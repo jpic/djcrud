@@ -18,10 +18,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from djcrud.controller import Controller
+from djcrud import mvc
+from djcrud.views.template import TemplateView
 from djcrud_auth.crud import AuthController
 
-site = Controller(
+site = mvc.Controller(
     views=[
         TemplateView.clone(
             icon='home',
@@ -39,6 +40,5 @@ site = Controller(
 )
 
 urlpatterns = [
-    site.urlpatterns,
     path("admin/", admin.site.urls),
-]
+] + site.urlpatterns
