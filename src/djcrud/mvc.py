@@ -46,3 +46,11 @@ class View(Clonable, generic.View):
         return [
             path(cls.urlpath, cls.as_view(), name=cls.urlname)
         ]
+
+    @attribute.getter
+    def has_perm(self):
+        try:
+            # secure by default: implement has_perm yourself
+            return self.request.is_superuser()
+        except AttributeError:
+            return False

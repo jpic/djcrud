@@ -28,12 +28,10 @@ site = mvc.Controller(
             icon='home',
             template_name='crudlfap/home.html',
             menus=['main'],
-            title=_('Home'),
-            title_menu=_('Home'),
             title_heading='',
             urlname='home',
             urlpath='',
-            authenticate=False,
+            has_perm=True,  # allow non-authenticated
         ),
         AuthController,
     ]
