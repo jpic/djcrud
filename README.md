@@ -166,9 +166,6 @@ Full test suite: `pytest` (108 tests passing).
 
 ## Documentation & Architecture
 
-- [FRONTEND_ARCHITECTURE.md](FRONTEND_ARCHITECTURE.md) — Template contract, multi-frontend design, philosophy.
-- [BOOTSTRAP_IMPLEMENTATION.md](BOOTSTRAP_IMPLEMENTATION.md) — Current Bootstrap frontend status.
-- [PROGRESS.md](PROGRESS.md) — Development roadmap and status.
 - `tests/` — Real-world usage patterns and integration tests.
 - `djcrud_example/` — Fully working demo project.
 
