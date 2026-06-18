@@ -1,0 +1,12 @@
+{% extends "djcrud/form.html" %}
+
+{% block title_actions %}
+<div class="btn-toolbar">
+    {% for action in view.model_menu %}
+    <a href="{{ action.url }}" class="btn btn-outline-primary btn-sm ms-2">
+        {% if action.icon %}<i class="bi bi-{{ action.icon }}"></i>{% endif %}
+        {{ action.title }}
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

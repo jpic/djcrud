@@ -1,6 +1,75 @@
 from djcrud import attribute
 from django.views import generic
-from django.urls import path, reverse, reverse_lazy
+from django.urls import path, include, reverse, reverse_lazy
+
+
+class ControllerViewsList(list):
+    """
+    A list subclass that automatically clones views when they're added.
+
+    This ensures that every view/controller in the list has proper parent
+    references set.
+    """
+
+    def __init__(self, controller, items=None):
+        """Initialize with parent controller reference."""
+        self.controller = controller
+        super().__init__()
+        if items:
+            self.extend(items)
+
+    def _clone_and_set_parent(self, item):
+        """Clone an item and set its parent controller reference."""
+        # If it's a controller instance, use it directly and set its parent
+        if isinstance(item, Controller):
+            item.parent_controller = self.controller
+            return item
+        # If it's a controller class, instantiate it with parent set
+        elif isinstance(item, type) and issubclass(item, Controller):
+            # Instantiate the controller with its parent
+            instance = item(views=item.views, parent=self.controller)
+            return instance
+        else:
+            # It's a view class - clone it
+            kwargs = {}
+
+            # If controller has a model and view doesn't, pass it to clone
+            if hasattr(self.controller, 'model') and self.controller.model:
+                if not hasattr(item, 'model') or item.model is None:
+                    kwargs['model'] = self.controller.model
+
+            cloned = item.clone(**kwargs) if hasattr(item, 'clone') else item
+
+            # Set parent controller reference
+            cloned.controller = self.controller
+
+            return cloned
+
+    def append(self, item):
+        """Append a view/controller, cloning it first."""
+        cloned = self._clone_and_set_parent(item)
+        super().append(cloned)
+
+    def insert(self, index, item):
+        """Insert a view/controller, cloning it first."""
+        cloned = self._clone_and_set_parent(item)
+        super().insert(index, cloned)
+
+    def extend(self, items):
+        """Extend with multiple views/controllers, cloning each."""
+        for item in items:
+            self.append(item)
+
+    def __setitem__(self, index, item):
+        """Set an item by index, cloning it first."""
+        cloned = self._clone_and_set_parent(item)
+        super().__setitem__(index, cloned)
+
+    def __add__(self, other):
+        """Return a new regular list when using + operator."""
+        # Return a regular list, not a ControllerViewsList
+        # This prevents issues with Django internals
+        return list(self) + list(other)
 
 
 class Clonable:
@@ -18,39 +87,152 @@ class Clonable:
 
 
 class Controller(Clonable):
-    def __init__(self, views):
-        self.views = views
+    cls = attribute.cls()
+    urlpath = ''  # Default to empty string (root controller)
+
+    def __init__(self, views, parent=None):
+        # Use custom list that auto-clones on mutation
+        self.views = ControllerViewsList(self, views)
+
+        # Set parent controller for this controller
+        self.parent_controller = parent
+
+    @attribute.getter
+    def root_controller(self):
+        """Get the root controller by traversing up the hierarchy."""
+        controller = self
+        while hasattr(controller, 'parent_controller') and controller.parent_controller:
+            controller = controller.parent_controller
+        return controller
+
+    @attribute.getter
+    def urlname(self):
+        """Return URL namespace for this controller."""
+        # TODO: this should be slugified controller name
+        return self.cls.__name__.replace('Controller', '').lower()
 
     @attribute.getter
     def urlpatterns(self):
-        result = []
-        for view in self.views:
-            results += view.urlpatterns
-        return result
+        """
+        Return URL patterns for this controller.
+
+        If controller has a urlpath, wrap children in include() with namespace.
+        Otherwise, return children directly (root controller).
+        """
+        # Build child patterns
+        child_patterns = []
+        views = self.views if isinstance(self, Controller) else getattr(self, 'views', [])
+
+        for view in views:
+            # All views/controllers are classes, get their urlpatterns
+            child_patterns += view.urlpatterns
+
+        # Get urlpath (handle both class and instance access)
+        urlpath = self.urlpath if isinstance(self, Controller) else getattr(self, 'urlpath', '')
+
+        if urlpath:
+            # Non-root controller: wrap in namespace
+            return [
+                path(
+                    f'{urlpath}/',
+                    include((child_patterns, self.urlname))
+                )
+            ]
+        else:
+            # Root controller: return children directly
+            return child_patterns
 
 
 class View(Clonable, generic.View):
+    cls = attribute.cls()
+    controller = None  # Set by Controller.__init__
+    _controller = None  # Passed via as_view()
+    _root_controller = None  # Passed via as_view()
+
+    def __init__(self, **kwargs):
+        # Extract our custom kwargs before passing to parent
+        self._controller = kwargs.pop('_controller', None) or self.controller
+        self._root_controller = kwargs.pop('_root_controller', None)
+        super().__init__(**kwargs)
+
     @attribute.getter
     def urlpath(self):
         # TODO: this should be slugified view class name without the
         # View suffix
-        return type(self).__name__
+        return self.cls.__name__
 
     @attribute.getter
     def urlname(self):
         # TODO: this should be a slugified view class name without the View suffix
-        return type(self).__name__
+        return self.cls.__name__
 
     @attribute.getter
     def urlpatterns(self):
+        # Add trailing slash if urlpath is not empty
+        urlpath = self.urlpath + '/' if self.urlpath else ''
+
+        # Compute root controller by traversing from controller attribute
+        root = None
+        if self.controller:
+            controller = self.controller
+            while hasattr(controller, 'parent_controller') and controller.parent_controller:
+                controller = controller.parent_controller
+            root = controller
+
+        # Pass controller reference through as_view's initkwargs
+        # This makes root_controller available to view instances
+        view_func = self.as_view(
+            _controller=self.controller,
+            _root_controller=root,
+        )
+
         return [
-            path(cls.urlpath, cls.as_view(), name=cls.urlname)
+            path(urlpath, view_func, name=self.urlname)
         ]
 
     @attribute.getter
     def has_perm(self):
         try:
             # secure by default: implement has_perm yourself
-            return self.request.is_superuser()
+            return self.request.user.is_superuser
         except AttributeError:
             return False
+
+    @attribute.getter
+    def root_controller(self):
+        """Get the root controller by traversing up from this view's controller."""
+        # Use the injected root_controller if available (from as_view)
+        if self._root_controller:
+            return self._root_controller
+
+        # Fall back to traversing from controller
+        controller = self._controller or self.controller
+        if not controller:
+            return None
+        return controller.root_controller
+
+    @attribute.cached
+    def url(self):
+        """Get the URL for this view."""
+        from django.urls import reverse
+        # Build the namespace from controller hierarchy
+        namespaces = []
+        # Try instance attributes first, then class attributes
+        controller = self._controller or self.controller or getattr(self.__class__, 'controller', None)
+        while controller:
+            if hasattr(controller, 'urlname') and controller.urlname:
+                namespaces.insert(0, controller.urlname)
+            controller = getattr(controller, 'parent_controller', None)
+
+        # Build the full URL name
+        if namespaces:
+            full_name = ':'.join(namespaces) + ':' + self.urlname
+        else:
+            full_name = self.urlname
+
+        return reverse(full_name)
+
+    @attribute.getter
+    def title(self):
+        """Get the title for this view."""
+        return self.cls.__name__

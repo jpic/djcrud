@@ -1,0 +1,1 @@
+# djcrud test suite

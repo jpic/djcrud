@@ -26,6 +26,8 @@ classifiers = [
 dependencies = [
     "django>=4.2",
     "django-tables2>=2.7",
+    "django-crispy-forms>=2.0",
+    "crispy-bootstrap5>=1.0",
 ]
 
 [project.optional-dependencies]
@@ -49,20 +51,15 @@ namespaces = false
 # Git-based versioning configuration
 # This will automatically determine the version from git tags
 # Tag format should be: v1.0.0, v0.1.0, etc.
-version_scheme = "guess-next-dev"
-local_scheme = "no-local-version"
 fallback_version = "0.0.0"
-
-[tool.setuptools_scm.tag_regex]
-# Matches tags like v1.0.0, 1.0.0, v0.1.0, etc.
-pattern = "^(?:v)?(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)(?P<pre>(?:a|b|rc)[0-9]+)?$"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-DJANGO_SETTINGS_MODULE = "tests.settings"
+DJANGO_SETTINGS_MODULE = "djcrud_example.settings"
+pythonpath = ["src/djcrud_example"]
 addopts = [
     "--reuse-db",
     "--strict-markers",

@@ -13,6 +13,30 @@ T = TypeVar('T')
 FuncType = Callable[[Any], T]
 
 
+class cls:
+    """
+    Descriptor that always returns the class, whether accessed on class or instance.
+
+    This allows code to use self.cls consistently without type checking.
+
+    Examples:
+        >>> class MyClass:
+        ...     cls = cls()
+        ...
+        >>> MyClass.cls
+        <class 'MyClass'>
+        >>> instance = MyClass()
+        >>> instance.cls
+        <class 'MyClass'>
+        >>> instance.cls is MyClass
+        True
+    """
+
+    def __get__(self, instance, owner):
+        """Return the owner class."""
+        return owner
+
+
 class getter(Generic[T]):
     """
     A non-caching property descriptor that works on both classes and instances.
@@ -213,4 +237,4 @@ class cached(Generic[T]):
             return instance_dict[self.attrname]
 
 
-__all__ = ['getter', 'cached']
+__all__ = ['cls', 'getter', 'cached']

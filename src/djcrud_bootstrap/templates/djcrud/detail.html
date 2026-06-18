@@ -1,0 +1,47 @@
+{% extends "djcrud/base.html" %}
+{% load bootstrap5 %}
+{% load djcrud_tags %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>
+                {% if view.icon %}
+                <i class="bi bi-{{ view.icon }}"></i>
+                {% endif %}
+                {{ view.title }}
+            </h2>
+        </div>
+        <div class="col-auto">
+            {% if view.object_menu %}
+            <div class="btn-group" role="group">
+                {% for menu_item in view.object_menu %}
+                <a href="{{ menu_item.url }}" class="btn btn-outline-primary">
+                    {% if menu_item.icon %}
+                    <i class="bi bi-{{ menu_item.icon }}"></i>
+                    {% endif %}
+                    {{ menu_item.title }}
+                </a>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-striped">
+                <tbody>
+                    {% for field in object|get_model_fields %}
+                    <tr>
+                        <th scope="row">{{ field.label }}</th>
+                        <td>{{ field.value }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

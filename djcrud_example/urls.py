@@ -26,9 +26,10 @@ site = mvc.Controller(
     views=[
         TemplateView.clone(
             icon='home',
-            template_name='crudlfap/home.html',
+            template_name='djcrud/home.html',
+            title='djcrud',
+            title_heading='Welcome to djcrud',
             menus=['main'],
-            title_heading='',
             urlname='home',
             urlpath='',
             has_perm=True,  # allow non-authenticated
