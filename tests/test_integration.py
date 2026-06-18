@@ -194,18 +194,18 @@ class TestMenuSystem:
     def test_view_with_menus_attribute(self):
         """Views can declare which menus they belong to."""
         class MainView(View):
-            menus = ['main', 'sidebar']
+            tags = ['main', 'sidebar']
 
-        assert MainView.menus == ['main', 'sidebar']
+        assert MainView.tags == ['main', 'sidebar']
 
     def test_view_clone_with_menus(self):
         """Views can be cloned with menus."""
         HomeView = View.clone(
             urlpath='',
-            menus=['main', 'footer']
+            tags=['main', 'footer']
         )
 
-        assert HomeView.menus == ['main', 'footer']
+        assert HomeView.tags == ['main', 'footer']
 
     def test_get_menu_function_exists(self):
         """djcrud.menu.get_menu function exists."""
@@ -229,7 +229,7 @@ class TestRealWorldExample:
         class UserListView(View):
             model = User
             urlpath = ''
-            menus = ['main', 'model']
+            tags = ['main', 'model']
 
         class UserCreateView(View):
             model = User
@@ -254,7 +254,7 @@ class TestRealWorldExample:
                 TemplateView.clone(
                     icon='home',
                     template_name='home.html',
-                    menus=['main'],
+                    tags=['main'],
                     urlname='home',
                     urlpath='',
                     has_perm=True,

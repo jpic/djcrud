@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: djcrud
-Version: 0.0.1.dev9+gd992341c9.d20260618
+Version: 0.0.1.dev10+gaa4ca2648.d20260618
 Summary: Django CRUD utilities
 Author-email: Your Name <your.email@example.com>
 License: MIT

@@ -1,5 +1,5 @@
 {% extends "djcrud/form.html" %}
-{% load crispy_forms_tags %}
+{% load crispy_forms_tags djcrud_tags %}
 
 {% partialdef content %}
 <div class="card" up-main="modal">
@@ -9,7 +9,10 @@
             {{ view.title }}
         </h2>
         <div class="btn-toolbar">
-            {% for action in view.model_menu %}
+            {% if view.controller %}
+                {% eval view.controller.get_tagged_views 'model' request exclude_current=view as model_menu %}
+            {% endif %}
+            {% for action in model_menu %}
             <a href="{{ action.url }}" class="btn btn-outline-{{ action.color|default:'primary' }} btn-sm ms-2">
                 {% if action.icon %}<i class="bi bi-{{ action.icon }}"></i>{% endif %}
                 {{ action.title }}

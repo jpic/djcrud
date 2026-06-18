@@ -3,6 +3,7 @@ MANIFEST.in
 README.md
 manage.py
 pyproject.toml
+tox.ini
 src/.gitignore
 src/djcrud/admin.py
 src/djcrud/apps.py
@@ -42,7 +43,10 @@ src/djcrud_bootstrap/tests.py
 src/djcrud_bootstrap/views.py
 src/djcrud_bootstrap/migrations/__init__.py
 src/djcrud_bootstrap/static/djcrud_bootstrap/css/djcrud.css
+src/djcrud_bootstrap/templates/djcrud/_actions_column.html
 src/djcrud_bootstrap/templates/djcrud/base.html
+src/djcrud_bootstrap/templates/djcrud/confirm.html
+src/djcrud_bootstrap/templates/djcrud/delete.html
 src/djcrud_bootstrap/templates/djcrud/detail.html
 src/djcrud_bootstrap/templates/djcrud/form.html
 src/djcrud_bootstrap/templates/djcrud/home.html

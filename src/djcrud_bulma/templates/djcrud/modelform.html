@@ -1,5 +1,5 @@
 {% extends "djcrud/form.html" %}
-{% load crispy_forms_tags %}
+{% load crispy_forms_tags djcrud_tags %}
 
 {% partialdef content %}
 <div class="box" up-main="modal">
@@ -9,7 +9,10 @@
         </div>
         <div class="level-right">
             <div class="buttons are-small">
-                {% for action in view.model_menu %}
+                {% if view.controller %}
+                    {% eval view.controller.get_tagged_views 'model' request exclude_current=view as model_menu %}
+                {% endif %}
+                {% for action in model_menu %}
                 <a href="{{ action.url }}" class="button is-primary is-outlined">{{ action.title }}</a>
                 {% endfor %}
             </div>

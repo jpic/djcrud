@@ -17,15 +17,15 @@ class TestGetMenu:
     def test_get_menu_filters_by_name(self, superuser_request):
         """get_menu returns only views with specified menu name."""
         class MainView(View):
-            menus = ['main']
+            tags = ['main']
             has_perm = True
 
         class SidebarView(View):
-            menus = ['sidebar']
+            tags = ['sidebar']
             has_perm = True
 
         class BothView(View):
-            menus = ['main', 'sidebar']
+            tags = ['main', 'sidebar']
             has_perm = True
 
         controller = Controller(views=[MainView, SidebarView, BothView])
@@ -40,11 +40,11 @@ class TestGetMenu:
         """get_menu filters out views user doesn't have permission for."""
         # View requiring superuser (default)
         class AdminView(View):
-            menus = ['main']
+            tags = ['main']
 
         # Public view
         class PublicView(View):
-            menus = ['main']
+            tags = ['main']
             has_perm = True
 
         controller = Controller(views=[AdminView, PublicView])
@@ -60,7 +60,7 @@ class TestGetMenu:
     def test_get_menu_empty_when_no_matches(self, superuser_request):
         """get_menu returns empty list when no views match."""
         class MainView(View):
-            menus = ['main']
+            tags = ['main']
 
         controller = Controller(views=[MainView])
 
@@ -86,7 +86,7 @@ class TestGetMenu:
     def test_get_menu_with_kwargs(self, superuser_request):
         """get_menu passes kwargs to view instantiation."""
         class ModelView(View):
-            menus = ['main']
+            tags = ['main']
             model = User
             has_perm = True
 
@@ -101,7 +101,7 @@ class TestGetMenu:
     def test_get_menu_instantiates_views(self, superuser_request):
         """get_menu returns view instances, not classes."""
         class MyView(View):
-            menus = ['main']
+            tags = ['main']
             has_perm = True
 
         controller = Controller(views=[MyView])
@@ -115,7 +115,7 @@ class TestGetMenu:
         """get_menu works with cloned views."""
         HomeView = View.clone(
             icon='home',
-            menus=['main'],
+            tags=['main'],
             has_perm=True,
         )
 
@@ -131,7 +131,7 @@ class TestGetMenu:
 
         # Create views for auth controller
         LoginView = TemplateView.clone(
-            menus=['main'],
+            tags=['main'],
             has_perm=True,
             urlpath='login',
             template_name='test.html',
@@ -160,7 +160,7 @@ class TestGetMenu:
 
         # Create a view with get_main_menu method
         class MyView(TemplateView):
-            menus = ['main']
+            tags = ['main']
             has_perm = True
 
             def get_main_menu(self):

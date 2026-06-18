@@ -1,15 +1,15 @@
 from djcrud.mvc import Controller
 
 
-def _get_views_recursive(controller, name, request, exclude_current=None, **kwargs):
+def _get_views_recursive(controller, tag, request, exclude_current=None, **kwargs):
     """
-    Recursively find all views matching the menu name.
+    Recursively find all views matching the tag.
 
     Returns a flat list of view instances only (no controller submenus).
 
     Args:
         controller: The controller to search
-        name: Menu name to filter by
+        tag: Tag to filter by
         request: The current request
         exclude_current: View instance to exclude from results (usually the current view)
         **kwargs: Additional arguments to pass to view.clone()
@@ -23,10 +23,10 @@ def _get_views_recursive(controller, name, request, exclude_current=None, **kwar
 
         if is_controller_instance or is_controller_class:
             # Recursively search controller's children for matching views
-            views.extend(_get_views_recursive(v, name, request, exclude_current=exclude_current, **kwargs))
+            views.extend(_get_views_recursive(v, tag, request, exclude_current=exclude_current, **kwargs))
         else:
-            # For views, check if view has the menu name
-            if name not in getattr(v, 'menus', []):
+            # For views, check if view has the tag
+            if tag not in getattr(v, 'tags', []):
                 continue
 
             # Clone with any model from parent controller
@@ -53,9 +53,9 @@ def _get_views_recursive(controller, name, request, exclude_current=None, **kwar
     return views
 
 
-def get_menu(controller, name, request, exclude_current=None, **kwargs):
+def get_menu(controller, tag, request, exclude_current=None, **kwargs):
     """
-    Return allowed view objects which have ``name`` in their ``menus``.
+    Return allowed view objects which have ``tag`` in their ``tags``.
 
     Recursively searches through all controllers to find matching views.
 
@@ -63,9 +63,9 @@ def get_menu(controller, name, request, exclude_current=None, **kwargs):
 
     Args:
         controller: The controller to search
-        name: Menu name to filter by ('main', 'model', 'object', etc.)
+        tag: Tag to filter by ('main', 'model', 'object', etc.)
         request: The current request
         exclude_current: Optional view instance to exclude (prevents showing link to current page)
         **kwargs: Additional arguments to pass to view.clone()
     """
-    return _get_views_recursive(controller, name, request, exclude_current=exclude_current, **kwargs)
+    return _get_views_recursive(controller, tag, request, exclude_current=exclude_current, **kwargs)

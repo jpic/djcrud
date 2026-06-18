@@ -8,17 +8,18 @@
 pip install djcrud djcrud-bootstrap
 ```
 
-[![Tests](https://img.shields.io/badge/tests-108%20passing-brightgreen)](tests/)
+[![Tests](https://img.shields.io/badge/tests-117%20passing-brightgreen)](tests/)
 [![Django](https://img.shields.io/badge/Django-5.1%2B-092E20)](https://www.djangoproject.com/)
 
 ## Why djcrud?
 
-- **View-centric templates**: Everything lives on the `view` object in context (`{{ view.title }}`, `{{ view.table }}`, `{{ view.main_menu }}`). No manual `get_context_data()`.
+- **View-centric templates**: Everything lives on the `view` object in context (`{{ view.title }}`, `{{ view.table }}`). No manual `get_context_data()` or custom template tags.
+- **`{% eval %}` template tag**: Call any Python function/method with args/kwargs directly in templates. Skip the boilerplate of `get_context_data()` and custom template tags entirely.
 - **Powerful descriptors**: `@attribute.getter` / `@attribute.cached` work on both classes *and* instances (the heart of the framework).
-- **Clone instead of subclass**: `MyView.clone(icon='star', menus=['main'])` — clean, flexible configuration.
+- **Clone instead of subclass**: `MyView.clone(icon='star', tags=['main'])` — clean, flexible configuration.
 - **Secure by default**: Permissions must be explicitly enabled.
 - **Swap frontends easily**: Core has zero HTML/CSS. Use Bootstrap today, Tailwind tomorrow.
-- **Well tested**: 108 passing tests with real integration examples.
+- **Well tested**: 117 passing tests with real integration examples.
 
 ## Quick Start
 
@@ -69,7 +70,7 @@ site = mvc.Controller(
             template_name="djcrud/home.html",
             title="My App",
             title_heading="Welcome to My App",
-            menus=["main"],
+            tags=["main"],
             urlname="home",
             urlpath="",
             has_perm=True,  # Public home page
@@ -97,8 +98,8 @@ class Product(models.Model):
     # ... your fields
 
 class ProductListView(Tables2Mixin, ListView):
-    menus = ["main"]   # Appears in sidebar
-    # title, icon, table, model_menu automatically provided
+    tags = ["main"]   # Appears in sidebar
+    # title, icon, table automatically provided
 
 ProductController = mvc.Controller.clone(model=Product, views=[ProductListView])
 ```
@@ -141,21 +142,58 @@ class MyView:
 - **`mvc.Controller`**: Groups views/controllers, handles URL namespacing and menu hierarchy.
 - **`mvc.View`**: Base for list/create/update/detail. Provides `url()`, `has_perm`, `root_controller`, etc.
 - **`mvc.Controller.clone(model=MyModel, views=[MyListView, ...])`**: One-liner for full CRUD on any model.
-- **Menus**: Declare `menus = ['main', 'model']` on views. Sidebar + action buttons appear automatically.
+- **Tags**: Declare `tags = ['main', 'model']` on views to categorize them. Use `controller.get_tagged_views()` to retrieve them.
 - **Tables**: Mix in `Tables2Mixin` for automatic django-tables2 support (`table_fields` + dynamic `Table` class).
+
+### The `{% eval %}` Template Tag
+
+The `{% eval %}` tag lets you call any Python function/method with arguments directly in templates, just like Jinja2:
+
+```django
+{% load djcrud_tags %}
+
+{# Call a method with positional and keyword arguments #}
+{% eval view.controller.get_tagged_views 'model' request exclude_current=view as model_menu %}
+
+{% for action in model_menu %}
+    <a href="{{ action.url }}">{{ action.title }}</a>
+{% endfor %}
+```
+
+**Why this matters:**
+
+Traditional Django forces you to write boilerplate:
+- Custom template tags for every function call
+- Override `get_context_data()` to inject values
+- Template tag libraries that duplicate view logic
+
+With `{% eval %}`, you:
+- **Keep logic in views** where it belongs (Python, not template syntax)
+- **Call methods directly** with the exact arguments you need
+- **Eliminate boilerplate** - no custom tags, no `get_context_data()` overrides
+- **Use generic, reusable functions** instead of template-specific code
 
 **Template example** (Bootstrap frontend):
 
 ```html
+{% load djcrud_tags %}
+
 <h1>
     {% if view.icon %}<i class="bi bi-{{ view.icon }}"></i>{% endif %}
     {{ view.title }}
 </h1>
-{% if view.model_menu %}
-    {% for action in view.model_menu %}
-    <a href="{{ action.url }}">{{ action.title }}</a>
+
+{# Get action buttons for this model #}
+{% if view.controller %}
+    {% eval view.controller.get_tagged_views 'model' request exclude_current=view as model_menu %}
+    {% for action in model_menu %}
+        <a href="{{ action.url }}" class="btn btn-primary">
+            {% if action.icon %}<i class="bi bi-{{ action.icon }}"></i>{% endif %}
+            {{ action.title }}
+        </a>
     {% endfor %}
 {% endif %}
+
 {% render_table view.table %}
 ```
 
@@ -166,7 +204,7 @@ See the Quick Start above and `djcrud_example/settings.py` for a complete config
 - Frontend is auto-detected (sets `DJCRUD_FRONTEND`, crispy/tables2 config, etc.) via `AppConfig.ready()`. No manual setting needed.
 - No special middleware or context processors are required. `mvc.View.get_context_data` injects `view` (with `view.main_menu`, `view.root_controller`, etc.) and `site_controller` (alias for root_controller) into templates.
 
-Full test suite: `tox` (Python 3.14 + Django 5.1+, tests both `djcrud_bulma` and `djcrud_bootstrap` frontends; all 118 tests pass).
+Full test suite: `tox` (Python 3.14 + Django 5.1+, tests both `djcrud_bulma` and `djcrud_bootstrap` frontends; all 117 tests pass).
 
 ## Philosophical Lessons
 
@@ -176,13 +214,13 @@ This project taught several hard-won lessons about sustainable Django developmen
 
 - **Minimal settings and auto-detection**: Settings like `DJCRUD_ACTIONS_COLUMN`, `DJCRUD_TABLES2_ATTRS` became unnecessary. `AppConfig.ready()` + frontend-specific templates handle everything. Less configuration = less maintenance.
 
-- **View-centric design wins**: Everything on `{{ view }}` (`view.title`, `view.model_fields`, `view.table`, `view.main_menu`, `view.object_menu`) makes templates declarative and eliminates `get_context_data()` boilerplate and custom template tags. No need to add templatetags because you can call the view methods/attributes directly. The `@attribute.getter`/`cached` descriptors (the true heart of djcrud) make this possible without magic.
+- **View-centric design wins**: Everything on `{{ view }}` (`view.title`, `view.model_fields`, `view.table`) makes templates declarative and eliminates `get_context_data()` boilerplate. The `{% eval %}` template tag lets you call any view method or controller method directly from templates with arguments, eliminating the need for custom template tags entirely. The `@attribute.getter`/`cached` descriptors (the true heart of djcrud) make this possible without magic. Keep your logic in Python (views/controllers), not in template tag libraries.
 
 - **Clone over subclass**: `Controller.clone()` and `View.clone(...)` provide flexible configuration without deep inheritance hierarchies. This pattern scales beautifully.
 
 - **Test everything, including the frontend**: The tox matrix, `pytest.mark.bulma`/`bootstrap`, and integration tests caught template rendering, Unpoly modal partials, and table attrs issues early. "It works on my machine" is not enough.
 
-- **Delete more than you add**: Removing `get_model_fields` template tag, `DJCRUD_*` settings, duplicated column classes, middleware, deprecated files (no backward compatibility needed), and comments about old approaches kept the codebase small and focused. The right amount of complexity is exactly what the task requires—no speculative abstractions.
+- **Delete more than you add**: Removing custom template tags (replaced with `{% eval %}`), `DJCRUD_*` settings, duplicated column classes, middleware, deprecated files (no backward compatibility needed), and comments about old approaches kept the codebase small and focused. The `{% eval %}` tag alone eliminated the need for `get_model_fields`, `get_menu`, and other custom template tags - one generic tag handles all function calls. The right amount of complexity is exactly what the task requires—no speculative abstractions.
 
 These principles turned what could have been a sprawling admin framework into something lightweight, extensible, and a joy to extend.
 

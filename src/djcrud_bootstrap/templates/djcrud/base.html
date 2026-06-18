@@ -1,4 +1,4 @@
-{% load static %}
+{% load static djcrud_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,7 +27,10 @@
                         <span>Navigation</span>
                     </h6>
                     <ul class="nav flex-column">
-                        {% for menu_item in view.main_menu %}
+                        {% if view.root_controller %}
+                            {% eval view.root_controller.get_tagged_views 'main' request exclude_current=view as main_menu %}
+                        {% endif %}
+                        {% for menu_item in main_menu %}
                         <li class="nav-item">
                             {% if menu_item.is_controller %}
                                 {# Controller with submenu #}

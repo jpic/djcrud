@@ -2,8 +2,8 @@
 Test simplified menu system.
 
 Requirements:
-1. Main menu shows only views with menus=['main'] (no controller submenus)
-2. UserListView, LoginView, LogoutView appear in main menu with menus=['main']
+1. Main menu shows only views with tags=['main'] (no controller submenus)
+2. UserListView, LoginView, LogoutView appear in main menu with tags=['main']
 3. Menu is a flat list of view instances
 4. LoginView shows only when NOT authenticated
 5. LogoutView shows only when authenticated
@@ -140,7 +140,7 @@ class TestMenuHTMLRendering:
         # Should have sidebar navigation
         assert 'sidebar' in content.lower()
 
-        # Should have Users link (UserListView with menus=['main'])
+        # Should have Users link (UserListView with tags=['main'])
         assert 'users' in content.lower() or 'user' in content.lower()
 
         # Should have Logout (not Login, since we're authenticated)

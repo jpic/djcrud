@@ -106,6 +106,23 @@ class Controller(Clonable):
             controller = controller.parent_controller
         return controller
 
+    def get_tagged_views(self, tag, request, exclude_current=None, **kwargs):
+        """
+        Return allowed view objects which have ``tag`` in their ``tags``.
+
+        Recursively searches through all controllers to find matching views.
+
+        Returns a flat list of view instances.
+
+        Args:
+            tag: Tag name to filter by ('main', 'model', 'object', etc.)
+            request: The current request
+            exclude_current: Optional view instance to exclude (prevents showing link to current page)
+            **kwargs: Additional arguments to pass to view.clone()
+        """
+        from djcrud.menu import _get_views_recursive
+        return _get_views_recursive(self, tag, request, exclude_current=exclude_current, **kwargs)
+
     @attribute.getter
     def urlname(self):
         """Return URL namespace for this controller.

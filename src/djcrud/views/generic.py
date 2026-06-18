@@ -1,7 +1,7 @@
 """Generic CRUD views for djcrud.
 
 Inherit from djcrud.mvc.View + django.views.generic.
-Provide model, model_meta, title, icon, menus, model_fields, table via attributes/getters.
+Provide model, model_meta, title, icon, tags, model_fields, table via attributes/getters.
 """
 from django.views import generic
 from djcrud.mvc import View
@@ -11,7 +11,7 @@ from djcrud.views.tables2 import Tables2Mixin
 
 
 class ListView(Tables2Mixin, View, generic.ListView):
-    menus = ['main']
+    tags = ['main']
     template_name = 'djcrud/list.html'
     paginate_by = 25
     urlpath = ''
@@ -49,23 +49,9 @@ class ListView(Tables2Mixin, View, generic.ListView):
             return self.form_class
         return super().get_form_class()
 
-    @attribute.cached
-    def model_menu(self):
-        from djcrud.menu import get_menu
-        if not self._controller:
-            return []
-        return get_menu(self._controller, 'model', self.request, exclude_current=self)
-
-    @attribute.cached
-    def main_menu(self):
-        from djcrud.menu import get_menu
-        if not self.root_controller:
-            return []
-        return get_menu(self.root_controller, 'main', self.request, exclude_current=self)
-
 
 class DetailView(View, generic.DetailView):
-    menus = ['object']
+    tags = ['object']
     template_name = 'djcrud/detail.html'
     urlpath = '<int:pk>/'
     urlname = 'detail'
@@ -99,13 +85,6 @@ class DetailView(View, generic.DetailView):
 
     icon = 'eye'
     color = 'primary'  # blue
-
-    @attribute.cached
-    def object_menu(self):
-        from djcrud.menu import get_menu
-        if not self._controller:
-            return []
-        return get_menu(self._controller, 'object', self.request, exclude_current=self, object=self.object)
 
     @attribute.getter
     def model_fields(self):
@@ -142,16 +121,9 @@ class DetailView(View, generic.DetailView):
 
         return fields
 
-    @attribute.cached
-    def main_menu(self):
-        from djcrud.menu import get_menu
-        if not self.root_controller:
-            return []
-        return get_menu(self.root_controller, 'main', self.request, exclude_current=self)
-
 
 class CreateView(UnpolyModalMixin, View, generic.CreateView):
-    menus = ['model']
+    tags = ['model']
     template_name = 'djcrud/modelform.html'
     action = 'click->modal#open'
     urlpath = 'create'
@@ -197,23 +169,9 @@ class CreateView(UnpolyModalMixin, View, generic.CreateView):
             return self.object.get_absolute_url()
         return self.cancel_url or '/'
 
-    @attribute.cached
-    def main_menu(self):
-        from djcrud.menu import get_menu
-        if not self.root_controller:
-            return []
-        return get_menu(self.root_controller, 'main', self.request, exclude_current=self)
-
-    @attribute.cached
-    def model_menu(self):
-        from djcrud.menu import get_menu
-        if not self._controller:
-            return []
-        return get_menu(self._controller, 'model', self.request, exclude_current=self)
-
 
 class UpdateView(UnpolyModalMixin, View, generic.UpdateView):
-    menus = ['object']
+    tags = ['object']
     template_name = 'djcrud/modelform.html'
     action = 'click->modal#open'
     urlpath = '<int:pk>/edit/'
@@ -259,23 +217,9 @@ class UpdateView(UnpolyModalMixin, View, generic.UpdateView):
             return self.object.get_absolute_url()
         return self.cancel_url or '/'
 
-    @attribute.cached
-    def main_menu(self):
-        from djcrud.menu import get_menu
-        if not self.root_controller:
-            return []
-        return get_menu(self.root_controller, 'main', self.request, exclude_current=self)
-
-    @attribute.cached
-    def object_menu(self):
-        from djcrud.menu import get_menu
-        if not self._controller:
-            return []
-        return get_menu(self._controller, 'object', self.request, exclude_current=self, object=self.object)
-
 
 class DeleteView(UnpolyModalMixin, View, generic.DeleteView):
-    menus = ['object']
+    tags = ['object']
     template_name = 'djcrud/delete.html'
     action = 'click->modal#open'
     partial_name = 'content'
@@ -320,13 +264,6 @@ class DeleteView(UnpolyModalMixin, View, generic.DeleteView):
                     except:
                         pass
         return '/'
-
-    @attribute.cached
-    def main_menu(self):
-        from djcrud.menu import get_menu
-        if not self.root_controller:
-            return []
-        return get_menu(self.root_controller, 'main', self.request, exclude_current=self)
 
 
 __all__ = ['ListView', 'DetailView', 'CreateView', 'UpdateView', 'DeleteView']

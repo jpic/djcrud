@@ -21,7 +21,7 @@ class LoginView(FormView):
     template_name = 'djcrud_auth/login.html'
     urlpath = 'login'
     urlname = 'login'
-    menus = ['main']
+    tags = ['main']
     icon = 'box-arrow-in-right'
 
     @attribute.getter
@@ -54,7 +54,7 @@ class LogoutView(UnpolyModalMixin, FormView):
     template_name = 'djcrud_auth/logout_confirm.html'
     urlpath = 'logout'
     urlname = 'logout'
-    menus = ['main']
+    tags = ['main']
     icon = 'box-arrow-right'
     action = 'click->modal#open'
     partial_name = 'content'

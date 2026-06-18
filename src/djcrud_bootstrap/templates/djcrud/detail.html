@@ -1,4 +1,5 @@
 {% extends "djcrud/base.html" %}
+{% load djcrud_tags %}
 
 {% block content %}
 <div class="container-fluid">
@@ -12,9 +13,12 @@
             </h2>
         </div>
         <div class="col-auto">
-            {% if view.object_menu %}
+            {% if view.controller %}
+                {% eval view.controller.get_tagged_views 'object' request exclude_current=view object=view.object as object_menu %}
+            {% endif %}
+            {% if object_menu %}
             <div class="btn-group" role="group">
-                {% for menu_item in view.object_menu %}
+                {% for menu_item in object_menu %}
                 <a href="{{ menu_item.url }}"
                    class="btn btn-outline-{{ menu_item.color|default:'primary' }}"
                    {% if menu_item.action %}{{ menu_item.action }}{% endif %}

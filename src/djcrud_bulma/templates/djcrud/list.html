@@ -1,5 +1,5 @@
 {% extends "djcrud/base.html" %}
-{% load django_tables2 %}
+{% load django_tables2 djcrud_tags %}
 
 {% block content %}
 <div class="level mb-5">
@@ -13,7 +13,10 @@
     </div>
     <div class="level-right">
         <div class="buttons">
-            {% for action in view.model_menu %}
+            {% if view.controller %}
+                {% eval view.controller.get_tagged_views 'model' request exclude_current=view as model_menu %}
+            {% endif %}
+            {% for action in model_menu %}
             <a href="{{ action.url }}"
                class="button is-{{ action.color|default:'primary' }}"
                {% if action.action %}{{ action.action }}{% endif %}

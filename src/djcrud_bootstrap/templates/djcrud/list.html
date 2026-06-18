@@ -1,5 +1,5 @@
 {% extends "djcrud/base.html" %}
-{% load django_tables2 %}
+{% load django_tables2 djcrud_tags %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -9,7 +9,10 @@
     </h1>
 
     <div class="btn-toolbar">
-        {% for action in view.model_menu %}
+        {% if view.controller %}
+            {% eval view.controller.get_tagged_views 'model' request exclude_current=view as model_menu %}
+        {% endif %}
+        {% for action in model_menu %}
         <a href="{{ action.url }}"
            class="btn btn-{{ action.color|default:'primary' }} ms-2"
            up-layer="new modal"

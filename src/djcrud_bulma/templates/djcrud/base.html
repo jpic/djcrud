@@ -1,4 +1,4 @@
-{% load static %}
+{% load static djcrud_tags %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +16,10 @@
         <aside class="column is-3-tablet is-2-desktop menu p-4 djcrud-sidebar">
             <p class="menu-label">Navigation</p>
             <ul class="menu-list">
-                {% for menu_item in view.main_menu %}
+                {% if view.root_controller %}
+                    {% eval view.root_controller.get_tagged_views 'main' request exclude_current=view as main_menu %}
+                {% endif %}
+                {% for menu_item in main_menu %}
                 <li>
                     {% if menu_item.is_controller %}
                         <a class="{% if menu_item.is_active %}is-active{% endif %}">

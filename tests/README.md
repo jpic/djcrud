@@ -47,7 +47,7 @@ Tests the menu system (`djcrud.menu.get_menu`):
 - Filtering views by menu name
 - Permission checking (`has_perm()`)
 - View instantiation with request and kwargs
-- Handling views with/without menus attribute
+- Handling views with/without tags attribute
 
 ### test_integration.py
 Full integration tests:

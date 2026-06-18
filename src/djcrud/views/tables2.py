@@ -135,11 +135,11 @@ class Tables2Mixin(View):
             return FallbackTable
 
         # Check if we need to add actions column
-        # Look for any views with 'object' in their menus
+        # Look for any views with 'object' in their tags
         add_actions = False
         if self._controller:
             for v in self._controller.views:
-                if hasattr(v, 'menus') and 'object' in getattr(v, 'menus', []):
+                if hasattr(v, 'tags') and 'object' in getattr(v, 'tags', []):
                     add_actions = True
                     break
 
