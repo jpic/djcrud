@@ -62,7 +62,7 @@ class Tables2Mixin(View):
         """Return a django-tables2 Table class configured for this model and fields.
 
         Must return a Table (not a UserTable or similar hardcoded class).
-        Uses the table_fields getter.
+        Uses the table_fields getter and adds Actions column if object_menu exists.
         """
         if not self.model:
             # Fallback generic table
@@ -73,12 +73,64 @@ class Tables2Mixin(View):
 
             return FallbackTable
 
+        # Check if we need to add actions column
+        # Look for any views with 'object' in their menus
+        add_actions = False
+        if self._controller:
+            for v in self._controller.views:
+                if hasattr(v, 'menus') and 'object' in getattr(v, 'menus', []):
+                    add_actions = True
+                    break
+
+        # Build fields list (data fields + actions if needed)
+        fields_list = list(self.table_fields)
+        if add_actions and 'actions' not in fields_list:
+            fields_list.append('actions')
+
+        # Create Meta class first to avoid closure issues
+        class TableMeta:
+            model = self.model
+            fields = fields_list
+            template_name = 'django_tables2/bootstrap5.html'
+            attrs = {'class': 'table table-striped table-hover'}
+
+        # Create the table class
         class DynamicTable(tables.Table):
-            class Meta:
-                model = self.model
-                fields = self.table_fields
-                template_name = 'django_tables2/bootstrap5.html'
-                attrs = {'class': 'table table-striped table-hover'}
+            Meta = TableMeta
+
+        # Make ID/PK column link to detail view if model has get_absolute_url
+        # Check if instances of this model will have get_absolute_url method
+        try:
+            # Try to check if the model class or instances have get_absolute_url
+            has_get_absolute_url = (
+                hasattr(self.model, 'get_absolute_url') or
+                'get_absolute_url' in dir(self.model)
+            )
+        except (AttributeError, TypeError):
+            has_get_absolute_url = False
+
+        if has_get_absolute_url:
+            pk_field = self.model._meta.pk.name if self.model._meta.pk else 'id'
+            if pk_field in fields_list:
+                # Use a custom column that calls get_absolute_url on each record
+                from django.utils.html import format_html
+
+                class PKLinkColumn(tables.Column):
+                    def render(self, value, record):
+                        if hasattr(record, 'get_absolute_url'):
+                            return format_html('<a href="{}">{}</a>', record.get_absolute_url(), value)
+                        return value
+
+                DynamicTable.base_columns[pk_field] = PKLinkColumn()
+
+        # Dynamically add actions column if needed
+        if add_actions:
+            try:
+                from djcrud_bootstrap.tables import ActionsColumn
+                DynamicTable.base_columns['actions'] = ActionsColumn()
+            except ImportError:
+                # djcrud_bootstrap not installed, skip actions column
+                pass
 
         return DynamicTable
 
@@ -99,6 +151,9 @@ class Tables2Mixin(View):
         table_class = self.table_class  # uses the getter
         queryset = self.get_queryset()
         table = table_class(queryset, **kwargs)
+
+        # Store reference to view so ActionsColumn can access it
+        table._djcrud_view = self
 
         # Configure pagination
         RequestConfig(

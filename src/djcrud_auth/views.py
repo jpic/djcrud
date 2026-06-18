@@ -4,19 +4,21 @@ Authentication views for djcrud_auth.
 Login and logout views that integrate with Django's authentication system.
 """
 
+from django import forms
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect
-from django.views.generic import RedirectView
+from django.http import HttpResponseRedirect
 
 from djcrud import mvc, attribute
 from djcrud.views.form import FormView
+from djcrud.views.unpoly import UnpolyModalMixin
 
 
 class LoginView(FormView):
     """Login view using Django's authentication."""
     form_class = AuthenticationForm
-    template_name = 'djcrud/form.html'
+    template_name = 'djcrud_auth/login.html'
     urlpath = 'login'
     urlname = 'login'
     menus = ['main']
@@ -41,13 +43,20 @@ class LoginView(FormView):
         return next_url if next_url else '/'
 
 
-class LogoutView(mvc.View, RedirectView):
-    """Logout view."""
+class LogoutConfirmForm(forms.Form):
+    """Empty form for logout confirmation."""
+    pass
+
+
+class LogoutView(UnpolyModalMixin, FormView):
+    """Logout confirmation view."""
+    form_class = LogoutConfirmForm
+    template_name = 'djcrud_auth/logout_confirm.html'
     urlpath = 'logout'
     urlname = 'logout'
     menus = ['main']
     icon = 'box-arrow-right'
-    permanent = False
+    action = 'click->modal#open'
 
     @property
     def has_perm(self):
@@ -61,8 +70,12 @@ class LogoutView(mvc.View, RedirectView):
             return f'Logout {self.request.user.username}'
         return 'Logout'
 
-    def get_redirect_url(self, *args, **kwargs):
+    def form_valid(self, form):
+        """Log out the user and redirect to homepage."""
         logout(self.request)
+        return HttpResponseRedirect('/')
+
+    def get_success_url(self):
         return '/'
 
 

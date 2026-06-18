@@ -10,7 +10,10 @@
 
     <div class="btn-toolbar">
         {% for action in view.model_menu %}
-        <a href="{{ action.url }}" class="btn btn-primary ms-2">
+        <a href="{{ action.url }}"
+           class="btn btn-primary ms-2"
+           up-layer="new modal"
+           up-size="medium">
             {% if action.icon %}<i class="bi bi-{{ action.icon }}"></i>{% endif %}
             {{ action.title }}
         </a>

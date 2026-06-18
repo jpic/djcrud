@@ -16,7 +16,10 @@
             {% if view.object_menu %}
             <div class="btn-group" role="group">
                 {% for menu_item in view.object_menu %}
-                <a href="{{ menu_item.url }}" class="btn btn-outline-primary">
+                <a href="{{ menu_item.url }}"
+                   class="btn btn-outline-{% if 'delete' in menu_item.title|lower %}danger{% else %}primary{% endif %}"
+                   up-layer="new modal"
+                   up-size="medium">
                     {% if menu_item.icon %}
                     <i class="bi bi-{{ menu_item.icon }}"></i>
                     {% endif %}

@@ -22,6 +22,7 @@ Usage (in yourapp/crud.py):
 from django.views import generic
 from djcrud.mvc import View
 from djcrud import attribute
+from djcrud.views.unpoly import UnpolyModalMixin
 # Tables2Mixin (and model_meta convenience) available via from djcrud.views.tables2
 # or imported explicitly. Templates use {{ view.model_meta }} to avoid _meta.
 
@@ -104,7 +105,7 @@ class ListView(View, generic.ListView):
         from djcrud.menu import get_menu
         if not self._controller:
             return []
-        return get_menu(self._controller, 'model', self.request)
+        return get_menu(self._controller, 'model', self.request, exclude_current=self)
 
     @attribute.cached
     def main_menu(self):
@@ -112,7 +113,7 @@ class ListView(View, generic.ListView):
         from djcrud.menu import get_menu
         if not self.root_controller:
             return []
-        return get_menu(self.root_controller, 'main', self.request)
+        return get_menu(self.root_controller, 'main', self.request, exclude_current=self)
 
 
 class DetailView(View, generic.DetailView):
@@ -188,7 +189,7 @@ class DetailView(View, generic.DetailView):
         from djcrud.menu import get_menu
         if not self._controller:
             return []
-        return get_menu(self._controller, 'object', self.request, object=self.object)
+        return get_menu(self._controller, 'object', self.request, exclude_current=self, object=self.object)
 
     @attribute.cached
     def main_menu(self):
@@ -196,16 +197,17 @@ class DetailView(View, generic.DetailView):
         from djcrud.menu import get_menu
         if not self.root_controller:
             return []
-        return get_menu(self.root_controller, 'main', self.request)
+        return get_menu(self.root_controller, 'main', self.request, exclude_current=self)
 
 
-class CreateView(View, generic.CreateView):
+class CreateView(UnpolyModalMixin, View, generic.CreateView):
     """
     Create view for creating new model instances.
 
     Template: djcrud/modelform.html (extends form.html with model menu)
     """
     template_name = 'djcrud/modelform.html'
+    action = 'click->modal#open'
 
     @attribute.getter
     def model(self):
@@ -291,7 +293,7 @@ class CreateView(View, generic.CreateView):
         from djcrud.menu import get_menu
         if not self.root_controller:
             return []
-        return get_menu(self.root_controller, 'main', self.request)
+        return get_menu(self.root_controller, 'main', self.request, exclude_current=self)
 
     @attribute.cached
     def model_menu(self):
@@ -299,16 +301,17 @@ class CreateView(View, generic.CreateView):
         from djcrud.menu import get_menu
         if not self._controller:
             return []
-        return get_menu(self._controller, 'model', self.request)
+        return get_menu(self._controller, 'model', self.request, exclude_current=self)
 
 
-class UpdateView(View, generic.UpdateView):
+class UpdateView(UnpolyModalMixin, View, generic.UpdateView):
     """
     Update view for editing model instances.
 
     Template: djcrud/modelform.html (extends form.html with object menu)
     """
     template_name = 'djcrud/modelform.html'
+    action = 'click->modal#open'
 
     @attribute.getter
     def model(self):
@@ -399,7 +402,7 @@ class UpdateView(View, generic.UpdateView):
         from djcrud.menu import get_menu
         if not self.root_controller:
             return []
-        return get_menu(self.root_controller, 'main', self.request)
+        return get_menu(self.root_controller, 'main', self.request, exclude_current=self)
 
     @attribute.cached
     def object_menu(self):
@@ -408,4 +411,88 @@ class UpdateView(View, generic.UpdateView):
         return []
 
 
-__all__ = ['ListView', 'DetailView', 'CreateView', 'UpdateView']
+class DeleteView(UnpolyModalMixin, View, generic.DeleteView):
+    """
+    Delete view for removing model instances.
+
+    Template: djcrud/delete_confirm.html (provided by frontend app)
+
+    Context variables:
+        - object: The model instance to delete
+        - title: Page title (from title getter)
+        - icon: Icon name from icon attribute
+        - main_menu: Sidebar menu items (views with 'main' in menus)
+    """
+    template_name = 'djcrud/delete_confirm.html'
+    action = 'click->modal#open'
+
+    @attribute.getter
+    def model(self):
+        """Get model from controller if not set directly on view."""
+        if hasattr(self.__class__, '_model') and self.__class__._model is not None:
+            return self.__class__._model
+        controller = self._controller or self.controller
+        if controller and hasattr(controller, 'model'):
+            return controller.model
+        return None
+
+    @attribute.getter
+    def model_meta(self):
+        """Convenience getter for model._meta."""
+        return self.model._meta
+
+    @attribute.getter
+    def title(self):
+        """Return page title for delete confirmation."""
+        model = self.model
+        if model:
+            return f"Delete {model._meta.verbose_name.capitalize()}"
+        return "Delete"
+
+    def get_context_data(self, **kwargs):
+        """Add view to context - templates access everything via view."""
+        context = super().get_context_data(**kwargs)
+        context['view'] = self
+        return context
+
+    @attribute.cached
+    def icon(self):
+        """Icon for this view."""
+        return 'trash'
+
+    @attribute.cached
+    def cancel_url(self):
+        """Return URL to go back to (object detail page)."""
+        if hasattr(self, 'object') and self.object and hasattr(self.object, 'get_absolute_url'):
+            return self.object.get_absolute_url()
+        return '/'
+
+    def get_success_url(self):
+        """After successful delete, redirect to list view.
+
+        Uses the controller's list view URL if available.
+        """
+        # Try to get list view URL from controller
+        if self._controller:
+            for view in self._controller.views:
+                # Check if it's a ListView (has 'main' or 'model' in menus typically)
+                if hasattr(view, '__name__') and 'List' in view.__name__:
+                    try:
+                        # Create temp instance to get URL
+                        temp_view = view.clone(request=self.request)()
+                        return temp_view.url
+                    except:
+                        pass
+        # Fallback to root
+        return '/'
+
+    @attribute.cached
+    def main_menu(self):
+        """Get main navigation menu."""
+        from djcrud.menu import get_menu
+        if not self.root_controller:
+            return []
+        return get_menu(self.root_controller, 'main', self.request, exclude_current=self)
+
+
+__all__ = ['ListView', 'DetailView', 'CreateView', 'UpdateView', 'DeleteView']

@@ -47,6 +47,7 @@ UserController = crud.ModelController.clone(
         crud.UserDetailView,
         crud.UserCreateView.clone(form_class=get_custom_user_creation_form()),
         crud.UserUpdateView.clone(form_class=get_custom_user_change_form()),
+        crud.UserDeleteView,
     ],
 )
 

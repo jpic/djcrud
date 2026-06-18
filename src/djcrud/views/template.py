@@ -68,7 +68,7 @@ class TemplateView(View, DjangoTemplateView):
         from djcrud.menu import get_menu
         if not self.root_controller:
             return []
-        return get_menu(self.root_controller, 'main', self.request)
+        return get_menu(self.root_controller, 'main', self.request, exclude_current=self)
 
 
 __all__ = ['TemplateView']

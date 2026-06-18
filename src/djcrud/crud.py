@@ -18,6 +18,7 @@ class UserListView(Tables2Mixin, generic.ListView):
     menus = ['main']
     urlpath = ''
     urlname = 'list'
+    has_perm = True
 
     @attribute.cached
     def title(self):
@@ -46,6 +47,7 @@ class UserDetailView(generic.DetailView):
     urlname = 'detail'
     menus = ['object']
     icon = 'eye'
+    has_perm = True
 
 
 class UserCreateView(generic.CreateView):
@@ -59,6 +61,7 @@ class UserCreateView(generic.CreateView):
     menus = ['model']
     icon = 'plus-circle'
     fields = '__all__'
+    has_perm = True
 
 
 class UserUpdateView(generic.UpdateView):
@@ -72,6 +75,16 @@ class UserUpdateView(generic.UpdateView):
     menus = ['object']
     icon = 'pencil'
     fields = '__all__'
+    has_perm = True
+
+
+class UserDeleteView(generic.DeleteView):
+    """Delete view for User objects (thin wrapper over generic DeleteView)."""
+    urlpath = '<int:pk>/delete/'
+    urlname = 'delete'
+    menus = ['object']
+    icon = 'trash'
+    has_perm = True
 
 
 class ModelController(mvc.Controller):
@@ -100,6 +113,7 @@ class ModelController(mvc.Controller):
         UserDetailView,
         UserCreateView,
         UserUpdateView,
+        UserDeleteView,
     ]
 
     @attribute.getter
