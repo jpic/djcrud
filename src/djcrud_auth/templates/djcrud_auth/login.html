@@ -1,36 +1,38 @@
 {% extends "djcrud/base.html" %}
 {% load crispy_forms_tags %}
 
-{% partialdef form_content %}
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h2 class="card-title mb-0">
-            {% if view.icon %}<i class="bi bi-{{ view.icon }}"></i>{% endif %}
-            {{ view.title }}
-        </h2>
+{% partialdef content %}
+<div class="box">
+    <div class="level mb-4">
+        <div class="level-left">
+            <h2 class="title is-4">
+                {% if view.icon %}<i class="bi bi-{{ view.icon }}"></i>{% endif %}
+                {{ view.title }}
+            </h2>
+        </div>
     </div>
-    <div class="card-body">
-        <form method="post"
-              up-target="body"
-              up-history="false"
-              {% if form.is_multipart %}enctype="multipart/form-data"{% endif %}>
-            {% csrf_token %}
-            {{ form|crispy }}
+    <form method="post"
+          up-target="body"
+          up-history="false"
+          {% if form.is_multipart %}enctype="multipart/form-data"{% endif %}>
+        {% csrf_token %}
+        {{ form|crispy }}
 
-            <div class="d-flex justify-content-end gap-2 mt-3">
-                <button type="submit" class="btn btn-primary">
+        <div class="field is-grouped is-grouped-right mt-4">
+            <p class="control">
+                <button type="submit" class="button is-primary">
                     <i class="bi bi-box-arrow-in-right"></i> Login
                 </button>
-            </div>
-        </form>
-    </div>
+            </p>
+        </div>
+    </form>
 </div>
 {% endpartialdef %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
-        {% partial form_content %}
+<div class="columns is-centered">
+    <div class="column is-8-tablet is-6-desktop">
+        {% partial content %}
     </div>
 </div>
 {% endblock %}

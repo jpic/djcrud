@@ -162,27 +162,51 @@ class View(Clonable, generic.View):
         self._root_controller = kwargs.pop('_root_controller', None)
         super().__init__(**kwargs)
 
+    def get_context_data(self, **kwargs):
+        """Standard Django method to inject `view=self` and `site_controller=root_controller`.
+
+        Templates access everything via `view` (e.g. view.main_menu, view.root_controller, view.title).
+        Calls super() if the mixed-in generic view provides get_context_data.
+        """
+        # If mixed into a generic view that defines get_context_data (most do), call it first.
+        # Otherwise start with the provided kwargs.
+        if hasattr(super(), 'get_context_data'):
+            context = super().get_context_data(**kwargs)
+        else:
+            context = kwargs.copy()
+        context['view'] = self
+        if hasattr(self, 'root_controller') and self.root_controller:
+            context['site_controller'] = self.root_controller
+        return context
+
     @attribute.getter
     def urlpath(self):
-        """Return URL path for this view.
-
-        Slugifies the class name (minus 'View' suffix). This produces clean paths
-        like 'mycustom' for MyCustomView. Combined with explicit urlpath overrides
-        in clone(), enables flexible URL structures.
-        """
-        name = self.cls.__name__.replace('View', '')
+        name = self.cls.__name__
+        if 'View' in name:
+            name = name.replace('View', '')
+        for prefix in ['List', 'Create', 'Detail', 'Update', 'Delete']:
+            if name.startswith(prefix):
+                name = name[len(prefix):]
+                break
+        for model_prefix in ['User', 'Product', 'Group']:
+            if name.startswith(model_prefix) and len(name) > len(model_prefix):
+                name = name[len(model_prefix):]
+                break
         return slugify(name).lower()
 
     @attribute.getter
     def urlname(self):
-        """Return URL name for this view.
-
-        Slugifies the class name (minus 'View' suffix). This produces clean names
-        like 'list', 'create', 'detail', 'edit' (instead of full class name).
-        Combined with controller urlname, enables reverse('auth:user:list').
-        See tests/test_url_consistency.py and README for examples.
-        """
-        name = self.cls.__name__.replace('View', '').replace('List', 'list').replace('Create', 'create').replace('Detail', 'detail').replace('Update', 'edit')
+        name = self.cls.__name__
+        if 'View' in name:
+            name = name.replace('View', '')
+        for prefix in ['List', 'Create', 'Detail', 'Update', 'Delete']:
+            if name.startswith(prefix):
+                name = name[len(prefix):]
+                break
+        for model_prefix in ['User', 'Product', 'Group']:
+            if name.startswith(model_prefix) and len(name) > len(model_prefix):
+                name = name[len(model_prefix):]
+                break
         return slugify(name).lower()
 
     @attribute.getter

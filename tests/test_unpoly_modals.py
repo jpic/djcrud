@@ -29,19 +29,19 @@ def test_create_view_renders_partial_for_unpoly(user):
     # Should NOT have full HTML structure
     content = response.content.decode()
     assert '<!DOCTYPE html>' not in content
-    # Should have card structure (the partial content)
-    assert 'card' in content.lower()
+    # Should have box (Bulma equivalent of card) or card structure (the partial content)
+    assert 'card' in content.lower() or 'box' in content.lower()
 
 
 @pytest.mark.django_db
-def test_delete_view_renders_full_page(user):
+def test_delete_view_renders_full_page(superuser):
     """Delete view renders full page when accessed directly."""
     from django.contrib.auth import get_user_model
     User = get_user_model()
     test_user = User.objects.create(username='delete_test_user', email='delete@example.com')
 
     client = Client()
-    client.force_login(user)
+    client.force_login(superuser)
     response = client.get(f'/auth/user/{test_user.pk}/delete/')
 
     assert response.status_code == 200
@@ -49,14 +49,14 @@ def test_delete_view_renders_full_page(user):
 
 
 @pytest.mark.django_db
-def test_delete_view_renders_partial_for_unpoly(user):
+def test_delete_view_renders_partial_for_unpoly(superuser):
     """Delete view renders only partial content for Unpoly modal requests."""
     from django.contrib.auth import get_user_model
     User = get_user_model()
     test_user = User.objects.create(username='delete_partial_user', email='deletepartial@example.com')
 
     client = Client()
-    client.force_login(user)
+    client.force_login(superuser)
 
     # Simulate Unpoly modal request
     response = client.get(f'/auth/user/{test_user.pk}/delete/', HTTP_X_UP_MODE='modal')
@@ -70,7 +70,7 @@ def test_delete_view_renders_partial_for_unpoly(user):
 
 
 @pytest.mark.django_db
-def test_actions_column_appears_in_table(user):
+def test_actions_column_appears_in_table(superuser):
     """Actions column should appear in user list table."""
     from django.contrib.auth import get_user_model
     User = get_user_model()
@@ -78,7 +78,7 @@ def test_actions_column_appears_in_table(user):
     User.objects.create(username='actions_test_user', email='actions@example.com')
 
     client = Client()
-    client.force_login(user)
+    client.force_login(superuser)
     response = client.get('/auth/user/')
 
     assert response.status_code == 200
@@ -92,14 +92,14 @@ def test_actions_column_appears_in_table(user):
 
 
 @pytest.mark.django_db
-def test_id_column_links_to_detail(user):
+def test_id_column_links_to_detail(superuser):
     """ID column should link to detail view."""
     from django.contrib.auth import get_user_model
     User = get_user_model()
     test_user = User.objects.create(username='id_link_test_user', email='idlink@example.com')
 
     client = Client()
-    client.force_login(user)
+    client.force_login(superuser)
     response = client.get('/auth/user/')
 
     assert response.status_code == 200

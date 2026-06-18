@@ -1,0 +1,39 @@
+{% extends "djcrud/base.html" %}
+{% load django_tables2 %}
+
+{% block content %}
+<div class="level mb-5">
+    <div class="level-left">
+        <div>
+            <h1 class="title is-3">
+                {% if view.icon %}<span class="icon{% if view.color %} has-text-{{ view.color }}{% endif %}"><i class="bi bi-{{ view.icon }}"></i></span>{% endif %}
+                {{ view.title }}
+            </h1>
+        </div>
+    </div>
+    <div class="level-right">
+        <div class="buttons">
+            {% for action in view.model_menu %}
+            <a href="{{ action.url }}"
+               class="button is-{{ action.color|default:'primary' }}"
+               {% if action.action %}{{ action.action }}{% endif %}
+               {% if action.urlname == 'create' %}
+               up-layer="new modal"
+               up-size="medium"
+               {% endif %}>
+                {% if action.icon %}<span class="icon"><i class="bi bi-{{ action.icon }}"></i></span>{% endif %}
+                <span>{{ action.title }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% if view.table %}
+    {% render_table view.table 'django_tables2/bulma.html' %}
+{% else %}
+    <div class="notification is-info is-light">
+        No {{ view.model_meta.verbose_name_plural|default:"items" }} found.
+    </div>
+{% endif %}
+{% endblock %}

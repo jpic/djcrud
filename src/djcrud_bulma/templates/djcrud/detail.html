@@ -1,0 +1,43 @@
+{% extends "djcrud/base.html" %}
+
+{% block content %}
+<div class="level mb-5">
+    <div class="level-left">
+        <h1 class="title is-3">
+            {% if view.icon %}<span class="icon{% if view.color %} has-text-{{ view.color }}{% endif %}"><i class="bi bi-{{ view.icon }}"></i></span>{% endif %}
+            {{ view.title }}
+        </h1>
+    </div>
+    <div class="level-right">
+        {% if view.object_menu %}
+        <div class="buttons">
+            {% for menu_item in view.object_menu %}
+            <a href="{{ menu_item.url }}"
+               class="button is-outlined is-{{ menu_item.color|default:'primary' }}"
+               {% if menu_item.action %}{{ menu_item.action }}{% endif %}
+               {% if menu_item.urlname == 'edit' or menu_item.urlname == 'delete' %}
+               up-layer="new modal"
+               up-size="medium"
+               {% endif %}>
+                {% if menu_item.icon %}<span class="icon"><i class="bi bi-{{ menu_item.icon }}"></i></span>{% endif %}
+                <span>{{ menu_item.title }}</span>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="box">
+    <table class="table is-striped is-fullwidth">
+        <tbody>
+            {% for field in view.model_fields %}
+            <tr>
+                <th>{{ field.label }}</th>
+                <td>{{ field.value }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

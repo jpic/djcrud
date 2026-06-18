@@ -1,5 +1,4 @@
 {% extends "djcrud/base.html" %}
-{% load djcrud_tags %}
 
 {% block content %}
 <div class="container-fluid">
@@ -7,7 +6,7 @@
         <div class="col">
             <h2>
                 {% if view.icon %}
-                <i class="bi bi-{{ view.icon }}"></i>
+                <i class="bi bi-{{ view.icon }}{% if view.color %} text-{{ view.color }}{% endif %}"></i>
                 {% endif %}
                 {{ view.title }}
             </h2>
@@ -17,9 +16,12 @@
             <div class="btn-group" role="group">
                 {% for menu_item in view.object_menu %}
                 <a href="{{ menu_item.url }}"
-                   class="btn btn-outline-{% if 'delete' in menu_item.title|lower %}danger{% else %}primary{% endif %}"
+                   class="btn btn-outline-{{ menu_item.color|default:'primary' }}"
+                   {% if menu_item.action %}{{ menu_item.action }}{% endif %}
+                   {% if menu_item.urlname == 'edit' or menu_item.urlname == 'delete' %}
                    up-layer="new modal"
-                   up-size="medium">
+                   up-size="medium"
+                   {% endif %}>
                     {% if menu_item.icon %}
                     <i class="bi bi-{{ menu_item.icon }}"></i>
                     {% endif %}
@@ -35,7 +37,7 @@
         <div class="card-body">
             <table class="table table-striped">
                 <tbody>
-                    {% for field in object|get_model_fields %}
+                    {% for field in view.model_fields %}
                     <tr>
                         <th scope="row">{{ field.label }}</th>
                         <td>{{ field.value }}</td>

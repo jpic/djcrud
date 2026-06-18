@@ -1,0 +1,4 @@
+djcrud_auth
+djcrud_bootstrap
+djcrud_bulma
+djcrud_example

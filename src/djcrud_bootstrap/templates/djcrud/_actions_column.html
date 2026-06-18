@@ -1,0 +1,46 @@
+{% load django_tables2 %}
+
+{% if actions %}
+{# Desktop: Icon buttons with tooltips #}
+<div class="d-none d-md-flex gap-1">
+    {% for action in actions %}
+    <a href="{{ action.url }}"
+       class="btn btn-sm btn-{{ action.color|default:'primary' }} rounded-circle"
+       title="{{ action.title }}"
+       data-bs-toggle="tooltip"
+       data-bs-placement="top"
+       {% if action.action %}{{ action.action }}{% endif %}
+       {% if action.urlname == 'create' or action.urlname == 'edit' or action.urlname == 'delete' %}
+       up-layer="new modal" up-size="medium"
+       {% endif %}>
+        {% if action.icon %}<i class="bi bi-{{ action.icon }}"></i>{% endif %}
+    </a>
+    {% endfor %}
+</div>
+
+{# Mobile/Tablet: Dropdown menu #}
+<div class="dropdown d-md-none actions-dropdown">
+    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+            data-bs-auto-close="true"
+            aria-expanded="false">
+        Actions
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        {% for action in actions %}
+        <li>
+            <a class="dropdown-item text-{{ action.color|default:'primary' }}"
+               href="{{ action.url }}"
+               {% if action.action %}{{ action.action }}{% endif %}
+               {% if action.urlname == 'create' or action.urlname == 'edit' or action.urlname == 'delete' %}
+               up-layer="new modal" up-size="medium"
+               {% endif %}>
+                {% if action.icon %}<i class="bi bi-{{ action.icon }}"></i>{% endif %}
+                {{ action.title }}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}

@@ -1,0 +1,4 @@
+include src/djcrud_bulma/templates/**/*.html
+include src/djcrud_bulma/static/**/*.css
+recursive-include src/djcrud_bulma/templates *
+recursive-include src/djcrud_bulma/static *

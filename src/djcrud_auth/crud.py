@@ -2,7 +2,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
-from djcrud import crud, mvc
+from djcrud import mvc
+from djcrud.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+
 from djcrud_auth.views import LoginView, LogoutView
 
 
@@ -33,21 +35,18 @@ def get_custom_user_change_form():
         {'Meta': type('Meta', (), {'model': User, 'fields': '__all__'})}
     )
 
-# Create User controller by copying the defaults from ModelController.
-# We explicitly list the views (instead of relying on ModelController.defaults)
-# so we can clone CreateView/UpdateView with our custom forms that use
-# settings.AUTH_USER_MODEL. This is the idiomatic djcrud way when the
-# generic ModelForm is not sufficient for a model like User (password hashing).
-UserController = crud.ModelController.clone(
-    model=get_user_model(),  # Uses settings.AUTH_USER_MODEL
+# Create User controller. We explicitly list the views so we can clone
+# Create/Update with custom forms for AUTH_USER_MODEL.
+UserController = mvc.Controller.clone(
+    model=get_user_model(),
     urlpath='user',
     urlname='user',
     views=[
-        crud.UserListView.clone(table_fields=['id', 'username', 'email', 'is_active']),
-        crud.UserDetailView,
-        crud.UserCreateView.clone(form_class=get_custom_user_creation_form()),
-        crud.UserUpdateView.clone(form_class=get_custom_user_change_form()),
-        crud.UserDeleteView,
+        ListView.clone(table_fields=['id', 'username', 'email', 'is_active'], urlpath='', urlname='list'),
+        DetailView,
+        CreateView.clone(form_class=get_custom_user_creation_form()),
+        UpdateView.clone(form_class=get_custom_user_change_form()),
+        DeleteView,
     ],
 )
 
@@ -58,7 +57,6 @@ class AuthController(mvc.Controller):
     views = [
         LoginView,
         LogoutView,
-        # this lets UserController return its urls for its own views in /auth/user
         UserController,
         # TODO: GroupController,
     ]

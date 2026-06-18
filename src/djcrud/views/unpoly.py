@@ -5,6 +5,8 @@ Provides mixins for handling Unpoly modal overlays and progressive enhancement.
 """
 
 from django.http import HttpResponse
+from django.template.loader import get_template
+from django.template import Context
 
 
 class UnpolyModalMixin:
@@ -23,25 +25,62 @@ class UnpolyModalMixin:
         """Check if the request is from an Unpoly modal/overlay."""
         return self.request.headers.get('X-Up-Mode') in ('modal', 'drawer', 'popup', 'cover')
 
-    def get_template_names(self):
+    def _find_partialdef_node(self, nodelist, partial_name):
+        """Recursively search for a partialdef node with the given name."""
+        for node in nodelist:
+            # Check if this node is a partialdef with the right name
+            if hasattr(node, 'partial_name') and node.partial_name == partial_name:
+                return node
+            # Handle ExtendsNode - load parent template and search there
+            if type(node).__name__ == 'ExtendsNode':
+                # The ExtendsNode has the parent template name
+                if hasattr(node, 'parent_name'):
+                    parent_template_name = node.parent_name.resolve({})
+                    parent_template = get_template(parent_template_name)
+                    result = self._find_partialdef_node(parent_template.template.nodelist, partial_name)
+                    if result:
+                        return result
+            # Recursively search child nodelists
+            if hasattr(node, 'nodelist'):
+                result = self._find_partialdef_node(node.nodelist, partial_name)
+                if result:
+                    return result
+            # Check other nodelist attributes (e.g., nodelist_true, nodelist_false for if nodes)
+            for attr in dir(node):
+                if attr.startswith('nodelist_'):
+                    child_nodelist = getattr(node, attr, None)
+                    if child_nodelist:
+                        result = self._find_partialdef_node(child_nodelist, partial_name)
+                        if result:
+                            return result
+        return None
+
+    def render_to_response(self, context, **response_kwargs):
         """
-        Return template name with #partial suffix for Unpoly modal requests.
+        Render response, using partial content for Unpoly modal requests.
 
-        Django 6's partialdef supports rendering just a partial by appending
-        #partial_name to the template name.
-
-        By default, looks for a partial named 'content'. Override the
-        partial_name attribute to use a different name.
+        For Unpoly modal requests, renders just the partial block by finding
+        and rendering the partial definition in the template.
         """
-        templates = super().get_template_names()
-
-        # Check for Unpoly modal request
         if self.is_unpoly_modal():
-            # Use partial_name attribute if defined, otherwise default to 'content'
             partial_name = getattr(self, 'partial_name', 'content')
-            return [f"{templates[0]}#{partial_name}"]
+            template_name = self.get_template_names()[0]
 
-        return templates
+            # Load the template
+            template = get_template(template_name)
+
+            # Find the partialdef node recursively
+            partial_node = self._find_partialdef_node(template.template.nodelist, partial_name)
+
+            if partial_node:
+                # Render just the partial node
+                ctx = Context(context)
+                ctx.update(context)
+                ctx.update({'request': self.request})
+                rendered = partial_node.nodelist.render(ctx)
+                return HttpResponse(rendered, **response_kwargs)
+
+        return super().render_to_response(context, **response_kwargs)
 
     def form_valid(self, form):
         """

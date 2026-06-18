@@ -9,7 +9,7 @@ pip install djcrud djcrud-bootstrap
 ```
 
 [![Tests](https://img.shields.io/badge/tests-108%20passing-brightgreen)](tests/)
-[![Django](https://img.shields.io/badge/Django-4.2%2B-092E20)](https://www.djangoproject.com/)
+[![Django](https://img.shields.io/badge/Django-5.1%2B-092E20)](https://www.djangoproject.com/)
 
 ## Why djcrud?
 
@@ -40,13 +40,16 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django_tables2",
     "crispy_forms",
-    "crispy_bootstrap5",
-    "djcrud",           # Core framework (no templates)
-    "djcrud_bootstrap", # Provides djcrud/*.html templates + Bootstrap 5
-    # "myapp",          # Your models + CRUD controllers
+    "crispy_bootstrap5",  # for djcrud_bootstrap (optional with bulma)
+    "djcrud",             # Core framework (no templates)
+    "djcrud_bulma",       # or "djcrud_bootstrap" (or both); installs crispy-bulma for CRISPY_TEMPLATE_PACK="bulma"
+    # "myapp",            # Your models + CRUD controllers
 ]
 
-CRISPY_TEMPLATE_PACK = "bootstrap5"
+# Frontend is **auto-detected** by the installed frontend's AppConfig.ready()
+# (sets DJCRUD_FRONTEND, CRISPY_TEMPLATE_PACK="bulma", CRISPY_ALLOWED_TEMPLATE_PACKS, etc.).
+# Uses crispy-bulma package templates exclusively (no custom bulma/ overrides or duplication).
+# Install with `pip install djcrud[bulma]` or `djcrud[bootstrap]`.
 ```
 
 3. **urls.py**:
@@ -84,7 +87,8 @@ urlpatterns = [
 
 ```python
 from django.db import models
-from djcrud import crud, views
+from djcrud import mvc
+from djcrud.views import ListView
 from djcrud.views.tables2 import Tables2Mixin
 
 class Product(models.Model):
@@ -92,11 +96,11 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     # ... your fields
 
-class ProductListView(Tables2Mixin, views.ListView):
+class ProductListView(Tables2Mixin, ListView):
     menus = ["main"]   # Appears in sidebar
     # title, icon, table, model_menu automatically provided
 
-ProductController = crud.ModelController.clone(model=Product)
+ProductController = mvc.Controller.clone(model=Product, views=[ProductListView])
 ```
 
 Add `ProductController` to your root `site.views` list. You instantly get list/create/update/detail views, tables, menus, permissions, and Bootstrap styling.
@@ -136,7 +140,7 @@ class MyView:
 ### MVC Pattern
 - **`mvc.Controller`**: Groups views/controllers, handles URL namespacing and menu hierarchy.
 - **`mvc.View`**: Base for list/create/update/detail. Provides `url()`, `has_perm`, `root_controller`, etc.
-- **`crud.ModelController.clone(model=MyModel)`**: One-liner for full CRUD on any model.
+- **`mvc.Controller.clone(model=MyModel, views=[MyListView, ...])`**: One-liner for full CRUD on any model.
 - **Menus**: Declare `menus = ['main', 'model']` on views. Sidebar + action buttons appear automatically.
 - **Tables**: Mix in `Tables2Mixin` for automatic django-tables2 support (`table_fields` + dynamic `Table` class).
 
@@ -158,11 +162,29 @@ class MyView:
 ## Installation & Setup
 
 See the Quick Start above and `djcrud_example/settings.py` for a complete configuration. Key points:
-- Add `djcrud` + a frontend (`djcrud_bootstrap` recommended).
-- Configure crispy-forms for Bootstrap 5.
-- No special middleware or context processors are required for basic usage (advanced menu features can use `djcrud.context_processors.djcrud_context`).
+- Add `djcrud` + **one** frontend (`djcrud_bulma` or `djcrud_bootstrap`).
+- Frontend is auto-detected (sets `DJCRUD_FRONTEND`, crispy/tables2 config, etc.) via `AppConfig.ready()`. No manual setting needed.
+- No special middleware or context processors are required. `mvc.View.get_context_data` injects `view` (with `view.main_menu`, `view.root_controller`, etc.) and `site_controller` (alias for root_controller) into templates.
 
-Full test suite: `pytest` (108 tests passing).
+Full test suite: `tox` (Python 3.14 + Django 5.1+, tests both `djcrud_bulma` and `djcrud_bootstrap` frontends; all 118 tests pass).
+
+## Philosophical Lessons
+
+This project taught several hard-won lessons about sustainable Django development:
+
+- **Templates over Python duplication**: Repeated frontend logic (actions column, confirm dialogs, table classes) belongs in templates. A single shared `ActionsColumn` + `djcrud/_actions_column.html` (and `confirm.html`/`delete.html`) eliminated duplicate Python code between `bulma`/`bootstrap` while keeping styling idiomatic. The `render_to_string()` + `partialdef content` pattern with Unpoly/Django 6 partials proved far cleaner than subclassing columns or settings.
+
+- **Minimal settings and auto-detection**: Settings like `DJCRUD_ACTIONS_COLUMN`, `DJCRUD_TABLES2_ATTRS` became unnecessary. `AppConfig.ready()` + frontend-specific templates handle everything. Less configuration = less maintenance.
+
+- **View-centric design wins**: Everything on `{{ view }}` (`view.title`, `view.model_fields`, `view.table`, `view.main_menu`, `view.object_menu`) makes templates declarative and eliminates `get_context_data()` boilerplate and custom template tags. No need to add templatetags because you can call the view methods/attributes directly. The `@attribute.getter`/`cached` descriptors (the true heart of djcrud) make this possible without magic.
+
+- **Clone over subclass**: `Controller.clone()` and `View.clone(...)` provide flexible configuration without deep inheritance hierarchies. This pattern scales beautifully.
+
+- **Test everything, including the frontend**: The tox matrix, `pytest.mark.bulma`/`bootstrap`, and integration tests caught template rendering, Unpoly modal partials, and table attrs issues early. "It works on my machine" is not enough.
+
+- **Delete more than you add**: Removing `get_model_fields` template tag, `DJCRUD_*` settings, duplicated column classes, middleware, deprecated files (no backward compatibility needed), and comments about old approaches kept the codebase small and focused. The right amount of complexity is exactly what the task requires—no speculative abstractions.
+
+These principles turned what could have been a sprawling admin framework into something lightweight, extensible, and a joy to extend.
 
 ## Documentation & Architecture
 

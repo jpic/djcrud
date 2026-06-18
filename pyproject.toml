@@ -22,15 +22,23 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.14",
 ]
 dependencies = [
-    "django>=4.2",
+    "django>=5.1",
     "django-tables2>=2.7",
     "django-crispy-forms>=2.0",
-    "crispy-bootstrap5>=1.0",
+    "crispy-bootstrap5>=1.0",  # for djcrud_bootstrap frontend
 ]
 
 [project.optional-dependencies]
+bulma = [
+    "django-crispy-forms>=2.0",
+    "crispy-bulma>=0.1",  # provides bulma template pack (uni_form.html, field.html, layout/ etc); CRISPY_TEMPLATE_PACK="bulma"
+]
+bootstrap = [
+    "crispy-bootstrap5>=1.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-django>=4.5",
@@ -64,6 +72,11 @@ addopts = [
     "--reuse-db",
     "--strict-markers",
     "-ra",
+]
+markers = [
+    "bulma: marks tests specific to the Bulma frontend",
+    "bootstrap: marks tests specific to the Bootstrap frontend",
+    "django_db: mark test that requires Django database",
 ]
 
 [tool.black]

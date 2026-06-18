@@ -24,14 +24,15 @@ def test_home_page_renders():
 
 
 @pytest.mark.django_db
-def test_home_page_has_bootstrap():
-    """Home page includes Bootstrap CSS."""
+def test_home_page_has_frontend():
+    """Home page includes either Bootstrap or Bulma CSS (depending on DJCRUD_FRONTEND)."""
     client = Client()
     response = client.get('/')
 
     assert response.status_code == 200
-    # Check for Bootstrap CDN
-    assert b'bootstrap' in response.content.lower()
+    # Check for either frontend (bootstrap CDN or bulma)
+    content = response.content.lower()
+    assert b'bootstrap' in content or b'bulma' in content
 
 
 @pytest.mark.django_db
@@ -83,9 +84,11 @@ def test_admin_page_exists():
 @pytest.mark.django_db
 def test_url_resolution():
     """URLs are properly resolved from the site controller."""
-    from django.urls import reverse, NoReverseMatch
+    from django.urls import reverse
+    from django.urls.exceptions import NoReverseMatch
 
-    # Home page should be reversible
+    # Home page should be reversible (the site controller from djcrud_example/urls.py
+    # registers it at the root).
     url = reverse('home')
     assert url == '/'
 

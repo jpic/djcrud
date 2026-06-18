@@ -2,37 +2,47 @@
 {% load crispy_forms_tags %}
 
 {% partialdef content %}
-<div class="card" up-main="modal">
-    <div class="card-header bg-warning text-dark">
-        <h2 class="card-title mb-0">
-            {% if view.icon %}<i class="bi bi-{{ view.icon }}"></i>{% endif %}
-            {{ view.title }}
-        </h2>
-    </div>
-    <div class="card-body">
-        <div class="alert alert-info">
-            <i class="bi bi-question-circle"></i>
-            Are you sure you want to log out?
+<div class="box" up-main="modal">
+    <div class="level mb-4">
+        <div class="level-left">
+            <h2 class="title is-4">
+                {% if view.icon %}<i class="bi bi-{{ view.icon }}"></i>{% endif %}
+                {{ view.title }}
+            </h2>
         </div>
+    </div>
+    {% block confirm_message %}
+    <div class="notification is-info">
+        <i class="bi bi-question-circle"></i>
+        Are you sure you want to log out?
+    </div>
+    {% endblock %}
 
-        <form method="post" up-target="body" up-history="false">
-            {% csrf_token %}
-            {{ form|crispy }}
+    <form method="post" up-target="body" up-history="false">
+        {% csrf_token %}
+        {{ form|crispy }}
 
-            <div class="d-flex justify-content-end gap-2 mt-3">
-                <button type="button" class="btn btn-secondary" up-dismiss>Cancel</button>
-                <button type="submit" class="btn btn-warning">
+        {% block confirm_form_content %}
+        {% endblock %}
+        {% block confirm_buttons %}
+        <div class="field is-grouped is-grouped-right mt-4">
+            <p class="control">
+                <button type="button" class="button" up-dismiss>Cancel</button>
+            </p>
+            <p class="control">
+                <button type="submit" class="button is-warning">
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </button>
-            </div>
-        </form>
-    </div>
+            </p>
+        </div>
+        {% endblock %}
+    </form>
 </div>
 {% endpartialdef %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8 col-lg-6">
+<div class="columns is-centered">
+    <div class="column is-8-tablet is-6-desktop">
         {% partial content %}
     </div>
 </div>

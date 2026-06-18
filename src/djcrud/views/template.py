@@ -34,7 +34,7 @@ class TemplateView(View, DjangoTemplateView):
     def title(self):
         """Return page title.
 
-        The title() getter does all the work (replaces previous get_title()).
+        The title() getter does all the work.
         """
         # If a title was explicitly set on the instance/class (e.g. via clone), use it.
         # Otherwise return default. The @attribute.getter on title() itself is handled
@@ -57,10 +57,8 @@ class TemplateView(View, DjangoTemplateView):
         return self.title
 
     def get_context_data(self, **kwargs):
-        """Add view to context - templates access everything via view."""
-        context = super().get_context_data(**kwargs)
-        context['view'] = self
-        return context
+        """The base mvc.View.get_context_data already injects `view` and `site_controller=root_controller`."""
+        return super().get_context_data(**kwargs)
 
     @attribute.cached
     def main_menu(self):

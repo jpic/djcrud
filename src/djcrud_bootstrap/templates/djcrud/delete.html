@@ -1,0 +1,15 @@
+{% extends "djcrud/confirm.html" %}
+
+{% block confirm_message %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    Are you sure you want to delete <strong>{{ object }}</strong>?
+    This action cannot be undone.
+</div>
+{% endblock %}
+
+{% block confirm_buttons %}
+<button type="submit" class="btn btn-danger">
+    <i class="bi bi-trash"></i> Delete
+</button>
+{% endblock %}

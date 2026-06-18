@@ -26,7 +26,7 @@ class LoginView(FormView):
 
     @attribute.getter
     def title(self):
-        """Return page title (replaces previous get_title())."""
+        """Return page title."""
         return 'Login'
 
     @property
@@ -57,6 +57,7 @@ class LogoutView(UnpolyModalMixin, FormView):
     menus = ['main']
     icon = 'box-arrow-right'
     action = 'click->modal#open'
+    partial_name = 'content'
 
     @property
     def has_perm(self):
@@ -65,7 +66,7 @@ class LogoutView(UnpolyModalMixin, FormView):
 
     @attribute.getter
     def title(self):
-        """Return 'Logout USERNAME' for authenticated users (replaces previous get_title())."""
+        """Return 'Logout USERNAME' for authenticated users."""
         if self.request.user.is_authenticated:
             return f'Logout {self.request.user.username}'
         return 'Logout'

@@ -1,0 +1,45 @@
+{% load django_tables2 %}
+
+{% if actions %}
+{# Desktop: Icon buttons with tooltips #}
+<div class="buttons is-hidden-touch">
+    {% for action in actions %}
+    <a href="{{ action.url }}"
+       class="button is-small is-{{ action.color|default:'primary' }} is-rounded"
+       title="{{ action.title }}"
+       {% if action.action %}{{ action.action }}{% endif %}
+       {% if action.urlname == 'create' or action.urlname == 'edit' or action.urlname == 'delete' %}
+       up-layer="new modal" up-size="medium"
+       {% endif %}>
+        {% if action.icon %}<span class="icon is-small"><i class="bi bi-{{ action.icon }}"></i></span>{% endif %}
+    </a>
+    {% endfor %}
+</div>
+
+{# Mobile/Tablet: Dropdown menu #}
+<div class="dropdown is-right is-hidden-desktop actions-dropdown">
+    <div class="dropdown-trigger">
+        <button class="button is-small is-outlined" aria-haspopup="true" aria-controls="dropdown-menu">
+            <span>Actions</span>
+            <span class="icon is-small">
+                <i class="bi bi-chevron-down"></i>
+            </span>
+        </button>
+    </div>
+    <div class="dropdown-menu" role="menu">
+        <div class="dropdown-content">
+            {% for action in actions %}
+            <a href="{{ action.url }}"
+               class="dropdown-item has-text-{{ action.color|default:'primary' }}"
+               {% if action.action %}{{ action.action }}{% endif %}
+               {% if action.urlname == 'create' or action.urlname == 'edit' or action.urlname == 'delete' %}
+               up-layer="new modal" up-size="medium"
+               {% endif %}>
+                {% if action.icon %}<span class="icon is-small"><i class="bi bi-{{ action.icon }}"></i></span>{% endif %}
+                <span>{{ action.title }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}

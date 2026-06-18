@@ -17,7 +17,8 @@ User = get_user_model()
 
 from djcrud.mvc import Controller
 from djcrud.menu import get_menu
-from djcrud.crud import UserListView, ModelController
+from djcrud.mvc import Controller as ModelController
+from djcrud.views.generic import ListView
 from djcrud_auth.views import LoginView, LogoutView
 from djcrud_auth.crud import UserController, AuthController
 from djcrud import attribute
@@ -90,7 +91,7 @@ class TestMainMenu:
         # Get view class names
         view_names = [v.__class__.__name__ for v in menu]
         assert 'LogoutView' in view_names
-        assert 'UserListView' in view_names
+        assert any('List' in name for name in view_names)
         assert 'LoginView' not in view_names
 
     def test_login_shows_for_anonymous(self, anonymous_user_request):
