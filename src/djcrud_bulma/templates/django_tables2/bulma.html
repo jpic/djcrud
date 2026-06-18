@@ -1,6 +1,6 @@
 {% load django_tables2 i18n l10n %}
 {% block table-wrapper %}
-<div class="table-container">
+<div class="table-container" up-table>
     {% block table %}
     <table class="table is-striped is-hoverable is-fullwidth"{% if table.attrs %}{{ table.attrs.as_html }}{% endif %}>
         {% block table.thead %}
@@ -10,7 +10,7 @@
                 {% for column in table.columns %}
                     <th {{ column.attrs.th.as_html }}>
                         {% if column.orderable %}
-                            <a href="{% querystring_replace table.prefixed_order_by_field=column.order_by_alias.next %}">{{ column.header }}</a>
+                            <a href="{% querystring_replace table.prefixed_order_by_field=column.order_by_alias.next %}" up-follow up-target="[up-table]">{{ column.header }}</a>
                         {% else %}
                             {{ column.header }}
                         {% endif %}
@@ -57,12 +57,12 @@
     {% if table.page and table.paginator.num_pages > 1 %}
     <nav class="pagination is-centered" role="navigation" aria-label="{% trans 'pagination' %}">
         {% if table.page.has_previous %}
-            <a class="pagination-previous" href="{% querystring_replace table.prefixed_page_field=table.page.previous_page_number %}">{% trans 'Previous' %}</a>
+            <a class="pagination-previous" href="{% querystring_replace table.prefixed_page_field=table.page.previous_page_number %}" up-follow up-target="[up-table]">{% trans 'Previous' %}</a>
         {% else %}
             <span class="pagination-previous is-disabled">{% trans 'Previous' %}</span>
         {% endif %}
         {% if table.page.has_next %}
-            <a class="pagination-next" href="{% querystring_replace table.prefixed_page_field=table.page.next_page_number %}">{% trans 'Next' %}</a>
+            <a class="pagination-next" href="{% querystring_replace table.prefixed_page_field=table.page.next_page_number %}" up-follow up-target="[up-table]">{% trans 'Next' %}</a>
         {% else %}
             <span class="pagination-next is-disabled">{% trans 'Next' %}</span>
         {% endif %}
@@ -74,7 +74,7 @@
                 {% elif p == '...' %}
                     <span class="pagination-ellipsis">&hellip;</span>
                 {% else %}
-                    <a class="pagination-link" href="{% querystring_replace table.prefixed_page_field=p %}">{{ p }}</a>
+                    <a class="pagination-link" href="{% querystring_replace table.prefixed_page_field=p %}" up-follow up-target="[up-table]">{{ p }}</a>
                 {% endif %}
                 </li>
             {% endfor %}

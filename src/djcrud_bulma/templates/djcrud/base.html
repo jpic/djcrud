@@ -12,12 +12,42 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <div class="columns is-gapless djcrud-layout">
-        <aside class="column is-3-tablet is-2-desktop menu p-4 djcrud-sidebar">
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+        <div class="navbar-brand">
+            <div class="navbar-item">
+                <hamburger-menu target="#sidebar"></hamburger-menu>
+            </div>
+        </div>
+
+        <div class="navbar-menu">
+            <div class="navbar-start">
+                {% if view.root_controller %}
+                    <div class="navbar-item">
+                        <strong>{{ view.root_controller.name }}</strong>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="navbar-end">
+                {% if view.root_controller %}
+                    {% eval view.root_controller.get_tagged_views 'topbar' request as topbar_menu %}
+                {% endif %}
+                {% for menu_item in topbar_menu %}
+                    <a class="navbar-item" href="{{ menu_item.url }}" up-follow up-target="[up-main]">
+                        {% if menu_item.icon %}<span class="icon"><i class="bi bi-{{ menu_item.icon }}"></i></span>{% endif %}
+                        <span>{{ menu_item.title }}</span>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="djcrud-layout">
+        <aside class="menu p-4 djcrud-sidebar" id="sidebar">
             <p class="menu-label">Navigation</p>
             <ul class="menu-list">
                 {% if view.root_controller %}
-                    {% eval view.root_controller.get_tagged_views 'main' request exclude_current=view as main_menu %}
+                    {% eval view.root_controller.get_tagged_views 'main' request as main_menu %}
                 {% endif %}
                 {% for menu_item in main_menu %}
                 <li>
@@ -53,67 +83,32 @@
             </ul>
         </aside>
 
-        <main class="column p-5 djcrud-main" up-main>
-            {% if messages %}
-                {% for message in messages %}
-                <div class="notification djcrud-message {% if message.tags == 'error' %}is-danger{% elif message.tags %}is-{{ message.tags }}{% else %}is-info{% endif %}">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            {% endif %}
+<main class="p-5 djcrud-main" up-main>
+    {% if messages %}
+        {% for message in messages %}
+        <div class="notification djcrud-message {% if message.tags == 'error' %}is-danger{% elif message.tags %}is-{{ message.tags %}{% else %}is-info{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
 
-            {% block content %}{% endblock %}
-        </main>
+    {% block content %}{% endblock %}
+</main>
     </div>
 
     <script src="https://unpkg.com/unpoly@3.9.2/unpoly.js"></script>
+    <script src="{% static 'djcrud_bulma/js/dropdown.js' %}" type="module"></script>
+    <script src="{% static 'djcrud_bulma/js/hamburger.js' %}" type="module"></script>
 
     <script>
-        // Dropdown management: close all dropdowns when clicking outside
+        // Global click handler to close all dropdowns when clicking outside
         document.addEventListener('DOMContentLoaded', function() {
-            // Close all dropdowns when clicking outside
             document.addEventListener('click', function(event) {
-                if (!event.target.closest('.dropdown')) {
-                    document.querySelectorAll('.dropdown.is-active').forEach(function(dropdown) {
+                if (!event.target.closest('bulma-dropdown')) {
+                    document.querySelectorAll('bulma-dropdown.is-active').forEach(dropdown => {
                         dropdown.classList.remove('is-active');
                     });
                 }
-            });
-
-            // Handle dropdown button clicks
-            document.querySelectorAll('.dropdown-trigger button').forEach(function(button) {
-                button.addEventListener('click', function(event) {
-                    event.stopPropagation();
-                    var dropdown = this.closest('.dropdown');
-                    var wasActive = dropdown.classList.contains('is-active');
-
-                    // Close all other dropdowns
-                    document.querySelectorAll('.dropdown.is-active').forEach(function(otherDropdown) {
-                        if (otherDropdown !== dropdown) {
-                            otherDropdown.classList.remove('is-active');
-                        }
-                    });
-
-                    // Toggle current dropdown
-                    if (!wasActive) {
-                        dropdown.classList.add('is-active');
-
-                        // Check if dropdown should open upwards (is-up class)
-                        var dropdownMenu = dropdown.querySelector('.dropdown-menu');
-                        var rect = dropdown.getBoundingClientRect();
-                        var spaceBelow = window.innerHeight - rect.bottom;
-                        var spaceAbove = rect.top;
-
-                        // If not enough space below but more space above, add is-up class
-                        if (spaceBelow < 200 && spaceAbove > spaceBelow) {
-                            dropdown.classList.add('is-up');
-                        } else {
-                            dropdown.classList.remove('is-up');
-                        }
-                    } else {
-                        dropdown.classList.remove('is-active');
-                    }
-                });
             });
         });
     </script>

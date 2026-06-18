@@ -1,7 +1,6 @@
 {% extends "djcrud/form.html" %}
 {% load crispy_forms_tags %}
 
-{% partialdef content %}
 <div class="box" up-main="modal">
     <div class="level mb-4">
         <div class="level-left">
@@ -20,7 +19,7 @@
     </div>
     {% endblock %}
 
-    <form method="post" up-submit>
+    <form method="post" up-submit up-target="[up-main]" up-layer="root">
         {% csrf_token %}
         {% block confirm_form_content %}
         {% endblock %}
@@ -42,12 +41,10 @@
         </div>
     </form>
 </div>
-{% endpartialdef %}
 
 {% block content %}
 <div class="columns is-centered">
     <div class="column is-8-tablet is-6-desktop">
-        {% partial content %}
     </div>
 </div>
 {% endblock %}

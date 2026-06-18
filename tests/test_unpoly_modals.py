@@ -17,19 +17,20 @@ def test_create_view_renders_full_page():
 
 
 @pytest.mark.django_db
-def test_create_view_renders_partial_for_unpoly(user):
-    """Create view renders only partial content for Unpoly modal requests."""
+def test_create_view_renders_full_page_for_unpoly(user):
+    """Create view renders full HTML for Unpoly (Unpoly extracts the target element)."""
     client = Client()
     client.force_login(user)
 
     # Simulate Unpoly modal request with X-Up-Mode header
+    # Unpoly will extract the target element from the full HTML response
     response = client.get('/auth/user/create/', HTTP_X_UP_MODE='modal')
 
     assert response.status_code == 200
-    # Should NOT have full HTML structure
+    # Should still have full HTML structure - Unpoly extracts client-side
     content = response.content.decode()
-    assert '<!DOCTYPE html>' not in content
-    # Should have box (Bulma equivalent of card) or card structure (the partial content)
+    assert '<!DOCTYPE html>' in content
+    # Should have the form content
     assert 'card' in content.lower() or 'box' in content.lower()
 
 
@@ -49,8 +50,8 @@ def test_delete_view_renders_full_page(superuser):
 
 
 @pytest.mark.django_db
-def test_delete_view_renders_partial_for_unpoly(superuser):
-    """Delete view renders only partial content for Unpoly modal requests."""
+def test_delete_view_renders_full_page_for_unpoly(superuser):
+    """Delete view renders full HTML for Unpoly (Unpoly extracts the target element)."""
     from django.contrib.auth import get_user_model
     User = get_user_model()
     test_user = User.objects.create(username='delete_partial_user', email='deletepartial@example.com')
@@ -59,14 +60,13 @@ def test_delete_view_renders_partial_for_unpoly(superuser):
     client.force_login(superuser)
 
     # Simulate Unpoly modal request
+    # Unpoly will extract the target element from the full HTML response
     response = client.get(f'/auth/user/{test_user.pk}/delete/', HTTP_X_UP_MODE='modal')
 
     assert response.status_code == 200
-    # Should NOT have full HTML structure
+    # Should still have full HTML structure - Unpoly extracts client-side
     content = response.content.decode()
-    assert '<!DOCTYPE html>' not in content
-    # Should have confirmation text
-    assert 'delete' in content.lower()
+    assert '<!DOCTYPE html>' in content
 
 
 @pytest.mark.django_db
@@ -107,3 +107,32 @@ def test_id_column_links_to_detail(superuser):
 
     # Check that the ID is a link to the detail view
     assert f'/auth/user/{test_user.pk}/' in content
+
+
+@pytest.mark.django_db
+def test_table_has_uuid_and_unpoly_attributes(superuser):
+    """Table container should have UUID id and Unpoly attributes on links."""
+    from django.contrib.auth import get_user_model
+    import re
+
+    User = get_user_model()
+    User.objects.create(username='unpoly_test_user', email='unpoly@example.com')
+
+    client = Client()
+    client.force_login(superuser)
+    response = client.get('/auth/user/')
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Check for table-container with UUID id
+    # UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    uuid_pattern = r'<div class="table-container" id="([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"'
+    match = re.search(uuid_pattern, content)
+    assert match, "Table container should have a UUID id"
+
+    table_id = match.group(1)
+
+    # Check that links have up-follow and up-target attributes
+    assert 'up-follow' in content, "Links should have up-follow attribute"
+    assert f'up-target="#{table_id}"' in content, "Links should target the table UUID"

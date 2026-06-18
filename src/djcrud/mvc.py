@@ -106,6 +106,21 @@ class Controller(Clonable):
             controller = controller.parent_controller
         return controller
 
+    @attribute.getter
+    def name(self):
+        """Return the display name for this controller.
+
+        Uses the 'name' class attribute if set, otherwise derives from class name.
+        """
+        # Check if name was explicitly set as a class attribute
+        # Check through MRO (Method Resolution Order) to find the name attribute
+        for cls in self.cls.__mro__:
+            if 'name' in cls.__dict__ and isinstance(cls.__dict__['name'], str):
+                return cls.__dict__['name']
+        # Fall back to deriving from class name
+        name = self.cls.__name__.replace('Controller', '')
+        return name
+
     def get_tagged_views(self, tag, request, exclude_current=None, **kwargs):
         """
         Return allowed view objects which have ``tag`` in their ``tags``.

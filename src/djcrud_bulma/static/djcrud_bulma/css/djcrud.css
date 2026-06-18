@@ -3,16 +3,62 @@ body {
     min-height: 100%;
 }
 
+/* Custom layout - two divs side by side */
 .djcrud-layout {
+    display: flex;
     min-height: 100vh;
 }
 
-.djcrud-sidebar {
-    border-right: 1px solid #dbdbdb;
+/* Hamburger menu web component */
+hamburger-menu {
+    display: block;
 }
 
+/* Show hamburger on all screen sizes (not just mobile) */
+.navbar-burger {
+    display: flex !important;
+}
+
+/* Sidebar - fixed width, slides in/out */
+.djcrud-sidebar {
+    width: 250px;
+    min-width: 250px;
+    border-right: 1px solid #dbdbdb;
+    transition: margin-left 0.3s ease-in-out;
+    margin-left: 0;
+}
+
+/* Slide sidebar to the left when hidden */
+.djcrud-sidebar.is-hidden-mobile {
+    margin-left: -250px;
+}
+
+/* Main content - expands to fill remaining space */
 .djcrud-main {
+    flex: 1;
     min-width: 0;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+/* Hamburger animation - rotate the spans when active */
+.navbar-burger.is-active span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+}
+
+.navbar-burger.is-active span:nth-child(2) {
+    opacity: 0;
+}
+
+.navbar-burger.is-active span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+}
+
+.navbar-burger.is-active span:nth-child(4) {
+    opacity: 0;
+}
+
+.navbar-burger span {
+    transition: all 0.3s ease;
 }
 
 .djcrud-message {
@@ -49,6 +95,23 @@ body {
     body {
         background-color: #1a1a1a;
         color: #e0e0e0;
+    }
+
+    /* Navbar */
+    .navbar {
+        background-color: #2a2a2a;
+        border-bottom: 1px solid #404040;
+    }
+
+    .navbar-item,
+    .navbar-link {
+        color: #e0e0e0;
+    }
+
+    .navbar-item:hover,
+    .navbar-link:hover {
+        background-color: #3a3a3a;
+        color: #ffffff;
     }
 
     /* Sidebar */

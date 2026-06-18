@@ -1,14 +1,32 @@
 {% extends "djcrud/confirm.html" %}
 
-{% block confirm_message %}
-<div class="notification is-warning is-light">
-    Are you sure you want to delete <strong>{{ object }}</strong>?
-    This action cannot be undone.
-</div>
-{% endblock %}
+<div class="box" up-main="modal">
+    <div class="level mb-4">
+        <div class="level-left">
+            <h2 class="title is-4">
+                {% if view.icon %}<span class="icon{% if view.color %} has-text-{{ view.color }}{% endif %}"><i class="bi bi-{{ view.icon }}"></i></span>{% endif %}
+                {{ view.title }}
+            </h2>
+        </div>
+    </div>
 
-{% block confirm_buttons %}
-<p class="control">
-    <button type="submit" class="button is-danger">Delete</button>
-</p>
-{% endblock %}
+    <div class="notification is-warning is-light">
+        Are you sure you want to delete <strong>{{ object }}</strong>?
+        This action cannot be undone.
+    </div>
+
+    <form method="post" up-submit up-target="[up-main]" up-layer="root">
+        {% csrf_token %}
+
+        <div class="field is-grouped is-grouped-right mt-4">
+            {% if view.cancel_url %}
+            <p class="control">
+                <button type="button" class="button" up-dismiss>Cancel</button>
+            </p>
+            {% endif %}
+            <p class="control">
+                <button type="submit" class="button is-danger">Delete</button>
+            </p>
+        </div>
+    </form>
+</div>

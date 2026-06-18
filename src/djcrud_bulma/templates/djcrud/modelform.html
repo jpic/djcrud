@@ -1,7 +1,6 @@
 {% extends "djcrud/form.html" %}
 {% load crispy_forms_tags djcrud_tags %}
 
-{% partialdef content %}
 <div class="box" up-main="modal">
     <div class="level mb-4">
         <div class="level-left">
@@ -20,6 +19,8 @@
     </div>
     <form method="post"
           up-submit
+          up-target="[up-main]"
+          up-layer="root"
           {% if form.is_multipart %}enctype="multipart/form-data"{% endif %}>
         {% csrf_token %}
         {{ form|crispy }}
@@ -36,4 +37,3 @@
         </div>
     </form>
 </div>
-{% endpartialdef %}

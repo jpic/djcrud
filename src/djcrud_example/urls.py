@@ -22,7 +22,9 @@ from djcrud import mvc
 from djcrud.views.template import TemplateView
 from djcrud_auth.crud import AuthController
 
-site = mvc.Controller(
+site = mvc.Controller.clone(
+    name='djcrud Example',
+)(
     views=[
         TemplateView.clone(
             icon='home',

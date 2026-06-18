@@ -1,11 +1,11 @@
 {% load django_tables2 %}
 
 {% if actions %}
-{# Desktop: Icon buttons with tooltips #}
-<div class="buttons is-hidden-touch">
+{# Desktop/Tablet: Icon buttons with tooltips #}
+<div class="is-hidden-mobile">
     {% for action in actions %}
     <a href="{{ action.url }}"
-       class="button is-small is-{{ action.color|default:'primary' }} is-rounded"
+       class="button is-small is-{{ action.color|default:view.color|default:'primary' }} is-rounded"
        title="{{ action.title }}"
        {% if action.action %}{{ action.action }}{% endif %}
        {% if action.urlname == 'create' or action.urlname == 'edit' or action.urlname == 'delete' %}
@@ -16,13 +16,12 @@
     {% endfor %}
 </div>
 
-{# Mobile/Tablet: Dropdown menu #}
-<div class="dropdown is-right is-hidden-desktop actions-dropdown">
+{# Mobile: Dropdown menu #}
+<bulma-dropdown class="dropdown is-right is-hidden-tablet actions-dropdown">
     <div class="dropdown-trigger">
-        <button class="button is-small is-outlined" aria-haspopup="true" aria-controls="dropdown-menu">
-            <span>Actions</span>
+        <button class="button is-small is-outlined" aria-haspopup="true" aria-controls="dropdown-menu" aria-label="Actions">
             <span class="icon is-small">
-                <i class="bi bi-chevron-down"></i>
+                <i class="bi bi-list"></i>
             </span>
         </button>
     </div>
@@ -30,7 +29,7 @@
         <div class="dropdown-content">
             {% for action in actions %}
             <a href="{{ action.url }}"
-               class="dropdown-item has-text-{{ action.color|default:'primary' }}"
+               class="dropdown-item has-text-{{ action.color|default:view.color|default:'primary' }}"
                {% if action.action %}{{ action.action }}{% endif %}
                {% if action.urlname == 'create' or action.urlname == 'edit' or action.urlname == 'delete' %}
                up-layer="new modal" up-size="medium"
@@ -41,5 +40,5 @@
             {% endfor %}
         </div>
     </div>
-</div>
+</bulma-dropdown>
 {% endif %}

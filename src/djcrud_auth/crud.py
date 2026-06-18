@@ -52,6 +52,7 @@ UserController = mvc.Controller.clone(
 
 
 class AuthController(mvc.Controller):
+    name = 'Authentication'
     urlpath = 'auth'
     icon = 'shield-lock'
     views = [

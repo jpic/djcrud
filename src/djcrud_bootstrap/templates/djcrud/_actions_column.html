@@ -5,7 +5,7 @@
 <div class="d-none d-md-flex gap-1">
     {% for action in actions %}
     <a href="{{ action.url }}"
-       class="btn btn-sm btn-{{ action.color|default:'primary' }} rounded-circle"
+       class="btn btn-sm btn-{{ action.color|default:view.color|default:'primary' }} rounded-circle"
        title="{{ action.title }}"
        data-bs-toggle="tooltip"
        data-bs-placement="top"
@@ -30,7 +30,7 @@
     <ul class="dropdown-menu dropdown-menu-end">
         {% for action in actions %}
         <li>
-            <a class="dropdown-item text-{{ action.color|default:'primary' }}"
+            <a class="dropdown-item text-{{ action.color|default:view.color|default:'primary' }}"
                href="{{ action.url }}"
                {% if action.action %}{{ action.action }}{% endif %}
                {% if action.urlname == 'create' or action.urlname == 'edit' or action.urlname == 'delete' %}
