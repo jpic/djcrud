@@ -9,7 +9,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.shortcuts import redirect
 from django.views.generic import RedirectView
 
-from djcrud import mvc
+from djcrud import mvc, attribute
 from djcrud.views.form import FormView
 
 
@@ -22,7 +22,9 @@ class LoginView(FormView):
     menus = ['main']
     icon = 'box-arrow-in-right'
 
-    def get_title(self):
+    @attribute.getter
+    def title(self):
+        """Return page title (replaces previous get_title())."""
         return 'Login'
 
     @property
@@ -52,8 +54,9 @@ class LogoutView(mvc.View, RedirectView):
         """Show logout only to authenticated users."""
         return self.request.user.is_authenticated
 
-    def get_title(self):
-        """Return 'Logout USERNAME' for authenticated users."""
+    @attribute.getter
+    def title(self):
+        """Return 'Logout USERNAME' for authenticated users (replaces previous get_title())."""
         if self.request.user.is_authenticated:
             return f'Logout {self.request.user.username}'
         return 'Logout'

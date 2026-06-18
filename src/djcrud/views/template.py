@@ -30,10 +30,18 @@ class TemplateView(View, DjangoTemplateView):
         )
     """
 
-    def get_title(self):
-        """Return page title."""
-        if hasattr(self, 'title'):
-            return self.title() if callable(self.title) else self.title
+    @attribute.getter
+    def title(self):
+        """Return page title.
+
+        The title() getter does all the work (replaces previous get_title()).
+        """
+        # If a title was explicitly set on the instance/class (e.g. via clone), use it.
+        # Otherwise return default. The @attribute.getter on title() itself is handled
+        # by the descriptor system without recursion.
+        if hasattr(type(self), 'title') and not callable(getattr(type(self), 'title', None)):
+            # title is a plain attribute (from clone or subclass)
+            return getattr(self, 'title')
         return 'Home'
 
     @attribute.cached
@@ -45,6 +53,7 @@ class TemplateView(View, DjangoTemplateView):
             if heading == '':
                 return ''
             return heading
+        # title() is now the @getter; call via attribute access
         return self.title
 
     def get_context_data(self, **kwargs):

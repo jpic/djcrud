@@ -10,14 +10,17 @@ Requirements:
 """
 
 import pytest
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test import RequestFactory
+
+User = get_user_model()
 
 from djcrud.mvc import Controller
 from djcrud.menu import get_menu
 from djcrud.crud import UserListView, ModelController
 from djcrud_auth.views import LoginView, LogoutView
 from djcrud_auth.crud import UserController, AuthController
+from djcrud import attribute
 
 
 @pytest.fixture
@@ -110,7 +113,7 @@ class TestMainMenu:
         logout_view = logout_view_class()
         logout_view.request = authenticated_user_request
 
-        title = logout_view.get_title()
+        title = logout_view.title
         assert 'Logout' in title
         assert user.username in title
 

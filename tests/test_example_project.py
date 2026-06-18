@@ -9,7 +9,7 @@ from django.test import Client
 from django.contrib.auth import get_user_model
 
 
-User = get_user_model()
+# User = get_user_model()  # Avoid early import of swapped model; use fixture instead
 
 
 @pytest.mark.django_db
@@ -135,3 +135,63 @@ def test_login_form_submission(user):
 
     # Should redirect after successful login
     assert response.status_code == 302
+
+
+@pytest.mark.django_db
+def test_user_create_page(superuser):
+    """Test the User create page at /auth/user/create/.
+
+    Uses superuser because User creation is restricted (secure-by-default).
+    On failure, prints the exact URL being tested (as requested).
+    """
+    client = Client()
+    url = '/auth/user/create/'
+    client.force_login(superuser)
+
+    try:
+        response = client.get(url)
+        assert response.status_code == 200, f"Expected 200, got {response.status_code} for {url}"
+        # Basic content checks (form should be present)
+        assert b'form' in response.content.lower() or b'Create' in response.content, f"Expected form or title on {url}"
+        assert b'User' in response.content or b'create' in response.content.lower(), f"Expected User create content on {url}"
+    except Exception as e:
+        print(f"\n=== TEST FAILED FOR URL: {url} ===")
+        print(f"Error: {type(e).__name__}: {e}")
+        print("This is the URL that failed (as requested).")
+        raise
+
+
+@pytest.mark.django_db
+def test_user_create_and_list(superuser):
+    """Test creating a user via POST to UserCreateView, then verify it appears in the list.
+
+    Uses the superuser fixture for permission. Tests the full create -> list flow.
+    """
+    client = Client()
+    client.force_login(superuser)
+
+    # 1. POST to create a new user (uses UserCreationForm from djcrud_auth)
+    create_url = '/auth/user/create/'
+    username = 'testcreateduser'
+    password = 'testpass123'
+
+    response = client.post(
+        create_url,
+        {
+            'username': username,
+            'password1': password,
+            'password2': password,
+        },
+        follow=True,  # Follow the success redirect (now to detail view per user request)
+    )
+
+    assert response.status_code == 200, f"Create failed for {create_url}"
+    # Success should redirect to the user detail (or show success message)
+    assert username.encode() in response.content, f"New user '{username}' not in response after create"
+
+    # 2. GET the user list and ensure the new user appears
+    list_url = '/auth/user/'
+    response = client.get(list_url)
+
+    assert response.status_code == 200, f"List view failed for {list_url}"
+    assert username.encode() in response.content, f"Created username '{username}' not found in list view"

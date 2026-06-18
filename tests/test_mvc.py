@@ -3,7 +3,10 @@ Tests for djcrud.mvc module - Controller and View classes.
 """
 
 import pytest
-from django.contrib.auth.models import User, Group
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+
+User = get_user_model()
 from django.urls import path, reverse, resolve
 from djcrud.mvc import Controller, View
 
@@ -122,16 +125,16 @@ class TestView:
         class MyCustomView(View):
             pass
 
-        # Should return class name by default (based on mvc.py implementation)
-        assert MyCustomView.urlpath == 'MyCustomView'
+        # Should return slugified class name without 'View' suffix
+        assert MyCustomView.urlpath == 'mycustom'
 
     def test_view_has_urlname_property(self):
         """View has urlname property with default implementation."""
         class MyCustomView(View):
             pass
 
-        # Should return class name by default (based on mvc.py implementation)
-        assert MyCustomView.urlname == 'MyCustomView'
+        # Should return slugified class name without 'View' suffix
+        assert MyCustomView.urlname == 'mycustom'
 
     def test_view_urlpath_can_be_overridden(self):
         """View urlpath can be overridden as class attribute."""

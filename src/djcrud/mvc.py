@@ -1,6 +1,7 @@
 from djcrud import attribute
 from django.views import generic
 from django.urls import path, include, reverse, reverse_lazy
+from django.utils.text import slugify
 
 
 class ControllerViewsList(list):
@@ -107,9 +108,14 @@ class Controller(Clonable):
 
     @attribute.getter
     def urlname(self):
-        """Return URL namespace for this controller."""
-        # TODO: this should be slugified controller name
-        return self.cls.__name__.replace('Controller', '').lower()
+        """Return URL namespace for this controller.
+
+        Slugifies the class name (minus 'Controller' suffix). For ModelController
+        with a model, it will use the model's name (via Clonable naming).
+        This enables 'auth:user:list' style names as expected in tests and README.
+        """
+        name = self.cls.__name__.replace('Controller', '')
+        return slugify(name).lower()
 
     @attribute.getter
     def urlpatterns(self):
@@ -131,10 +137,11 @@ class Controller(Clonable):
         urlpath = self.urlpath if isinstance(self, Controller) else getattr(self, 'urlpath', '')
 
         if urlpath:
-            # Non-root controller: wrap in namespace
+            # Non-root controller: wrap in namespace. Ensure trailing / for directory-like paths.
+            urlpath_for_include = urlpath if urlpath.endswith('/') else urlpath + '/'
             return [
                 path(
-                    f'{urlpath}/',
+                    urlpath_for_include,
                     include((child_patterns, self.urlname))
                 )
             ]
@@ -157,19 +164,33 @@ class View(Clonable, generic.View):
 
     @attribute.getter
     def urlpath(self):
-        # TODO: this should be slugified view class name without the
-        # View suffix
-        return self.cls.__name__
+        """Return URL path for this view.
+
+        Slugifies the class name (minus 'View' suffix). This produces clean paths
+        like 'mycustom' for MyCustomView. Combined with explicit urlpath overrides
+        in clone(), enables flexible URL structures.
+        """
+        name = self.cls.__name__.replace('View', '')
+        return slugify(name).lower()
 
     @attribute.getter
     def urlname(self):
-        # TODO: this should be a slugified view class name without the View suffix
-        return self.cls.__name__
+        """Return URL name for this view.
+
+        Slugifies the class name (minus 'View' suffix). This produces clean names
+        like 'list', 'create', 'detail', 'edit' (instead of full class name).
+        Combined with controller urlname, enables reverse('auth:user:list').
+        See tests/test_url_consistency.py and README for examples.
+        """
+        name = self.cls.__name__.replace('View', '').replace('List', 'list').replace('Create', 'create').replace('Detail', 'detail').replace('Update', 'edit')
+        return slugify(name).lower()
 
     @attribute.getter
     def urlpatterns(self):
-        # Add trailing slash if urlpath is not empty
-        urlpath = self.urlpath + '/' if self.urlpath else ''
+        # Add trailing slash if urlpath is not empty. Avoid double-slash for paths that already end with /
+        urlpath = self.urlpath
+        if not urlpath.endswith('/') and urlpath:
+            urlpath += '/'
 
         # Compute root controller by traversing from controller attribute
         root = None
@@ -230,7 +251,14 @@ class View(Clonable, generic.View):
         else:
             full_name = self.urlname
 
-        return reverse(full_name)
+        # For views that need a pk (DetailView, UpdateView, etc.), pass it from self.object
+        kwargs = {}
+        if hasattr(self, 'object') and self.object is not None:
+            # Object has a pk, pass it to reverse
+            if hasattr(self.object, 'pk'):
+                kwargs['pk'] = self.object.pk
+
+        return reverse(full_name, kwargs=kwargs) if kwargs else reverse(full_name)
 
     @attribute.getter
     def title(self):

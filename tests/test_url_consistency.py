@@ -226,10 +226,9 @@ class TestTemplateExceptionPropagation:
         broken_view = BrokenListView()
         broken_view.request = None
 
-        # Title tries to access self.model._meta which will fail
+        # Title now safely returns 'List' when no model (via model_meta guard)
+        # Test that it does not raise and renders correctly
         template = Template("{{ view.title }}")
         context = Context({'view': broken_view})
-
-        # Should raise AttributeError, not return empty string
-        with pytest.raises(AttributeError, match="'NoneType' object has no attribute '_meta'"):
-            template.render(context)
+        rendered = template.render(context)
+        assert rendered == 'List'

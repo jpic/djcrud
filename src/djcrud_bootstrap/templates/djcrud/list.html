@@ -18,13 +18,13 @@
     </div>
 </div>
 
-{% if table %}
+{% if view.table %}
     <div class="table-responsive">
-        {% render_table table 'django_tables2/bootstrap5.html' %}
+        {% render_table view.table 'django_tables2/bootstrap5.html' %}
     </div>
 {% else %}
     <div class="alert alert-info">
-        <i class="bi bi-info-circle"></i> No {{ model_name_plural|default:"items" }} found.
+        <i class="bi bi-info-circle"></i> No {{ view.model_meta.verbose_name_plural|default:"items" }} found.
     </div>
 {% endif %}
 {% endblock %}

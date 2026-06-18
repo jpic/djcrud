@@ -6,7 +6,10 @@ as demonstrated in djcrud_example and djcrud_auth.
 """
 
 import pytest
-from django.contrib.auth.models import User, Group
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+
+User = get_user_model()
 from django.urls import path, reverse, resolve
 from djcrud.mvc import Controller, View
 

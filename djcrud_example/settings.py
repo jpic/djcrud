@@ -25,7 +25,11 @@ SECRET_KEY = "django-insecure-$)lvizx#(3&go_%&a%!&bi!q9dtc#a9p5@61#mr!t0@(cm^z6k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# For runserver + tests (testserver is used by Django's test Client)
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
+
+# Use our custom User model from example_app (adds get_absolute_url for success_url)
+AUTH_USER_MODEL = 'example_app.User'
 
 
 # Application definition
@@ -42,6 +46,7 @@ INSTALLED_APPS = [
     "crispy_bootstrap5",
     "djcrud",
     "djcrud_bootstrap",
+    "djcrud_example.example_app",  # Custom User model - must be before djcrud_auth
     "djcrud_auth",
 ]
 
