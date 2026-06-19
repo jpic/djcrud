@@ -1,50 +1,49 @@
-{% extends "djcrud/form.html" %}
+{% extends "djcrud/base.html" %}
 {% load crispy_forms_tags %}
-
-<div class="box" up-main="modal">
-    <div class="level mb-4">
-        <div class="level-left">
-            <h2 class="title is-4">
-                {% if view.icon %}<span class="icon{% if view.color %} has-text-{{ view.color }}{% endif %}"><i class="bi bi-{{ view.icon }}"></i></span>{% endif %}
-                {{ view.title }}
-            </h2>
-        </div>
-        {% block title_actions %}{% endblock %}
-    </div>
-
-    {% block confirm_message %}
-    <div class="notification is-{{ view.color|default:'warning' }} is-light">
-        Are you sure you want to delete <strong>{{ object }}</strong>?
-        This action cannot be undone.
-    </div>
-    {% endblock %}
-
-    <form method="post" up-submit up-target="[up-main]" up-layer="root">
-        {% csrf_token %}
-        {% block confirm_form_content %}
-        {% endblock %}
-
-        <div class="field is-grouped is-grouped-right mt-4">
-            {% if view.cancel_url %}
-            <p class="control">
-                <button type="button" class="button" up-dismiss>Cancel</button>
-            </p>
-            {% endif %}
-            {% block confirm_buttons %}
-            <p class="control">
-                <button type="submit" class="button is-{{ view.color|default:'danger' }}">
-                    {% if view.icon %}<span class="icon"><i class="bi bi-{{ view.icon }}"></i></span>{% endif %}
-                    <span>Delete</span>
-                </button>
-            </p>
-            {% endblock %}
-        </div>
-    </form>
-</div>
 
 {% block content %}
 <div class="columns is-centered">
     <div class="column is-8-tablet is-6-desktop">
+        <div class="box" up-main="modal">
+            <div class="level mb-4">
+                <div class="level-left">
+                    <h2 class="title is-4">
+                        {% if view.icon %}<span class="icon{% if view.color %} has-text-{{ view.color }}{% endif %}"><i class="bi bi-{{ view.icon }}"></i></span>{% endif %}
+                        {{ view.title }}
+                    </h2>
+                </div>
+                {% block title_actions %}{% endblock %}
+            </div>
+
+            {% block confirm_message %}
+            <div class="notification is-{{ view.color|default:'warning' }} is-light">
+                Are you sure you want to delete <strong>{{ object }}</strong>?
+                This action cannot be undone.
+            </div>
+            {% endblock %}
+
+            <form method="post" up-submit {% if view.up_target %}up-layer="{{ view.up_target }}" up-target="[up-main]"{% endif %}>
+                {% csrf_token %}
+                {% block confirm_form_content %}
+                {% endblock %}
+
+                <div class="field is-grouped is-grouped-right mt-4">
+                    {% if view.cancel_url %}
+                    <p class="control">
+                        <button type="button" class="button" up-dismiss>Cancel</button>
+                    </p>
+                    {% endif %}
+                    {% block confirm_buttons %}
+                    <p class="control">
+                        <button type="submit" class="button is-{{ view.color|default:'danger' }}">
+                            {% if view.icon %}<span class="icon"><i class="bi bi-{{ view.icon }}"></i></span>{% endif %}
+                            <span>Delete</span>
+                        </button>
+                    </p>
+                    {% endblock %}
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}

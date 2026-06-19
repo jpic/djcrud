@@ -12,6 +12,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    {% if view.unpoly.mode != 'modal' %}
     <nav class="navbar" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
             <div class="navbar-item">
@@ -82,8 +83,9 @@
                 {% endfor %}
             </ul>
         </aside>
+    {% endif %}
 
-<main class="p-5 djcrud-main" up-main>
+<main class="{% if view.unpoly.mode != 'modal' %}p-5 djcrud-main{% endif %}" up-main>
     {% if messages %}
         {% for message in messages %}
         <div class="notification djcrud-message {% if message.tags == 'error' %}is-danger{% elif message.tags %}is-{{ message.tags %}{% else %}is-info{% endif %}">
@@ -94,7 +96,9 @@
 
     {% block content %}{% endblock %}
 </main>
+    {% if view.unpoly.mode != 'modal' %}
     </div>
+    {% endif %}
 
     <script src="https://unpkg.com/unpoly@3.9.2/unpoly.js"></script>
     <script src="{% static 'djcrud_bulma/js/dropdown.js' %}" type="module"></script>

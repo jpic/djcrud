@@ -94,6 +94,12 @@ class TestMainMenu:
         assert any('List' in name for name in view_names)
         assert 'LoginView' not in view_names
 
+        # Verify UserController (and its ListView) uses the person icon
+        # (via Controller.icon getter + ListView.icon getter)
+        user_list_view = next((v for v in menu if 'List' in v.__class__.__name__), None)
+        assert user_list_view is not None
+        assert user_list_view.icon == 'person'
+
     def test_login_shows_for_anonymous(self, anonymous_user_request):
         """Anonymous user sees LoginView but not LogoutView."""
         auth_controller = AuthController(views=[

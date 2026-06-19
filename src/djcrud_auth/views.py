@@ -12,7 +12,7 @@ from django.http import HttpResponseRedirect
 
 from djcrud import mvc, attribute
 from djcrud.views.form import FormView
-from djcrud.views.unpoly import UnpolyModalMixin
+from djcrud.views.unpoly import UnpolyMixin
 
 
 class LoginView(FormView):
@@ -48,7 +48,7 @@ class LogoutConfirmForm(forms.Form):
     pass
 
 
-class LogoutView(UnpolyModalMixin, FormView):
+class LogoutView(UnpolyMixin, FormView):
     """Logout confirmation view."""
     form_class = LogoutConfirmForm
     template_name = 'djcrud_auth/logout_confirm.html'

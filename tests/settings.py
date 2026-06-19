@@ -19,12 +19,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # Frontend app must come BEFORE django_tables2 to override table templates
+    os.getenv("DJCRUD_FRONTEND", "djcrud_bulma"),
     "django_tables2",
     "crispy_forms",
     "crispy_bootstrap5",  # for bootstrap frontend (only loaded when selected)
     "crispy_bulma",  # required for bulma template pack and its templates (INSTALLED_APPS per crispy-bulma docs)
     "djcrud",
-    os.getenv("DJCRUD_FRONTEND", "djcrud_bulma"),
     "djcrud_auth",
 ]
 

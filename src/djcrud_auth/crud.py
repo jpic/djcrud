@@ -4,6 +4,7 @@ from django.contrib.auth.forms import UserCreationForm, UserChangeForm
 
 from djcrud import mvc
 from djcrud.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from djcrud import attribute
 
 from djcrud_auth.views import LoginView, LogoutView
 
@@ -41,8 +42,14 @@ UserController = mvc.Controller.clone(
     model=get_user_model(),
     urlpath='user',
     urlname='user',
+    icon='person',
     views=[
-        ListView.clone(table_fields=['id', 'username', 'email', 'is_active'], urlpath='', urlname='list'),
+        ListView.clone(
+            table_fields=['id', 'username', 'email', 'is_active'],
+            urlpath='',
+            urlname='list',
+            icon='person',  # ensure ListView uses person icon (overrides default 'list')
+        ),
         DetailView,
         CreateView.clone(form_class=get_custom_user_creation_form()),
         UpdateView.clone(form_class=get_custom_user_change_form()),

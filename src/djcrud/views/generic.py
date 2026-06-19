@@ -6,11 +6,11 @@ Provide model, model_meta, title, icon, tags, model_fields, table via attributes
 from django.views import generic
 from djcrud.mvc import View
 from djcrud import attribute
-from djcrud.views.unpoly import UnpolyModalMixin
+from djcrud.views.unpoly import UnpolyMixin
 from djcrud.views.tables2 import Tables2Mixin
 
 
-class ListView(Tables2Mixin, View, generic.ListView):
+class ListView(UnpolyMixin, Tables2Mixin, View, generic.ListView):
     tags = ['main']
     template_name = 'djcrud/list.html'
     paginate_by = 25
@@ -50,7 +50,7 @@ class ListView(Tables2Mixin, View, generic.ListView):
         return super().get_form_class()
 
 
-class DetailView(View, generic.DetailView):
+class DetailView(UnpolyMixin, View, generic.DetailView):
     tags = ['object']
     template_name = 'djcrud/detail.html'
     urlpath = '<int:pk>/'
@@ -122,7 +122,7 @@ class DetailView(View, generic.DetailView):
         return fields
 
 
-class CreateView(UnpolyModalMixin, View, generic.CreateView):
+class CreateView(UnpolyMixin, View, generic.CreateView):
     tags = ['model']
     template_name = 'djcrud/modelform.html'
     action = 'click->modal#open'
@@ -170,7 +170,7 @@ class CreateView(UnpolyModalMixin, View, generic.CreateView):
         return self.cancel_url or '/'
 
 
-class UpdateView(UnpolyModalMixin, View, generic.UpdateView):
+class UpdateView(UnpolyMixin, View, generic.UpdateView):
     tags = ['object']
     template_name = 'djcrud/modelform.html'
     action = 'click->modal#open'
@@ -218,7 +218,7 @@ class UpdateView(UnpolyModalMixin, View, generic.UpdateView):
         return self.cancel_url or '/'
 
 
-class DeleteView(UnpolyModalMixin, View, generic.DeleteView):
+class DeleteView(UnpolyMixin, View, generic.DeleteView):
     tags = ['object']
     template_name = 'djcrud/delete.html'
     action = 'click->modal#open'

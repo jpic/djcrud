@@ -110,10 +110,32 @@ def test_id_column_links_to_detail(superuser):
 
 
 @pytest.mark.django_db
-def test_table_has_uuid_and_unpoly_attributes(superuser):
-    """Table container should have UUID id and Unpoly attributes on links."""
+def test_modal_request_excludes_layout(user):
+    """Modal requests should not render sidebar/navbar (only main content)."""
+    client = Client()
+    client.force_login(user)
+
+    # Simulate Unpoly modal request
+    response = client.get('/auth/user/create/', HTTP_X_UP_MODE='modal')
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Should NOT have sidebar/navbar elements
+    assert 'sidebar' not in content.lower()
+    assert 'navbar' not in content.lower()
+    assert 'navigation' not in content.lower() or 'role="navigation"' not in content
+
+    # Should have main content with up-main attribute
+    assert 'up-main' in content
+    # Should have form content (card/box)
+    assert 'card' in content.lower() or 'box' in content.lower()
+
+
+@pytest.mark.django_db
+def test_table_has_uptable_and_unpoly_attributes(superuser):
+    """Table container should have up-table attribute and Unpoly attributes on links."""
     from django.contrib.auth import get_user_model
-    import re
 
     User = get_user_model()
     User.objects.create(username='unpoly_test_user', email='unpoly@example.com')
@@ -125,14 +147,9 @@ def test_table_has_uuid_and_unpoly_attributes(superuser):
     assert response.status_code == 200
     content = response.content.decode()
 
-    # Check for table-container with UUID id
-    # UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    uuid_pattern = r'<div class="table-container" id="([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})"'
-    match = re.search(uuid_pattern, content)
-    assert match, "Table container should have a UUID id"
-
-    table_id = match.group(1)
+    # Check for table-container with up-table attribute
+    assert '<div class="table-container" up-table>' in content, "Table container should have up-table attribute"
 
     # Check that links have up-follow and up-target attributes
     assert 'up-follow' in content, "Links should have up-follow attribute"
-    assert f'up-target="#{table_id}"' in content, "Links should target the table UUID"
+    assert 'up-target="[up-table]"' in content, "Links should target [up-table]"

@@ -15,5 +15,5 @@ from .generic import *
 from .form import FormView
 from .tables2 import Tables2Mixin
 from .template import TemplateView
-from .unpoly import UnpolyModalMixin
+from .unpoly import UnpolyMixin
 

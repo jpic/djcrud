@@ -20,10 +20,7 @@
             <a href="{{ action.url }}"
                class="button is-{{ action.color|default:'primary' }}"
                {% if action.action %}{{ action.action }}{% endif %}
-               {% if action.urlname == 'create' %}
-               up-layer="new modal"
-               up-size="medium"
-               {% endif %}>
+               up-layer="new modal" up-size="medium">
                 {% if action.icon %}<span class="icon"><i class="bi bi-{{ action.icon }}"></i></span>{% endif %}
                 <span>{{ action.title }}</span>
             </a>

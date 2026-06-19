@@ -187,6 +187,7 @@ class View(Clonable, generic.View):
     controller = None  # Set by Controller.__init__
     _controller = None  # Passed via as_view()
     _root_controller = None  # Passed via as_view()
+    up_target = None  # Optional Unpoly target (e.g., 'root' for login/logout forms)
 
     def __init__(self, **kwargs):
         # Extract our custom kwargs before passing to parent

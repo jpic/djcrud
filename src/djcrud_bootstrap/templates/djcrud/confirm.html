@@ -1,45 +1,44 @@
-{% extends "djcrud/form.html" %}
+{% extends "djcrud/base.html" %}
 {% load crispy_forms_tags %}
-
-<div class="card" up-main="modal">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h2 class="card-title mb-0">
-            {% if view.icon %}<i class="bi bi-{{ view.icon }}{% if view.color %} text-{{ view.color }}{% endif %}"></i>{% endif %}
-            {{ view.title }}
-        </h2>
-        {% block title_actions %}{% endblock %}
-    </div>
-    <div class="card-body">
-        {% block confirm_message %}
-        <div class="alert alert-{{ view.color|default:'warning' }}">
-            <i class="bi bi-exclamation-triangle"></i>
-            Are you sure you want to delete <strong>{{ object }}</strong>?
-            This action cannot be undone.
-        </div>
-        {% endblock %}
-
-        <form method="post" up-submit up-target="[up-main]" up-layer="root">
-            {% csrf_token %}
-            {% block confirm_form_content %}
-            {% endblock %}
-
-            <div class="d-flex justify-content-end gap-2 mt-3">
-                {% if view.cancel_url %}
-                <button type="button" class="btn btn-secondary" up-dismiss>Cancel</button>
-                {% endif %}
-                {% block confirm_buttons %}
-                <button type="submit" class="btn btn-{{ view.color|default:'danger' }}">
-                    <i class="bi bi-trash"></i> Delete
-                </button>
-                {% endblock %}
-            </div>
-        </form>
-    </div>
-</div>
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
+        <div class="card" up-main="modal">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2 class="card-title mb-0">
+                    {% if view.icon %}<i class="bi bi-{{ view.icon }}{% if view.color %} text-{{ view.color }}{% endif %}"></i>{% endif %}
+                    {{ view.title }}
+                </h2>
+                {% block title_actions %}{% endblock %}
+            </div>
+            <div class="card-body">
+                {% block confirm_message %}
+                <div class="alert alert-{{ view.color|default:'warning' }}">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    Are you sure you want to delete <strong>{{ object }}</strong>?
+                    This action cannot be undone.
+                </div>
+                {% endblock %}
+
+                <form method="post" up-submit {% if view.up_target %}up-layer="{{ view.up_target }}" up-target="[up-main]"{% endif %}>
+                    {% csrf_token %}
+                    {% block confirm_form_content %}
+                    {% endblock %}
+
+                    <div class="d-flex justify-content-end gap-2 mt-3">
+                        {% if view.cancel_url %}
+                        <button type="button" class="btn btn-secondary" up-dismiss>Cancel</button>
+                        {% endif %}
+                        {% block confirm_buttons %}
+                        <button type="submit" class="btn btn-{{ view.color|default:'danger' }}">
+                            <i class="bi bi-trash"></i> Delete
+                        </button>
+                        {% endblock %}
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
