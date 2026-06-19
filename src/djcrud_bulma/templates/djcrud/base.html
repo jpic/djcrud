@@ -85,10 +85,10 @@
         </aside>
     {% endif %}
 
-<main class="{% if view.unpoly.mode != 'modal' %}p-5 djcrud-main{% endif %}" up-main>
+<main class="p-5 djcrud-main" up-main>
     {% if messages %}
         {% for message in messages %}
-        <div class="notification djcrud-message {% if message.tags == 'error' %}is-danger{% elif message.tags %}is-{{ message.tags %}{% else %}is-info{% endif %}">
+        <div class="notification djcrud-message {% if message.tags == 'error' %}is-danger{% elif message.tags %}is-{{ message.tags }}{% else %}is-info{% endif %}">
             {{ message }}
         </div>
         {% endfor %}

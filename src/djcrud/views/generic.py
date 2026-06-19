@@ -8,6 +8,7 @@ from djcrud.mvc import View
 from djcrud import attribute
 from djcrud.views.unpoly import UnpolyMixin
 from djcrud.views.tables2 import Tables2Mixin
+from djcrud.views.form import FormMixin
 
 
 class ListView(UnpolyMixin, Tables2Mixin, View, generic.ListView):
@@ -123,7 +124,7 @@ class DetailView(UnpolyMixin, View, generic.DetailView):
         return fields
 
 
-class CreateView(UnpolyMixin, View, generic.CreateView):
+class CreateView(FormMixin, UnpolyMixin, View, generic.CreateView):
     tags = ['model']
     template_name = 'djcrud/modelform.html'
     action = 'click->modal#open'
@@ -165,21 +166,8 @@ class CreateView(UnpolyMixin, View, generic.CreateView):
 
     cancel_url = '/'
 
-    def get_success_url(self):
-        # Check for next parameter first (from modal links)
-        next_url = self.get_next_url()
-        if next_url:
-            return next_url
 
-        # Fall back to object's get_absolute_url
-        if hasattr(self, 'object') and self.object and hasattr(self.object, 'get_absolute_url'):
-            return self.object.get_absolute_url()
-
-        # Final fallback
-        return self.cancel_url or '/'
-
-
-class UpdateView(UnpolyMixin, View, generic.UpdateView):
+class UpdateView(FormMixin, UnpolyMixin, View, generic.UpdateView):
     tags = ['object']
     template_name = 'djcrud/modelform.html'
     action = 'click->modal#open'
@@ -221,21 +209,8 @@ class UpdateView(UnpolyMixin, View, generic.UpdateView):
 
     cancel_url = '/'
 
-    def get_success_url(self):
-        # Check for next parameter first (from modal links)
-        next_url = self.get_next_url()
-        if next_url:
-            return next_url
 
-        # Fall back to object's get_absolute_url
-        if hasattr(self, 'object') and self.object and hasattr(self.object, 'get_absolute_url'):
-            return self.object.get_absolute_url()
-
-        # Final fallback
-        return self.cancel_url or '/'
-
-
-class DeleteView(UnpolyMixin, View, generic.DeleteView):
+class DeleteView(FormMixin, UnpolyMixin, View, generic.DeleteView):
     tags = ['object']
     template_name = 'djcrud/delete.html'
     action = 'click->modal#open'
@@ -272,6 +247,14 @@ class DeleteView(UnpolyMixin, View, generic.DeleteView):
     cancel_url = '/'
 
     def get_success_url(self):
+        # Check for next parameter first (from modal links)
+        # This uses FormMixin's logic via get_next_url from UnpolyMixin
+        if hasattr(self, 'get_next_url'):
+            next_url = self.get_next_url()
+            if next_url:
+                return next_url
+
+        # Try to find the ListView in the controller
         if self._controller:
             for view in self._controller.views:
                 if hasattr(view, '__name__') and 'List' in view.__name__:

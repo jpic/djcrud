@@ -5,6 +5,43 @@ Form views for djcrud.
 from django.views.generic import FormView as DjangoFormView
 from djcrud.mvc import View
 from djcrud import attribute
+from djcrud.views.unpoly import UnpolyMixin
+
+
+class FormMixin:
+    """
+    Mixin for form-based views that provides smart success URL handling.
+
+    This mixin provides get_success_url() logic that:
+    1. Checks for a 'next' parameter (from modal links)
+    2. Falls back to object's get_absolute_url() if available
+    3. Falls back to cancel_url or '/'
+
+    Used by CreateView, UpdateView, and DeleteView to avoid code duplication.
+    """
+
+    def get_success_url(self):
+        """
+        Get the URL to redirect to after successful form submission.
+
+        Checks in order:
+        1. POST/GET 'next' parameter (persists through form resubmissions)
+        2. Object's get_absolute_url() method
+        3. cancel_url or '/' as final fallback
+        """
+        # Check for next parameter first (from modal links)
+        # This requires UnpolyMixin.get_next_url() to be available
+        if hasattr(self, 'get_next_url'):
+            next_url = self.get_next_url()
+            if next_url:
+                return next_url
+
+        # Fall back to object's get_absolute_url
+        if hasattr(self, 'object') and self.object and hasattr(self.object, 'get_absolute_url'):
+            return self.object.get_absolute_url()
+
+        # Final fallback
+        return getattr(self, 'cancel_url', None) or '/'
 
 
 class FormView(View, DjangoFormView):
@@ -67,4 +104,4 @@ class FormView(View, DjangoFormView):
         return get_menu(self.root_controller, 'main', self.request, exclude_current=self)
 
 
-__all__ = ['FormView']
+__all__ = ['FormMixin', 'FormView']
