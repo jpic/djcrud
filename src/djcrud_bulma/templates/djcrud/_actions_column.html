@@ -4,12 +4,14 @@
 {# Desktop/Tablet: Icon buttons with tooltips #}
 <div class="is-hidden-mobile">
     {% for action in actions %}
-    <a href="{{ action.url }}"
+    <a href="{{ action.url }}{% if action.urlname == 'create' or action.urlname == 'edit' or action.urlname == 'delete' %}?next={{ request.path }}{% endif %}"
        class="button is-small is-{{ action.color|default:view.color|default:'primary' }} is-rounded"
        title="{{ action.title }}"
        {% if action.action %}{{ action.action }}{% endif %}
        {% if action.urlname == 'create' or action.urlname == 'edit' or action.urlname == 'delete' %}
-       up-layer="new modal" up-size="medium"
+       up-layer="new modal" up-size="medium" up-accept-location="{{ request.path }}"
+       {% elif action.up_target %}
+       up-target="{{ action.up_target }}"
        {% endif %}>
         {% if action.icon %}<span class="icon is-small"><i class="bi bi-{{ action.icon }}"></i></span>{% endif %}
     </a>
@@ -28,11 +30,13 @@
     <div class="dropdown-menu" role="menu">
         <div class="dropdown-content">
             {% for action in actions %}
-            <a href="{{ action.url }}"
+            <a href="{{ action.url }}{% if action.urlname == 'create' or action.urlname == 'edit' or action.urlname == 'delete' %}?next={{ request.path }}{% endif %}"
                class="dropdown-item has-text-{{ action.color|default:view.color|default:'primary' }}"
                {% if action.action %}{{ action.action }}{% endif %}
                {% if action.urlname == 'create' or action.urlname == 'edit' or action.urlname == 'delete' %}
-               up-layer="new modal" up-size="medium"
+               up-layer="new modal" up-size="medium" up-accept-location="{{ request.path }}"
+               {% elif action.up_target %}
+               up-target="{{ action.up_target }}"
                {% endif %}>
                 {% if action.icon %}<span class="icon is-small"><i class="bi bi-{{ action.icon }}"></i></span>{% endif %}
                 <span>{{ action.title }}</span>

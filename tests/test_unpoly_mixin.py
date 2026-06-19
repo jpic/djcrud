@@ -31,7 +31,7 @@ class TestUnpolyMixin:
         assert 'X-Up-Location' not in response
 
     def test_dispatch_with_modal_mode_redirect(self):
-        """When X-Up-Mode is 'modal' and redirect, add X-Up-Location header."""
+        """When X-Up-Mode is 'modal' and redirect, add X-Up-Accept-Layer and X-Up-Location headers."""
         class MyView(UnpolyMixin, FormView):
             form_class = DjangoTestForm
             success_url = '/success/'
@@ -41,12 +41,13 @@ class TestUnpolyMixin:
 
         response = view(request)
 
-        # Should have redirect with X-Up-Location header
+        # Should have redirect with X-Up-Accept-Layer (to close modal) and X-Up-Location (to navigate)
         assert response.status_code == 302
-        assert response['X-Up-Location'] == '/create/?page=2'
+        assert response['X-Up-Accept-Layer'] == 'null'
+        assert response['X-Up-Location'] == '/success/'
 
     def test_dispatch_with_drawer_mode(self):
-        """When X-Up-Mode is 'drawer', add X-Up-Location header."""
+        """When X-Up-Mode is 'drawer', add X-Up-Accept-Layer and X-Up-Location headers."""
         class MyView(UnpolyMixin, FormView):
             form_class = DjangoTestForm
             success_url = '/success/'
@@ -57,13 +58,14 @@ class TestUnpolyMixin:
         response = view(request)
 
         assert response.status_code == 302
-        assert response['X-Up-Location'] == '/create/'
+        assert response['X-Up-Accept-Layer'] == 'null'
+        assert response['X-Up-Location'] == '/success/'
 
-    def test_dispatch_preserves_query_string(self):
-        """X-Up-Location includes query string from request."""
+    def test_dispatch_navigates_to_success_url(self):
+        """X-Up-Location navigates to the redirect target (success_url)."""
         class MyView(UnpolyMixin, FormView):
             form_class = DjangoTestForm
-            success_url = '/success/'
+            success_url = '/success/?status=created'
 
         request = RequestFactory().post('/create/?sort=name&page=3', data={'name': 'test'}, HTTP_X_UP_MODE='modal')
         view = MyView.as_view()
@@ -71,7 +73,8 @@ class TestUnpolyMixin:
         response = view(request)
 
         assert response.status_code == 302
-        assert response['X-Up-Location'] == '/create/?sort=name&page=3'
+        assert response['X-Up-Accept-Layer'] == 'null'
+        assert response['X-Up-Location'] == '/success/?status=created'
 
     def test_dispatch_with_form_errors_keeps_modal_open(self):
         """When form has errors in modal mode, don't set X-Up-Location (modal stays open)."""
@@ -113,3 +116,45 @@ class TestUnpolyMixin:
 
         # Should have up_target attribute set
         assert view.up_target == 'root'
+
+    def test_dispatch_redirects_to_next_in_modal_mode(self):
+        """When in modal mode with next parameter, redirect to next instead of success_url."""
+        class MyView(UnpolyMixin, FormView):
+            form_class = DjangoTestForm
+            success_url = '/success/'
+
+        # Simulate a form submission from a list page in modal mode with next parameter
+        request = RequestFactory().post(
+            '/create/',
+            data={'name': 'test', 'next': '/list/'},
+            HTTP_X_UP_MODE='modal'
+        )
+        view = MyView.as_view()
+        response = view(request)
+
+        # Should redirect to next, not success_url
+        assert response.status_code == 302
+        assert response['Location'] == '/list/'
+        assert response['X-Up-Accept-Layer'] == 'null'
+        assert response['X-Up-Location'] == '/list/'
+
+    def test_dispatch_without_next_parameter_uses_success_url(self):
+        """When in modal mode without next parameter, use success_url for redirect."""
+        class MyView(UnpolyMixin, FormView):
+            form_class = DjangoTestForm
+            success_url = '/success/'
+
+        # Simulate form submission in modal mode without next parameter
+        request = RequestFactory().post(
+            '/create/',
+            data={'name': 'test'},
+            HTTP_X_UP_MODE='modal'
+        )
+        view = MyView.as_view()
+        response = view(request)
+
+        # Should redirect to success_url when no next parameter
+        assert response.status_code == 302
+        assert response['Location'] == '/success/'
+        assert response['X-Up-Accept-Layer'] == 'null'
+        assert response['X-Up-Location'] == '/success/'

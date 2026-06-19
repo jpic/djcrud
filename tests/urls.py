@@ -3,10 +3,10 @@ URL configuration for tests.
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
-# Empty urlpatterns for basic tests
-# Tests will create their own controllers and test urlpatterns generation
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("auth/", include('djcrud_auth.urls')),
+    path("", include('djcrud_auth.urls')),  # Include auth at root too for home page
 ]

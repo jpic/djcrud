@@ -1,39 +1,13 @@
 {% extends "djcrud/form.html" %}
-{% load crispy_forms_tags djcrud_tags %}
+{% load djcrud_tags %}
 
-<div class="box" up-main="modal">
-    <div class="level mb-4">
-        <div class="level-left">
-            <h2 class="title is-4">{{ view.title }}</h2>
-        </div>
-        <div class="level-right">
-            <div class="buttons are-small">
-                {% if view.controller %}
-                    {% eval view.controller.get_tagged_views 'model' request exclude_current=view as model_menu %}
-                {% endif %}
-                {% for action in model_menu %}
-                <a href="{{ action.url }}" class="button is-primary is-outlined">{{ action.title }}</a>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-    <form method="post"
-          up-submit
-          up-target="[up-main]"
-          up-layer="root"
-          {% if form.is_multipart %}enctype="multipart/form-data"{% endif %}>
-        {% csrf_token %}
-        {{ form|crispy }}
-
-        <div class="field is-grouped is-grouped-right mt-4">
-            {% if view.cancel_url %}
-            <p class="control">
-                <button type="button" class="button" up-dismiss>Cancel</button>
-            </p>
-            {% endif %}
-            <p class="control">
-                <button type="submit" class="button is-primary">Save</button>
-            </p>
-        </div>
-    </form>
+{% block title_actions %}
+<div class="buttons are-small">
+    {% if view.controller %}
+        {% eval view.controller.get_tagged_views 'model' request exclude_current=view as model_menu %}
+    {% endif %}
+    {% for action in model_menu %}
+    <a href="{{ action.url }}" class="button is-primary is-outlined">{{ action.title }}</a>
+    {% endfor %}
 </div>
+{% endblock %}

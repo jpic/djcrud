@@ -4,34 +4,62 @@
 {% block content %}
 <div class="columns is-centered">
     <div class="column is-8-tablet is-6-desktop">
+        {% block modal_wrapper %}
         <div class="box" up-main="modal">
             <div class="level mb-4">
+                {% block header %}
                 <div class="level-left">
-                    <h2 class="title is-4">{{ view.title }}</h2>
+                    <h2 class="title is-4">
+                        {% block title %}
+                        {{ view.title }}
+                        {% endblock %}
+                    </h2>
                 </div>
                 <div class="level-right">
                     {% block title_actions %}{% endblock %}
                 </div>
+                {% endblock %}
             </div>
+
+            {% block before_form %}{% endblock %}
+
             <form method="post"
                   up-submit
-                  {% if view.up_target %}up-layer="{{ view.up_target }}" up-target="[up-main]"{% endif %}
+                  up-layer="any"
+                  up-accept-location="*"
+                  up-on-accepted="up.visit(value.response.url)"
+                  {% block form_attrs %}{% endblock %}
                   {% if form.is_multipart %}enctype="multipart/form-data"{% endif %}>
                 {% csrf_token %}
+                {% if view.get_next_url %}
+                <input type="hidden" name="next" value="{{ view.get_next_url }}">
+                {% endif %}
+
+                {% block form_content %}
+                {% block form_fields %}
                 {{ form|crispy }}
+                {% endblock %}
+                {% endblock %}
 
                 <div class="field is-grouped is-grouped-right mt-4">
+                    {% block form_buttons %}
                     {% if view.cancel_url %}
                     <p class="control">
                         <button type="button" class="button" up-dismiss>Cancel</button>
                     </p>
                     {% endif %}
                     <p class="control">
-                        <button type="submit" class="button is-primary">Save</button>
+                        <button type="submit" class="button is-primary">
+                            {% block submit_button_content %}
+                            Save
+                            {% endblock %}
+                        </button>
                     </p>
+                    {% endblock %}
                 </div>
             </form>
         </div>
+        {% endblock %}
     </div>
 </div>
 {% endblock %}

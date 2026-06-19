@@ -4,33 +4,56 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
+        {% block modal_wrapper %}
         <div class="card" up-main="modal">
             <div class="card-header d-flex justify-content-between align-items-center">
+                {% block header %}
                 <h2 class="card-title mb-0">
+                    {% block title %}
                     {% if view.icon %}<i class="bi bi-{{ view.icon }}{% if view.color %} text-{{ view.color }}{% endif %}"></i>{% endif %}
                     {{ view.title }}
+                    {% endblock %}
                 </h2>
                 {% block title_actions %}{% endblock %}
+                {% endblock %}
             </div>
             <div class="card-body">
+                {% block before_form %}{% endblock %}
+
                 <form method="post"
                       up-submit
-                      {% if view.up_target %}up-layer="{{ view.up_target }}" up-target="[up-main]"{% endif %}
+                      up-layer="any"
+                      up-accept-location="*"
+                      up-on-accepted="up.visit(value.response.url)"
+                      {% block form_attrs %}{% endblock %}
                       {% if form.is_multipart %}enctype="multipart/form-data"{% endif %}>
                     {% csrf_token %}
+                    {% if view.get_next_url %}
+                    <input type="hidden" name="next" value="{{ view.get_next_url }}">
+                    {% endif %}
+
+                    {% block form_content %}
+                    {% block form_fields %}
                     {{ form|crispy }}
+                    {% endblock %}
+                    {% endblock %}
 
                     <div class="d-flex justify-content-end gap-2 mt-3">
+                        {% block form_buttons %}
                         {% if view.cancel_url %}
                         <button type="button" class="btn btn-secondary" up-dismiss>Cancel</button>
                         {% endif %}
                         <button type="submit" class="btn btn-{{ view.color|default:'primary' }}">
+                            {% block submit_button_content %}
                             <i class="bi bi-check-circle"></i> Save
+                            {% endblock %}
                         </button>
+                        {% endblock %}
                     </div>
                 </form>
             </div>
         </div>
+        {% endblock %}
     </div>
 </div>
 {% endblock %}

@@ -13,10 +13,11 @@
             {% eval view.controller.get_tagged_views 'model' request exclude_current=view as model_menu %}
         {% endif %}
         {% for action in model_menu %}
-        <a href="{{ action.url }}"
+        <a href="{{ action.url }}?next={{ request.path }}"
            class="btn btn-{{ action.color|default:'primary' }} ms-2"
            up-layer="new modal"
-           up-size="medium">
+           up-size="medium"
+           up-accept-location="{{ request.path }}">
             {% if action.icon %}<i class="bi bi-{{ action.icon }}"></i>{% endif %}
             {{ action.title }}
         </a>

@@ -1,41 +1,16 @@
 {% extends "djcrud/form.html" %}
-{% load crispy_forms_tags djcrud_tags %}
+{% load djcrud_tags %}
 
-<div class="card" up-main="modal">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h2 class="card-title mb-0">
-            {% if view.icon %}<i class="bi bi-{{ view.icon }}{% if view.color %} text-{{ view.color }}{% endif %}"></i>{% endif %}
-            {{ view.title }}
-        </h2>
-        <div class="btn-toolbar">
-            {% if view.controller %}
-                {% eval view.controller.get_tagged_views 'model' request exclude_current=view as model_menu %}
-            {% endif %}
-            {% for action in model_menu %}
-            <a href="{{ action.url }}" class="btn btn-outline-{{ action.color|default:'primary' }} btn-sm ms-2">
-                {% if action.icon %}<i class="bi bi-{{ action.icon }}"></i>{% endif %}
-                {{ action.title }}
-            </a>
-            {% endfor %}
-        </div>
-    </div>
-    <div class="card-body">
-        <form method="post"
-              up-submit
-              up-target="[up-main]"
-              up-layer="root"
-              {% if form.is_multipart %}enctype="multipart/form-data"{% endif %}>
-            {% csrf_token %}
-            {{ form|crispy }}
-
-            <div class="d-flex justify-content-end gap-2 mt-3">
-                {% if view.cancel_url %}
-                <button type="button" class="btn btn-secondary" up-dismiss>Cancel</button>
-                {% endif %}
-                <button type="submit" class="btn btn-{{ view.color|default:'primary' }}">
-                    <i class="bi bi-check-circle"></i> Save
-                </button>
-            </div>
-        </form>
-    </div>
+{% block title_actions %}
+<div class="btn-toolbar">
+    {% if view.controller %}
+        {% eval view.controller.get_tagged_views 'model' request exclude_current=view as model_menu %}
+    {% endif %}
+    {% for action in model_menu %}
+    <a href="{{ action.url }}" class="btn btn-outline-{{ action.color|default:'primary' }} btn-sm ms-2">
+        {% if action.icon %}<i class="bi bi-{{ action.icon }}"></i>{% endif %}
+        {{ action.title }}
+    </a>
+    {% endfor %}
 </div>
+{% endblock %}

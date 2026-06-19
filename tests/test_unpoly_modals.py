@@ -153,3 +153,25 @@ def test_table_has_uptable_and_unpoly_attributes(superuser):
     # Check that links have up-follow and up-target attributes
     assert 'up-follow' in content, "Links should have up-follow attribute"
     assert 'up-target="[up-table]"' in content, "Links should target [up-table]"
+
+
+@pytest.mark.django_db
+def test_detail_view_action_has_up_target(superuser):
+    """DetailView action links should have up-target attribute."""
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+    test_user = User.objects.create(username='detail_test_user', email='detail@example.com')
+
+    client = Client()
+    client.force_login(superuser)
+    response = client.get('/auth/user/')
+
+    assert response.status_code == 200
+    content = response.content.decode()
+
+    # Check that detail view link (eye icon) has up-target attribute
+    # The link should have up-target="[up-main]" since DetailView.up_target is set
+    assert 'up-target="[up-main]"' in content, "DetailView action link should have up-target=\"[up-main]\""
+    # The detail view should be the eye icon
+    assert 'bi-eye' in content, "DetailView action should have eye icon"

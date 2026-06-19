@@ -55,6 +55,7 @@ class DetailView(UnpolyMixin, View, generic.DetailView):
     template_name = 'djcrud/detail.html'
     urlpath = '<int:pk>/'
     urlname = 'detail'
+    up_target = '[up-main]'  # DetailView links should update main content area
 
     @attribute.getter
     def model(self):
@@ -165,8 +166,16 @@ class CreateView(UnpolyMixin, View, generic.CreateView):
     cancel_url = '/'
 
     def get_success_url(self):
+        # Check for next parameter first (from modal links)
+        next_url = self.get_next_url()
+        if next_url:
+            return next_url
+
+        # Fall back to object's get_absolute_url
         if hasattr(self, 'object') and self.object and hasattr(self.object, 'get_absolute_url'):
             return self.object.get_absolute_url()
+
+        # Final fallback
         return self.cancel_url or '/'
 
 
@@ -213,8 +222,16 @@ class UpdateView(UnpolyMixin, View, generic.UpdateView):
     cancel_url = '/'
 
     def get_success_url(self):
+        # Check for next parameter first (from modal links)
+        next_url = self.get_next_url()
+        if next_url:
+            return next_url
+
+        # Fall back to object's get_absolute_url
         if hasattr(self, 'object') and self.object and hasattr(self.object, 'get_absolute_url'):
             return self.object.get_absolute_url()
+
+        # Final fallback
         return self.cancel_url or '/'
 
 
