@@ -70,6 +70,7 @@ class Tables2Mixin(View):
     """
     table_pagination = {'per_page': 25}
     table_template_name = None
+    per_page_options = '10,25,50,100'  # Options for rows per page selector
     # table_attrs removed: classes now hardcoded in frontend table templates (bulma.html + bootstrap5.html)
     # (consistent with philosophy of preferring templates over Python/settings for frontend differences)
 
@@ -211,10 +212,24 @@ class Tables2Mixin(View):
         # Store reference to view so ActionsColumn can access it
         table._djcrud_view = self
 
+        # Add per_page_options to table for template access
+        table.per_page_options = self.per_page_options
+
+        # Get per_page from query parameter if present
+        pagination_config = self.table_pagination.copy()
+        try:
+            per_page = int(self.request.GET.get('per_page', pagination_config.get('per_page', 25)))
+            # Validate that it's one of the allowed options
+            allowed_options = [int(x) for x in self.per_page_options.split(',')]
+            if per_page in allowed_options:
+                pagination_config['per_page'] = per_page
+        except (ValueError, TypeError):
+            pass
+
         # Configure pagination
         RequestConfig(
             self.request,
-            paginate=self.table_pagination
+            paginate=pagination_config
         ).configure(table)
 
         return table

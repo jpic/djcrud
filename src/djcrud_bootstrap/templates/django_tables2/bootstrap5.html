@@ -1,4 +1,4 @@
-{% load django_tables2 %}
+{% load django_tables2 djcrud_tags %}
 {% load i18n l10n %}
 {% block table-wrapper %}
 <div class="table-container" up-table>
@@ -55,42 +55,82 @@
     {% endblock table %}
 
     {% block pagination %}
-        {% if table.page and table.paginator.num_pages > 1 %}
-        <nav aria-label="Table navigation">
-            <ul class="pagination justify-content-center">
-            {% if table.page.has_previous %}
-                {% block pagination.previous %}
-                <li class="previous page-item">
-                    <a href="{% querystring_replace table.prefixed_page_field=table.page.previous_page_number %}" class="page-link" up-follow up-target="[up-table]">
-                        <span aria-hidden="true">&laquo;</span>
-                        {% trans 'previous' %}
-                    </a>
-                </li>
-                {% endblock pagination.previous %}
+        {% if table.page %}
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <!-- Left: Rows per page selector -->
+            <per-page-selector
+                current="{{ table.paginator.per_page }}"
+                options="{{ table.per_page_options|default:'10,25,50,100' }}"
+                target="[up-table]">
+            </per-page-selector>
+
+            <!-- Right: Pagination controls -->
+            {% if table.paginator.num_pages > 1 %}
+            <nav aria-label="Table navigation">
+                <ul class="pagination mb-0">
+                    <!-- First page -->
+                    <li class="page-item{% if not table.page.has_previous %} disabled{% endif %}">
+                        <a href="{% querystring_replace table.prefixed_page_field=1 %}" class="page-link" {% if table.page.has_previous %}up-follow up-target="[up-table]"{% else %}tabindex="-1" aria-disabled="true"{% endif %}>
+                            <i class="bi bi-chevron-bar-left"></i>
+                        </a>
+                    </li>
+
+                    <!-- Previous page -->
+                    {% if table.page.has_previous %}
+                    <li class="page-item">
+                        <a href="{% querystring_replace table.prefixed_page_field=table.page.previous_page_number %}" class="page-link" up-follow up-target="[up-table]">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" tabindex="-1" aria-disabled="true">
+                            <i class="bi bi-chevron-left"></i>
+                        </span>
+                    </li>
+                    {% endif %}
+
+                    <!-- Page number input -->
+                    <li class="page-item">
+                        <form method="get" class="d-inline" onsubmit="event.preventDefault(); var page = this.querySelector('input').value; if(page > 0 && page <= {{ table.paginator.num_pages }}) { up.navigate('{% querystring_replace table.prefixed_page_field='__PAGE__' %}'.replace('__PAGE__', page), {target: '[up-table]'}); }">
+                            <input type="number"
+                                   class="form-control form-control-sm text-center"
+                                   style="width: 70px;"
+                                   value="{{ table.page.number }}"
+                                   min="1"
+                                   max="{{ table.paginator.num_pages }}"
+                                   aria-label="Page number">
+                        </form>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">of {{ table.paginator.num_pages }}</span>
+                    </li>
+
+                    <!-- Next page -->
+                    {% if table.page.has_next %}
+                    <li class="page-item">
+                        <a href="{% querystring_replace table.prefixed_page_field=table.page.next_page_number %}" class="page-link" up-follow up-target="[up-table]">
+                            <i class="bi bi-chevron-right"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link" tabindex="-1" aria-disabled="true">
+                            <i class="bi bi-chevron-right"></i>
+                        </span>
+                    </li>
+                    {% endif %}
+
+                    <!-- Last page -->
+                    <li class="page-item{% if not table.page.has_next %} disabled{% endif %}">
+                        <a href="{% querystring_replace table.prefixed_page_field=table.paginator.num_pages %}" class="page-link" {% if table.page.has_next %}up-follow up-target="[up-table]"{% else %}tabindex="-1" aria-disabled="true"{% endif %}>
+                            <i class="bi bi-chevron-bar-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
             {% endif %}
-            {% if table.page.has_previous or table.page.has_next %}
-            {% block pagination.range %}
-            {% for p in table.page|table_page_range:table.paginator %}
-                <li class="page-item{% if table.page.number == p %} active{% endif %}">
-                    <a class="page-link" {% if p != '...' %}href="{% querystring_replace table.prefixed_page_field=p %}" up-follow up-target="[up-table]"{% endif %}>
-                        {{ p }}
-                    </a>
-                </li>
-            {% endfor %}
-            {% endblock pagination.range %}
-            {% endif %}
-            {% if table.page.has_next %}
-                {% block pagination.next %}
-                <li class="next page-item">
-                    <a href="{% querystring_replace table.prefixed_page_field=table.page.next_page_number %}" class="page-link" up-follow up-target="[up-table]">
-                        {% trans 'next' %}
-                        <span aria-hidden="true">&raquo;</span>
-                    </a>
-                </li>
-                {% endblock pagination.next %}
-            {% endif %}
-            </ul>
-        </nav>
+        </div>
         {% endif %}
     {% endblock pagination %}
 </div>

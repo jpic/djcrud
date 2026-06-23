@@ -11,6 +11,14 @@ def uuid4():
     return str(uuid.uuid4())
 
 
+@register.filter
+def split(value, separator=','):
+    """Split a string by a separator and return a list."""
+    if not value:
+        return []
+    return str(value).split(separator)
+
+
 @register.tag(name='eval')
 def do_eval(parser, token):
     """
