@@ -47,9 +47,16 @@ class TestUnpolyModalCRUD:
         browser.fill('password', 'admin123')
         browser.find_by_css('button[type="submit"]').first.click()
 
+        # Verify login was successful by checking for Logout link in sidebar
+        assert browser.is_text_present('Logout'), "Login should have succeeded - Logout link should be visible"
+        assert not browser.is_text_present('Login'), "After login, Login link should not be visible"
+
         # Navigate to user list
         browser.visit(f'{live_server.url}/auth/user/')
         initial_url = browser.url
+
+        # Verify we're still logged in after navigation
+        assert browser.is_text_present('Logout'), "Should still be logged in after navigation"
 
         # Click create button - should open modal
         create_button = browser.find_by_css('a[href*="/auth/user/create"]').first
@@ -58,9 +65,10 @@ class TestUnpolyModalCRUD:
         # Wait for modal to appear
         assert browser.is_element_present_by_css('[up-main="modal"]', wait_time=2)
 
-        # Fill form with valid data
+        # Fill form with valid data (UserCreationForm uses password1 and password2)
         browser.fill('username', 'newuser')
-        browser.fill('password', 'newpass123')
+        browser.fill('password1', 'newpass123')
+        browser.fill('password2', 'newpass123')
 
         # Submit form
         browser.find_by_css('[up-main="modal"] button[type="submit"]').first.click()
@@ -87,6 +95,9 @@ class TestUnpolyModalCRUD:
         browser.fill('password', 'admin123')
         browser.find_by_css('button[type="submit"]').first.click()
 
+        # Verify login was successful
+        assert browser.is_text_present('Logout'), "Login should have succeeded"
+
         # Navigate to user list
         browser.visit(f'{live_server.url}/auth/user/')
 
@@ -96,14 +107,19 @@ class TestUnpolyModalCRUD:
         # Wait for modal
         assert browser.is_element_present_by_css('[up-main="modal"]', wait_time=2)
 
-        # Submit form WITHOUT filling required field (should cause validation error)
+        # Fill form with MISMATCHED passwords to trigger Django validation error
+        browser.fill('username', 'testuser')
+        browser.fill('password1', 'password123')
+        browser.fill('password2', 'differentpassword456')
+
+        # Submit form with validation error (mismatched passwords)
         browser.find_by_css('[up-main="modal"] button[type="submit"]').first.click()
 
-        # Modal should STAY open
+        # Modal should STAY open due to validation error
         assert browser.is_element_present_by_css('[up-main="modal"]', wait_time=2)
 
-        # Error message should be visible
-        assert browser.is_text_present('This field is required') or browser.is_text_present('required')
+        # Error message should be visible (password mismatch)
+        assert browser.is_text_present("password", wait_time=2), "Password validation error should be visible"
 
         # Should NOT see full page layout elements (navbar, sidebar) inside modal
         modal = browser.find_by_css('[up-main="modal"]').first
@@ -125,13 +141,16 @@ class TestUnpolyModalCRUD:
         browser.fill('password', 'admin123')
         browser.find_by_css('button[type="submit"]').first.click()
 
+        # Verify login was successful
+        assert browser.is_text_present('Logout'), "Login should have succeeded"
+
         # Navigate to user list
         browser.visit(f'{live_server.url}/auth/user/')
         initial_url = browser.url
 
         # Find and click edit button for first test user
         user = test_users[0]
-        edit_button = browser.find_by_css(f'a[href*="/auth/user/{user.pk}/"]').first
+        edit_button = browser.find_by_css(f'a[href*="/auth/user/{user.pk}/edit"]').first
         edit_button.click()
 
         # Wait for modal
@@ -167,6 +186,9 @@ class TestUnpolyModalCRUD:
         browser.fill('username', 'admin')
         browser.fill('password', 'admin123')
         browser.find_by_css('button[type="submit"]').first.click()
+
+        # Verify login was successful
+        assert browser.is_text_present('Logout'), "Login should have succeeded"
 
         # Navigate to user list
         browser.visit(f'{live_server.url}/auth/user/')
@@ -208,6 +230,9 @@ class TestUnpolyModalCRUD:
         browser.fill('password', 'admin123')
         browser.find_by_css('button[type="submit"]').first.click()
 
+        # Verify login was successful
+        assert browser.is_text_present('Logout'), "Login should have succeeded"
+
         # Navigate to user list
         browser.visit(f'{live_server.url}/auth/user/')
         initial_url = browser.url
@@ -242,6 +267,9 @@ class TestUnpolyModalCRUD:
         browser.fill('password', 'admin123')
         browser.find_by_css('button[type="submit"]').first.click()
 
+        # Verify login was successful
+        assert browser.is_text_present('Logout'), "Login should have succeeded"
+
         # Navigate to user list
         browser.visit(f'{live_server.url}/auth/user/')
         initial_url = browser.url
@@ -258,9 +286,10 @@ class TestUnpolyModalCRUD:
         browser.find_by_css('[up-main="modal"] button[type="submit"]').first.click()
         assert browser.is_element_present_by_css('[up-main="modal"]', wait_time=2)
 
-        # Third time - fill correctly
+        # Third time - fill correctly (UserCreationForm uses password1 and password2)
         browser.fill('username', 'finallyright')
-        browser.fill('password', 'pass123')
+        browser.fill('password1', 'pass123Strong!')
+        browser.fill('password2', 'pass123Strong!')
         browser.find_by_css('[up-main="modal"] button[type="submit"]').first.click()
 
         # Should close and redirect to initial URL

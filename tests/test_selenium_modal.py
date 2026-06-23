@@ -11,6 +11,15 @@ import time
 @pytest.mark.django_db
 def test_create_modal_closes_on_success(browser, live_server, superuser):
     """Test that create modal opens and closes after successful form submission."""
+    # Login as superuser
+    browser.visit(f'{live_server.url}/auth/login/')
+    browser.fill('username', superuser.username)
+    browser.fill('password', 'adminpass123')
+    browser.find_by_css('button[type="submit"]').first.click()
+
+    # Verify login was successful
+    assert browser.is_text_present('Logout'), "Login should have succeeded"
+
     # Navigate to user list page
     browser.visit(f'{live_server.url}/auth/user/')
 

@@ -59,22 +59,36 @@ def test_create_view_has_perm(admin_user, db):
 
 def test_get_tagged_views_returns_create(admin_user, db):
     """Test that get_tagged_views('model') returns CreateView for superuser."""
-    from djcrud_auth.crud import UserController
+    from djcrud_example.urls import site
     from django.test import RequestFactory
 
     factory = RequestFactory()
     request = factory.get('/auth/user/')
     request.user = admin_user
 
-    # Instantiate the controller
-    controller_instance = UserController(views=UserController.views)
+    # Get UserController from the site hierarchy (not in isolation)
+    auth_controller = None
+    for v in site.views:
+        if hasattr(v, 'urlpath') and v.urlpath == 'auth':
+            auth_controller = v
+            break
+
+    assert auth_controller is not None, "AuthController should be in site.views"
+
+    user_controller = None
+    for v in auth_controller.views:
+        if hasattr(v, 'urlpath') and v.urlpath == 'user':
+            user_controller = v
+            break
+
+    assert user_controller is not None, "UserController should be in AuthController.views"
 
     # Get model-tagged views
-    model_views = controller_instance.get_tagged_views('model', request)
+    model_views = user_controller.get_tagged_views('model', request)
 
     print(f"Model-tagged views found: {len(model_views)}")
     for v in model_views:
-        print(f"  - {v.__class__.__name__}: url={getattr(v, 'url', 'N/A')}")
+        print(f"  - {v.__class__.__name__}: url={v.url}")
 
     assert len(model_views) > 0, "Should find at least CreateView with 'model' tag"
 

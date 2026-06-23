@@ -128,6 +128,34 @@ class TestMainMenu:
 
 
 @pytest.mark.django_db
+class TestModelMenu:
+    """Test model-tagged views (CreateView) appear in action menus."""
+
+    def test_create_view_in_model_menu_for_superuser(self, superuser_request):
+        """Superuser sees CreateView in model menu on list page."""
+        # UserController includes CreateView with tags=['model']
+        auth_controller = AuthController(views=[
+            UserController,
+        ])
+        root = Controller(views=[auth_controller])
+
+        # Get views tagged with 'model'
+        menu = get_menu(root, 'model', superuser_request)
+
+        # Should have CreateView
+        assert len(menu) >= 1, f"Expected at least 1 view with 'model' tag, got {len(menu)}"
+
+        # Should be view instances
+        from djcrud.mvc import View
+        assert all(isinstance(item, View) for item in menu)
+
+        # Get view class names
+        view_names = [v.__class__.__name__ for v in menu]
+        print(f"Views with 'model' tag: {view_names}")
+        assert any('Create' in name for name in view_names), f"Expected CreateView in menu, got {view_names}"
+
+
+@pytest.mark.django_db
 class TestMenuHTMLRendering:
     """Test that menus actually render in HTML."""
 
@@ -151,6 +179,25 @@ class TestMenuHTMLRendering:
 
         # Should have Logout (not Login, since we're authenticated)
         assert 'logout' in content.lower()
+
+    def test_user_list_page_renders_create_button_for_superuser(self, superuser_user):
+        """User list page renders Create button for superuser."""
+        from django.test import Client
+
+        client = Client()
+        client.force_login(superuser_user)
+
+        response = client.get('/auth/user/')
+
+        assert response.status_code == 200
+        content = response.content.decode('utf-8')
+
+        # Should have Create button/link
+        assert 'create' in content.lower(), "Create button should be present for superuser"
+        # Should link to create URL
+        assert '/auth/user/create' in content, "Create button should link to /auth/user/create"
+        # Should have up-layer="new modal" for modal behavior
+        assert 'up-layer="new modal"' in content, "Create button should open in modal"
 
     def test_anonymous_sees_login(self):
         """Anonymous users see Login in menu."""
