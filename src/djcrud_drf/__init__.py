@@ -103,6 +103,13 @@ class DrfSite:
 
         return [login_urlpattern()]
 
+    def mcp_urlpatterns(self):
+        try:
+            from djcrud_mcp.routes import api_urlpatterns
+        except ImportError:
+            return []
+        return api_urlpatterns()
+
     @property
     def urlpatterns(self):
         self.build()
@@ -113,6 +120,7 @@ class DrfSite:
         for route in login_router.routes:
             patterns += route.urlpatterns
         patterns += api.urlpatterns
+        patterns += self.mcp_urlpatterns()
         patterns += self.schema_urlpatterns()
         return [
             path(

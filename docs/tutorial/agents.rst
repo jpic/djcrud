@@ -60,15 +60,14 @@ Every stdio MCP client uses a registered profile; remote clients fetch it from
 
    djcrud_mcp.site.register(ArticlesMcp)
 
-Wire host URLs (once per project):
+MCP profile routes are mounted automatically under ``/api/mcp/`` when you include
+:data:`djcrud_drf.site` URLs (same as schema and login):
 
 .. code-block:: python
 
-   from djcrud_mcp.urls import urlpatterns as mcp_urlpatterns
-
    urlpatterns = [
        # ...
-   ] + djcrud_drf.site.build().urlpatterns + mcp_urlpatterns
+   ] + djcrud_drf.site.build().urlpatterns
 
 Remote client
 -------------

@@ -23,4 +23,4 @@ class ArticlesMcp(djcrud_mcp.McpProfile):
 djcrud_mcp.site.register(ArticlesMcp)
 ```
 
-Mount `djcrud_mcp.urls` so remote clients can fetch profiles at `GET /api/mcp/profiles/{key}/`. `GET /api/mcp/profiles/` also returns the host `default` key. Mark one profile with `default = True` (or register only one); clients omit `--registry` to use that default.
+Include `djcrud_drf.site` URLs on the host so remote clients can fetch profiles at `GET /api/mcp/profiles/{key}/` (mounted automatically). `GET /api/mcp/profiles/` also returns the host `default` key. Mark one profile with `default = True` (or register only one); clients omit `--registry` to use that default.

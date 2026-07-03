@@ -24,15 +24,14 @@ Server setup
 4. Register permissions in ``djcrud.py``
 5. Declare and register :class:`~djcrud_mcp.McpProfile` classes on
    :data:`djcrud_mcp.site` (required — see :doc:`../../tutorial/agents`)
-6. Include :mod:`djcrud_mcp.urls` in project ``urlpatterns``
+6. Include :data:`djcrud_drf.site` URLs — MCP routes mount at ``/api/mcp/``
+   automatically (no separate URLconf)
 
 .. code-block:: python
 
-   from djcrud_mcp.urls import urlpatterns as mcp_urlpatterns
-
    urlpatterns = [
        # ...
-   ] + djcrud_drf.site.build().urlpatterns + mcp_urlpatterns
+   ] + djcrud_drf.site.build().urlpatterns
 
 MCP profiles
 ============

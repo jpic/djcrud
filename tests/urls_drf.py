@@ -6,18 +6,11 @@ import djcrud_drf
 
 from djcrud import handlers
 
-try:
-    from djcrud_mcp.urls import urlpatterns as mcp_urlpatterns
-except ImportError:
-    mcp_urlpatterns = []
-
-
 urlpatterns = [
     path("admin/", admin.site.urls),
 ] + (
     djcrud.site.build().urlpatterns
     + djcrud_drf.site.build().urlpatterns
-    + mcp_urlpatterns
 )
 
 handler400 = handlers.handler400
