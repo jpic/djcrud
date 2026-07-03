@@ -10,5 +10,22 @@ export DJCRUD_TOKEN=<token>
 djcrud-mcp -mcp
 ```
 
-Register tools via `api_prefixes` on a `RegistryProfile` (no ViewSet introspection), or
-install `djcrud-mcp[django]` on a Django host for automatic ViewSet discovery.
+## Django host
+
+Declare `McpProfile` classes and register them on `djcrud_mcp.site` (like `djcrud_drf.site.register`):
+
+```python
+import djcrud_mcp
+
+class ArticlesMcp(djcrud_mcp.McpProfile):
+    key = "articles"
+    server_name = "myapp-articles"
+    viewsets = (ArticleViewSet,)
+    instructions = "Article CRUD via the JSON API."
+
+djcrud_mcp.site.register(ArticlesMcp)
+```
+
+Mount `djcrud_mcp.django.urls` so remote clients can fetch profiles at `GET /api/mcp/profiles/{key}/`.
+
+CRUD tools come from `GET /api/schema/` filtered by the profile's ViewSets. Non-CRUD endpoints must be DRF routes documented with `@extend_schema`.

@@ -60,7 +60,7 @@ Generated MCP tools (no manual naming):
 Server setup
 ============
 
-1. ``pip install --pre "djcrud[drf,mcp]``
+1. ``pip install --pre "djcrud[drf,mcp]"``
 2. Enable ``djcrud_drf``, ``djcrud_api``, Bearer middleware, API URLs
    (:doc:`../../tutorial/drf`)
 3. Register ``ModelViewSet`` subclasses on :data:`djcrud_drf.site`
