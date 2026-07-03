@@ -29,6 +29,22 @@ def test_spa_renders_server_navigation(client, admin_user):
 
 
 @pytest.mark.django_db
+def test_spa_requires_login(client):
+    response = client.get(reverse("site:spa"))
+    assert response.status_code == 302
+    assert "/auth/login/" in response["Location"]
+
+
+@pytest.mark.django_db
+def test_spa_renders_default_mount_node(client, admin_user):
+    client.force_login(admin_user)
+
+    response = client.get(reverse("site:spa"))
+    assert response.status_code == 200
+    assert '<div id="app"></div>' in response.content.decode()
+
+
+@pytest.mark.django_db
 def test_spa_standard_list_still_uses_navbar(client, admin_user):
     client.force_login(admin_user)
 

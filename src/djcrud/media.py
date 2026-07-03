@@ -1,30 +1,14 @@
 """Static asset bundles for djcrud Bulma shells.
 
-Views expose these through :class:`ModuleMedia` (see
+Views expose Django :class:`~django.forms.Media` (see
 :class:`~djcrud.views.spa.SPAView`). Templates render ``{{ view.media.css }}``
 in ``<head>`` and ``{{ view.media.js }}`` before ``</body>`` — no inline
-JavaScript in the reference templates.
+JavaScript in the reference templates. ES modules use
+:class:`~django.forms.widgets.Script` with ``type="module"`` (Django 6+).
 """
 
 from django.forms import Media
-from django.utils.html import format_html
-
-
-class ModuleMedia(Media):
-    """Like :class:`~django.forms.Media`, but ES module ``<script>`` tags."""
-
-    def render_js(self):
-        return [
-            (
-                path.__html__()
-                if hasattr(path, "__html__")
-                else format_html(
-                    '<script type="module" src="{}"></script>',
-                    self.absolute_path(path),
-                )
-            )
-            for path in self._js
-        ]
+from django.forms.widgets import Script
 
 BULMA_CSS = (
     "https://cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css",
@@ -35,10 +19,10 @@ BULMA_CSS = (
 
 UNPOLY_JS = "https://unpkg.com/unpoly@3.9.2/unpoly.js"
 
-# ES modules only — load :data:`UNPOLY_JS` as a classic <script> before these.
+# ES modules — load :data:`UNPOLY_JS` as a classic <script> before these.
 _SHELL_JS = (
-    "djcrud_bulma/js/unpoly-config.js",
-    "djcrud_bulma/js/nav-config.js",
+    Script("djcrud_bulma/js/unpoly-config.js", type="module"),
+    Script("djcrud_bulma/js/nav-config.js", type="module"),
 )
 
 
@@ -54,9 +38,10 @@ class StandardShellMedia:
 
     css = {"all": BULMA_CSS}
     js = _SHELL_JS + (
-        "djcrud_bulma/js/hamburger.js",
-        "djcrud_bulma/js/form-focus.js",
-        "djcrud_bulma/js/filter-sidebar.js",
-        "djcrud_bulma/js/list-action-bar.js",
-        "djcrud_bulma/js/toast.js",
+        Script("djcrud_bulma/js/hamburger.js", type="module"),
+        Script("djcrud_bulma/js/form-focus.js", type="module"),
+        Script("djcrud_bulma/js/filter-sidebar.js", type="module"),
+        Script("djcrud_bulma/js/list-action-bar.js", type="module"),
+        Script("djcrud_bulma/js/toast.js", type="module"),
     )
+

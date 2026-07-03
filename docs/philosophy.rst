@@ -144,20 +144,8 @@ nothing until you register grants); navigation lists only permitted views (see
 Declare assets with Django :class:`~django.forms.Media` — no inline JavaScript in
 the reference templates:
 
-.. code-block:: python
-
-   from djcrud.views.spa import SPAView
-
-   class DashboardView(SPAView):
-       title = "Dashboard"
-       urlpath = "dashboard/"
-
-       class Media(SPAView.Media):
-           js = SPAView.Media.js + ("myapp/js/dashboard.js",)
-
-   # djcrud.py
-   import djcrud
-   djcrud.site.routes.append(DashboardView)
+.. literalinclude:: ../src/djcrud_example/spa_example/djcrud.py
+   :language: python
 
 The shell loads Bulma, Unpoly, CSRF config, and sidebar markup; your subclass
 adds only the client bundle. Copy ``base.html`` or extend ``SPAView`` — routing
@@ -232,7 +220,7 @@ The :doc:`tutorial/index` mirrors how you would actually adopt djcrud:
        HTML, API, and future MCP agents
    * - :doc:`tutorial/views`
      - Clone list views, object actions, bulk list actions, mixin tour
-   * - :doc:`tutorial/frontend`
+   * - :doc:`tutorial/spa`
      - DRF API and SPA shell reusing the permissions you registered in step 2
    * - :doc:`tutorial/agents`
      - stdio MCP bridge (``djcrud_mcp``) over the same API and permissions

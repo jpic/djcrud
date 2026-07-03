@@ -11,10 +11,13 @@ from django.views import generic
 
 from django.forms import Media
 
+from django.forms.widgets import Script
+
 from djcrud.media import SpaShellMedia
 from djcrud.redirect import FULL_PAGE_LINK_ATTRIBUTES, apply_unpoly_target
 from djcrud.templatetags.djcrud import unpoly_attributes
 from djcrud.view import ViewMixin, uses_spa_shell
+from djcrud.views.spa import SPAView
 from djcrud.views.template import TemplateViewMixin
 
 
@@ -35,6 +38,24 @@ class _SpaView:
     breadcrumbs = []
     media = Media(media=SpaShellMedia)
     mount_element = '<div id="app"></div>'
+
+
+def test_spa_view_mount_element_and_module_media():
+    class DashboardView(SPAView):
+        mount_element = '<div id="app"><p>Loading…</p></div>'
+
+        class Media(SPAView.Media):
+            js = SPAView.Media.js + (
+                Script("myapp/js/dashboard.js", type="module"),
+            )
+
+    view = DashboardView()
+
+    assert view.get_mount_element() == '<div id="app"><p>Loading…</p></div>'
+    rendered_js = "".join(view.media.render_js())
+    assert 'type="module"' in rendered_js
+    assert "myapp/js/dashboard.js" in rendered_js
+    assert "unpoly-config.js" in rendered_js
 
 
 def test_spa_template_is_minimal_shell():

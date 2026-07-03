@@ -6,6 +6,7 @@ from djcrud.clonable import Clonable
 from djcrud.permission import PermissionMixin
 from djcrud.route import Route
 
+from .log import LogMixin
 from .serializers import serializer_for_model
 
 ACTION_SHORTCODES = {
@@ -25,7 +26,7 @@ def action_shortcode(action):
     return ACTION_SHORTCODES.get(action, action)
 
 
-class ModelViewSet(PermissionMixin, viewsets.ModelViewSet):
+class ModelViewSet(PermissionMixin, LogMixin, viewsets.ModelViewSet):
     """Default CRUD ViewSet wired to the :mod:`djcrud.permissions` registry."""
 
     model = None

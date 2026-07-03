@@ -28,12 +28,17 @@ Add to ``INSTALLED_APPS`` and include API URLs:
        + djcrud_drf.site.build().urlpatterns
    )
 
-Register in each app's ``djcrud.py`` (with HTML router):
+Register ViewSets in each app's ``djcrud.py`` (loaded by
+:meth:`djcrud.Site.build`). Call :meth:`djcrud_drf.DrfSite.build` after
+:meth:`djcrud.Site.build` in ``urls.py``. Split into other modules via imports
+if you prefer — HTML :class:`~djcrud.ModelRouter` registration in the same file
+is optional and independent.
 
 .. code-block:: python
 
    # myapp/djcrud.py
    import djcrud
+   import djcrud_drf
    from .models import Item
 
    class ItemRouter(djcrud.ModelRouter):
@@ -41,14 +46,22 @@ Register in each app's ``djcrud.py`` (with HTML router):
 
    djcrud.site.routes.append(ItemRouter)
 
-   # myapp/djcrud_drf.py
-   import djcrud_drf
-   from .models import Item
-
    class ItemViewSet(djcrud_drf.ModelViewSet):
        model = Item
 
    djcrud_drf.site.register(ItemViewSet)
+
+Audit logging
+=============
+
+:class:`~djcrud_drf.ModelViewSet` mixes in :class:`~djcrud_drf.LogMixin`, which
+writes Django admin ``LogEntry`` rows on create, update, and destroy (same
+envelope format as :class:`~djcrud.views.log.LogMixin` on HTML views). When
+``djcrud_history`` is installed, API mutations appear on each model's history
+view automatically.
+
+Set ``log_actions = False`` on a ViewSet subclass to disable logging, or pass a
+``frozenset`` of action names (``"update"`` covers ``partial_update``).
 
 Permissions
 ===========
@@ -83,5 +96,5 @@ clients know how to authenticate:
    )
 
 Bearer tokens from :doc:`../djcrud_api/index` work on DRF routes. See
-:doc:`../../tutorial/frontend` for the full install walkthrough,
-SPA shell, and client codegen.
+:doc:`../../tutorial/drf` for the install walkthrough and
+:doc:`../../tutorial/spa` for the SPA shell and client codegen.

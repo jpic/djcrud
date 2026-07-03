@@ -49,7 +49,7 @@
     {:else if apiError}
       <p class="has-text-danger">
         Could not load products ({apiError}). Enable <code>djcrud[drf]</code> per
-        <code>docs/tutorial/frontend.rst</code>, or run <code>npm run api</code> to
+        <code>docs/tutorial/drf.rst</code>, or run <code>npm run api</code> to
         generate a client from <code>/api/schema/</code>.
       </p>
     {:else if products.length === 0}

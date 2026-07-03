@@ -2,7 +2,7 @@ Agents (MCP bridge)
 ===================
 
 Stdio MCP tools proxy Bearer HTTP to your DRF API. Enable DRF first
-(:doc:`frontend`).
+(:doc:`drf`).
 
 The MCP **client** is the standalone ``djcrud-mcp`` package (``mcp`` +
 ``httpx`` only — no Django). The Django **host** still needs
@@ -11,97 +11,76 @@ The MCP **client** is the standalone ``djcrud-mcp`` package (``mcp`` +
 Install client
 --------------
 
-**Sandboxes and agent subprocesses** (no Django on ``PYTHONPATH``):
+**Remote subprocesses** (no Django on ``PYTHONPATH`` — sandboxes, CI, remote agents):
 
 .. code-block:: bash
 
    pip install --pre djcrud-mcp
 
-**Django host development** (ViewSet auto-discovery via ``djcrud_drf.site``):
+**Django host** (declare profiles and serve ``GET /api/mcp/profiles/``):
 
 .. code-block:: bash
 
    pip install --pre "djcrud[drf,mcp]"
 
-``djcrud[mcp]`` depends on ``djcrud-mcp``; use ``[drf,mcp]`` when the MCP
-process runs on the same machine as Django and should introspect registered
-ViewSets. Remote agents should install ``djcrud-mcp`` only and point at your
-API with ``DJCRUD_BASE_URL`` / ``DJCRUD_TOKEN``.
+Remote agents install ``djcrud-mcp`` only and point at your API with
+``DJCRUD_BASE_URL`` / ``DJCRUD_TOKEN``. The client fetches the active profile
+from the host at startup.
 
 Example
 -------
 
-One ``djcrud.py`` — CRUD permissions, ``publish`` action, ViewSet registration.
-MCP tools (``article_list``, ``article_create``, ``article_publish``, …) follow
-from the registered ViewSet and ``GET /api/schema/``.
+Base ViewSet registration lives in ``drf_example/djcrud.py`` (see :doc:`drf`).
+Custom ``@action`` methods — such as **publish** on ``Article`` — can live in a
+separate module imported from ``djcrud.py``. MCP tools (``article_list``,
+``article_create``, ``article_publish``, …) follow from the registered ViewSet
+and ``GET /api/schema/``.
+
+.. literalinclude:: ../../src/djcrud_example/drf_example/article_viewset.py
+
+Default profile
+---------------
+
+With no ``McpProfile`` registered, the ``default`` profile exposes every
+``ModelViewSet`` on :data:`djcrud_drf.site`:
+
+.. code-block:: bash
+
+   export DJCRUD_TOKEN=<raw_key>
+   djcrud-mcp -mcp
+
+Named profiles
+--------------
+
+When you need **multiple** stdio MCP servers (tasks vs admin, public vs internal),
+declare a :class:`~djcrud_mcp.McpProfile` on the Django host and register it on
+:data:`djcrud_mcp.site` — same pattern as :meth:`djcrud_drf.site.register`:
 
 .. code-block:: python
 
-   import djcrud
-   import djcrud_drf
-   from rest_framework.decorators import action
-   from rest_framework.response import Response
+   import djcrud_mcp
+   from myapp.drf import ArticleViewSet
 
-   from .models import Article
+   class ArticlesMcp(djcrud_mcp.McpProfile):
+       key = "articles"
+       server_name = "myapp-articles"
+       instructions = "Article CRUD via /api/article/."
+       info_tool_name = "article_registry_info"
+       viewsets = (ArticleViewSet,)
 
+   djcrud_mcp.site.register(ArticlesMcp)
 
-   def can_publish(user, *, obj, **ctx):
-       if not user.is_authenticated:
-           return False
-       if obj is not None and (
-           not djcrud.is_owner(user, obj=obj, **ctx) or obj.published
-       ):
-           return False
-       return True
-
-
-   class ArticleViewSet(djcrud_drf.ModelViewSet):
-       model = Article
-
-       @action(detail=True, methods=["post"])
-       def publish(self, request, pk=None):
-           article = self.get_object()
-           article.publish()
-           return Response(self.get_serializer(article).data)
-
-
-   djcrud.add_perm(Article, "view,add,change,delete", check=djcrud.authenticated)
-   djcrud.add_perm(Article, "publish", check=can_publish)
-   djcrud_drf.site.register(ArticleViewSet)
-
-Standalone registry (no ViewSet introspection)
---------------------------------------------
-
-When the MCP subprocess cannot import Django (gVisor sandboxes, CI, remote
-agents), register a :class:`~djcrud_mcp.RegistryProfile` with ``api_prefixes``
-and optional :class:`~djcrud_mcp.ExtraTool` entries — then run ``djcrud-mcp``:
+Wire host URLs (once per project):
 
 .. code-block:: python
 
-   from djcrud_mcp import ExtraTool, RegistryProfile, register_profile
+   from djcrud_mcp.django.urls import urlpatterns as mcp_urlpatterns
 
-   register_profile(
-       RegistryProfile(
-           key="articles",
-           server_name="myapp-articles",
-           instructions="Article CRUD via /api/article/.",
-           info_tool_name="article_registry_info",
-           api_prefixes=("/api/article/",),
-           extra_tools=(
-               ExtraTool(
-                   name="article_publish",
-                   method="post",
-                   path="/api/article/{id}/publish/",
-                   description="Publish an article",
-                   input_schema={
-                       "type": "object",
-                       "properties": {"id": {"type": "integer"}},
-                       "required": ["id"],
-                   },
-               ),
-           ),
-       )
-   )
+   urlpatterns = [
+       # ...
+   ] + djcrud_drf.site.build().urlpatterns + mcp_urlpatterns
+
+Remote client:
 
 .. code-block:: bash
 
@@ -109,8 +88,8 @@ and optional :class:`~djcrud_mcp.ExtraTool` entries — then run ``djcrud-mcp``:
    export DJCRUD_TOKEN=<raw_key>
    djcrud-mcp -mcp
 
-On a Django host, the same profile works without ``discover_viewsets()`` as long
-as ``api_prefixes`` is set.
+The client calls ``GET /api/mcp/profiles/articles/`` for instructions and API
+prefixes, then ``GET /api/schema/`` to build tools.
 
 Run
 ---

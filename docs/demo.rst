@@ -57,7 +57,7 @@ with list, create, detail, update, and delete views.
 models (requires ``djcrud_dal_topbar``).
 
 **JSON API** — Enable the DRF tutorial apps in ``settings.py`` and ``urls.py``
-(see :doc:`tutorial/frontend`), then visit http://localhost:8000/api/docs/ for the
+(see :doc:`tutorial/drf`), then visit http://localhost:8000/api/docs/ for the
 Swagger UI.
 
 **Tutorial examples** — The example project includes all tutorial chapters:
@@ -65,7 +65,8 @@ Swagger UI.
 * :doc:`tutorial/routing` — ``/item/`` — basic model router
 * :doc:`tutorial/permission` — ``/secured-document/`` — permissions registry
 * :doc:`tutorial/views` — ``/article/``, ``/post/`` — view customization and actions
-* :doc:`tutorial/frontend` — ``/api/product/``, ``/spa/``, and OpenAPI client codegen
+* :doc:`tutorial/drf` — ``/api/product/`` and OpenAPI
+* :doc:`tutorial/spa` — ``/spa/`` and client codegen
 
 **Debug tools** — Visit http://localhost:8000/debug/router/ (superuser only)
 to introspect the routing tree.

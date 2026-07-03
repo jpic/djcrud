@@ -13,17 +13,13 @@ Registration
 
 .. literalinclude:: ../../src/djcrud_example/views_example/djcrud.py
 
-Models
-------
-
-.. literalinclude:: ../../src/djcrud_example/views_example/models.py
-
 State-based object action
 -------------------------
 
 Custom routes are not limited to CRUD. :file:`example_action.py` adds a **Publish**
-object action gated by a ``publish`` rule in ``djcrud.py`` (owner + draft only;
-see :doc:`permission` and :doc:`agents` for the DRF equivalent):
+object action on ``Article`` (gated by a ``publish`` rule in ``djcrud.py`` — owner
++ draft only; see :doc:`permission`, :doc:`drf` for the API surface, and
+:doc:`agents` for MCP):
 
 .. literalinclude:: ../../src/djcrud_example/views_example/example_action.py
 
@@ -48,7 +44,7 @@ List action
 -----------
 
 Bulk actions follow the same pattern as built-in bulk delete (see :doc:`routing`).
-Subclass :py:class:`~djcrud.views.list_action.ListActionView`, tag it
+On ``Post``, subclass :py:class:`~djcrud.views.list_action.ListActionView`, tag it
 ``list_action``, and append it to the router ``routes``:
 
 .. literalinclude:: ../../src/djcrud_example/views_example/example_listaction.py
@@ -202,4 +198,5 @@ Tests
 
 `tests/test_views_example.py on GitHub <https://github.com/jpic/djcrud/blob/master/tests/test_views_example.py>`_
 
-Next: :doc:`frontend` adds an optional JSON API, SPA shell, and client codegen.
+Next: :doc:`drf` adds an optional JSON API; :doc:`spa` adds the SPA shell and
+client codegen.

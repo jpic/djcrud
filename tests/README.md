@@ -36,8 +36,8 @@ Tutorial chapters map to example apps:
 | `routing_example` | `docs/tutorial/routing.rst` |
 | `security_example` | `docs/tutorial/permission.rst` |
 | `views_example` | `docs/tutorial/views.rst` |
-| `drf_example` | `docs/tutorial/frontend.rst` (DRF) |
-| `spa_example` | `docs/tutorial/frontend.rst` (SPA) |
+| `drf_example` | `docs/tutorial/drf.rst`, `docs/tutorial/agents.rst` (`article_viewset.py`) |
+| `spa_example` | `docs/tutorial/spa.rst` |
 
 ## Shared fixtures
 

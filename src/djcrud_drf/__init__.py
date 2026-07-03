@@ -1,16 +1,16 @@
 """Optional DRF API layer for djcrud.
 
-Register :class:`ModelViewSet` subclasses on :data:`site` from each app's
-``djcrud.py`` module.
+Register :class:`ModelViewSet` subclasses on :data:`site` from your app's
+``djcrud.py`` (or any module imported from there).
 
 Install with ``pip install djcrud[drf]`` and add ``djcrud_drf`` to
 ``INSTALLED_APPS``.
 """
 
 from django.urls import include, path
-from django.utils.module_loading import autodiscover_modules
 
 from .spectacular import spectacular_settings
+from .log import LogMixin
 from .viewsets import ModelViewSet
 
 
@@ -63,14 +63,9 @@ class DrfSite:
         if viewset_class not in self._registrations:
             self._registrations.append(viewset_class)
 
-    def autodiscover(self):
-        autodiscover_modules("djcrud_drf")
-        return self
-
     def build(self):
         if self._built:
             return self
-        self.autodiscover()
         for viewset_class in self._registrations:
             viewset_class._built_router = viewset_class.build_router()
         router.build()
@@ -152,13 +147,3 @@ class _LazyRouterProxy:
 site = DrfSite()
 api = ApiRouter()
 router = _LazyRouterProxy()
-
-__all__ = [
-    "ApiRouter",
-    "DrfSite",
-    "ModelViewSet",
-    "api",
-    "router",
-    "site",
-    "spectacular_settings",
-]

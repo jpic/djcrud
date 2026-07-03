@@ -15,7 +15,7 @@ Routes
 ======
 
 :mod:`djcrud_api` registers login and token routes on :data:`djcrud_drf.router`
-when ``djcrud_drf`` is installed (see :doc:`../../tutorial/frontend`):
+when ``djcrud_drf`` is installed (see :doc:`../../tutorial/drf`):
 
 .. list-table::
    :header-rows: 1
@@ -33,7 +33,7 @@ Enable the package
 
 Add ``djcrud_api`` to ``INSTALLED_APPS`` and register the Bearer middleware
 (**required** for token auth and CSRF exemption). Full steps are in
-:doc:`../../tutorial/frontend`:
+:doc:`../../tutorial/drf`:
 
 .. code-block:: python
 

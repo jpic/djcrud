@@ -54,9 +54,9 @@ INSTALLED_APPS = [
     "djcrud_triggers",
     # routing introspection for superusers at /debug/router/ and /debug/url/
     "djcrud_debug",
-    # Token model for djcrud_drf login routes (see docs/tutorial/frontend.rst)
+    # Token model for djcrud_drf login routes (see docs/tutorial/drf.rst)
     "djcrud_api",
-    # DRF tutorial — uncomment when following docs/tutorial/frontend.rst:
+    # DRF tutorial — uncomment when following docs/tutorial/drf.rst:
     # "rest_framework",
     # "drf_spectacular",
     # "djcrud_drf",
@@ -83,7 +83,7 @@ LOGIN_URL = "/auth/login/"
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    # Bearer token middleware — enable per docs/tutorial/frontend.rst:
+    # Bearer token middleware — enable per docs/tutorial/drf.rst:
     # "djcrud_api.middleware.BearerCsrfMiddleware",  # before CsrfViewMiddleware
     "django.middleware.locale.LocaleMiddleware",
     "django.middleware.common.CommonMiddleware",

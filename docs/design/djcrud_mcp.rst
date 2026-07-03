@@ -26,14 +26,16 @@ Goals
 * **No ``@extend_schema`` on CRUD** — drf-spectacular already documents
   registered ViewSets; MCP reads ``GET /api/schema/`` and filters by known API
   paths.
+* **Host-owned profiles** — ``McpProfile`` classes register on
+  :data:`djcrud_mcp.site`; remote clients fetch ``GET /api/mcp/profiles/{key}/``.
 
 Non-goals
 ---------
 
-* Host-side MCP registry (user server vaults — application code, e.g. Tildette
-  ``djacp_mcp``).
+* User MCP server vaults (application code, e.g. Tildette ``djacp_mcp``).
 * Django URL routes for MCP stdio transport.
 * Re-declaring permissions in the MCP client.
+* Client-side tool definitions outside OpenAPI schema.
 
 Architecture
 ------------
@@ -44,7 +46,8 @@ Architecture
    │ Agent            │ ◄────────────────► │ djcrud_mcp          │
    └──────────────────┘                    └──────────┬──────────┘
                                                       │
-                        GET /api/schema/  +  Bearer HTTP /api/<model>/
+              GET /api/mcp/profiles/{key}/  +  GET /api/schema/
+              Bearer HTTP /api/<model>/
                                                       ▼
                                            ┌─────────────────────┐
                                            │ djcrud_drf          │
@@ -58,11 +61,11 @@ Architecture
 CRUD discovery (default)
 ------------------------
 
-1. **Registered ViewSets** — introspect :data:`djcrud_drf.site` (same registry
-   as URL building) to learn each model's API path:
+1. **Registered ViewSets** — on the Django host, introspect
+   :data:`djcrud_drf.site` to learn each model's API path:
    ``/api/{model.__name__.lower()}/``.
 2. **Schema fetch** — ``GET /api/schema/``; keep operations whose path matches
-   a registered ViewSet prefix.
+   a profile's ViewSet prefixes.
 3. **Tool naming** — for each standard DRF action on that path:
 
    .. list-table::
@@ -103,34 +106,42 @@ CRUD discovery (default)
 .. code-block:: python
 
    # djcrud.py
+   import djcrud_drf
+
    djcrud.site.routes.append(ItemRouter)
    djcrud.add_perm(ItemRouter, "view,add,change,delete", check=djcrud.authenticated)
-
-   # djcrud_drf.py
    djcrud_drf.site.register(ItemViewSet)
 
 That is the full MCP CRUD setup. Custom ``@action`` methods use the method name
 as the permission shortcode (``publish`` → ``publish`` rule).
 
-Registry profiles (optional grouping)
--------------------------------------
+MCP profiles (optional grouping)
+--------------------------------
 
-When one MCP server should expose **a subset** of registered ViewSets (e.g.
-tasks vs admin models), a :class:`~djcrud_mcp.RegistryProfile` lists **models
-or ViewSet classes** — not OpenAPI tags:
+When one stdio MCP server should expose **a subset** of registered ViewSets
+(e.g. tasks vs admin models), declare a :class:`~djcrud_mcp.McpProfile` on the
+Django host and register it on :data:`djcrud_mcp.site`:
 
 .. code-block:: python
 
-   RegistryProfile(
-       key="items",
-       server_name="myapp-items",
-       viewsets=(ItemViewSet,),   # or models=(Item,)
-       instructions="...",
-       info_tool_name="item_registry_info",
-   )
+   import djcrud_mcp
+
+   class ItemsMcp(djcrud_mcp.McpProfile):
+       key = "items"
+       server_name = "myapp-items"
+       viewsets = (ItemViewSet,)   # or models=(Item,)
+       instructions = "..."
+       info_tool_name = "item_registry_info"
+
+   djcrud_mcp.site.register(ItemsMcp)
 
 Default profile: **all** ``ModelViewSet`` registrations on
-:data:`djcrud_drf.site`.
+:data:`djcrud_drf.site` (synthesized when no explicit ``default`` profile is
+registered).
+
+Remote MCP subprocesses fetch the built profile from
+``GET /api/mcp/profiles/{key}/`` — they do not import Django or declare
+profiles locally.
 
 Custom (non-CRUD) endpoints
 ---------------------------
@@ -140,9 +151,9 @@ Only non-standard routes need explicit schema surfacing:
 * Standalone :class:`~rest_framework.views.APIView` (workflow steps, probes)
 * ``@action`` on a ViewSet for one-off operations
 
-Use ``@extend_schema`` (or :class:`~djcrud_mcp.ExtraTool`) **only** for these.
-Register them on the profile's ``extra_tools`` list or a dedicated custom
-APIView with a documented path under ``/api/``.
+Use ``@extend_schema`` so the path appears in ``/api/schema/``, then include the
+ViewSet (or ``api_prefixes``) on the relevant ``McpProfile``. There is no
+parallel client-side tool registry — schema is the single source of truth.
 
 Authentication
 --------------
@@ -154,39 +165,30 @@ Same as :doc:`../reference/djcrud_api/index`:
 
 Passwords are never sent per tool call.
 
-Package layout (planned)
-------------------------
+Package layout
+--------------
 
 ::
 
-   src/djcrud_mcp/
+   djcrud-mcp/src/djcrud_mcp/
+     site.py        # McpSite — register(McpProfile), build profiles
+     profiles.py    # McpProfile, RegistryProfile
+     django/        # GET /api/mcp/profiles/ (host only)
      viewsets.py    # discover registered ModelViewSets, api_path_for(model)
-     schema.py      # filter schema paths by registered prefixes
+     schema.py      # filter schema paths by profile prefixes
      tools.py       # tool_name(model, action), render_path, split_arguments
      server.py      # create_mcp_server()
-     profiles.py    # RegistryProfile(viewsets=..., models=...)
-     api.py         # CrudApi
+     api.py         # CrudApi, fetch_profile()
      config.py
-     extras.py      # ExtraTool for non-CRUD only
 
-Tildette mapping
-----------------
+Application example (Tildette)
+------------------------------
 
-Replace URL-prefix filtering (``/taskssection``) with ViewSet/model-based
-discovery after DRF migration:
-
-.. list-table::
-   :header-rows: 1
-   :widths: 40 60
-
-   * - tildette_client today
-     - djcrud_mcp
-   * - ``controller_prefix="/taskssection"``
-     - ``models=(Task,)`` or ``viewsets=(TaskViewSet,)``
-   * - ``tool_name_for_operation()`` path heuristics
-     - ``{model}_{action}`` from registered ViewSet
-   * - ``_register_mcp_secret_tools()``
-     - ``ExtraTool`` only (non-CRUD)
+Tildette declares two host profiles — ``tasks`` and ``mcp`` — in
+``tildette_tasks/mcp_profile.py`` and ``tildette_mcp/mcp_profile.py``, each
+registered with ``djcrud_mcp.site.register(...)``. The sandbox
+``tildette-client`` subprocess fetches them over HTTP; it does not ship profile
+definitions in the workspace package.
 
 Related docs
 ------------

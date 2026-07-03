@@ -389,8 +389,8 @@ Tildette is the reference large port. Suggested order:
    * - ``tildette_triggers``
      - Small; swap ``djmvc_triggers`` imports first
    * - ``tildette_mcp``
-     - Registry section; non-CRUD secret endpoints become ``@action`` or
-       ``ExtraTool`` entries (see :doc:`design/djcrud_mcp`)
+     - Registry section; non-CRUD secret endpoints become DRF ``@action`` or
+       APIView routes in ``/api/schema/`` (see :doc:`design/djcrud_mcp`)
    * - ``tildette_tasks``
      - Heavy JSON on views; add ``TaskViewSet``; MCP tool names change
    * - ``tildette_workspace``
@@ -433,6 +433,6 @@ Further reading
 
 * :doc:`philosophy` — why the registry exists
 * :doc:`tutorial/permission` — ``add_perm`` / ``add_queryset`` in depth
-* :doc:`tutorial/frontend` — DRF setup
+* :doc:`tutorial/drf` — DRF setup
 * :doc:`tutorial/agents` — MCP after DRF
 * :doc:`design/djcrud_mcp` — tool discovery design

@@ -1,9 +1,90 @@
 import json
 
 import pytest
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth import get_user_model
 
+from djcrud.views.log import ADDITION, CHANGE, DELETION
+
 pytestmark = pytest.mark.drf
+
+
+@pytest.mark.django_db
+def test_drf_create_logs_addition(api_client):
+    from djcrud_example.drf_example.models import Product
+
+    before = LogEntry.objects.count()
+    response = api_client.post(
+        "/api/product/",
+        data=json.dumps({"name": "logged product"}),
+        content_type="application/json",
+    )
+    assert response.status_code == 201
+    obj = Product.objects.get(name="logged product")
+
+    assert LogEntry.objects.count() == before + 1
+    entry = LogEntry.objects.filter(object_id=str(obj.pk)).get()
+    assert entry.action_flag == ADDITION
+    data = json.loads(entry.change_message)
+    assert data["extra"]["path"] == "/api/product/"
+    assert data["extra"]["view"] == "ProductViewSet"
+
+
+@pytest.mark.django_db
+def test_drf_update_logs_changed_fields(api_client):
+    from djcrud_example.drf_example.models import Product
+
+    product = Product.objects.create(name="before")
+    response = api_client.patch(
+        f"/api/product/{product.pk}/",
+        data=json.dumps({"name": "after"}),
+        content_type="application/json",
+    )
+    assert response.status_code == 200
+
+    entry = LogEntry.objects.filter(object_id=str(product.pk)).get()
+    assert entry.action_flag == CHANGE
+    data = json.loads(entry.change_message)
+    assert data["changes"] == [{"changed": {"fields": ["Name"]}}]
+
+
+@pytest.mark.django_db
+def test_drf_delete_logs_deletion(api_client):
+    from djcrud_example.drf_example.models import Product
+
+    product = Product.objects.create(name="gone")
+    pk = product.pk
+    response = api_client.delete(f"/api/product/{pk}/")
+    assert response.status_code == 204
+
+    entry = LogEntry.objects.filter(object_id=str(pk)).get()
+    assert entry.action_flag == DELETION
+
+
+@pytest.mark.django_db
+def test_drf_no_log_when_anonymous(client, drf_settings, db):
+    before = LogEntry.objects.count()
+    client.post(
+        "/api/product/",
+        data=json.dumps({"name": "ghost"}),
+        content_type="application/json",
+    )
+    assert LogEntry.objects.count() == before
+
+
+@pytest.mark.django_db
+def test_drf_no_log_when_disabled(api_client, monkeypatch):
+    from djcrud_example.drf_example.djcrud import ProductViewSet
+
+    monkeypatch.setattr(ProductViewSet, "log_actions", False)
+    before = LogEntry.objects.count()
+    response = api_client.post(
+        "/api/product/",
+        data=json.dumps({"name": "silent"}),
+        content_type="application/json",
+    )
+    assert response.status_code == 201
+    assert LogEntry.objects.count() == before
 
 
 @pytest.mark.django_db

@@ -17,16 +17,16 @@ Design spec: :doc:`../../design/djcrud_mcp`.
 CRUD without decorators
 =======================
 
-Register a ViewSet the same way as :doc:`../../tutorial/frontend` — MCP picks
+Register a ViewSet the same way as :doc:`../../tutorial/drf` — MCP picks
 it up automatically:
 
 .. code-block:: python
 
    # djcrud.py
+   import djcrud_drf
+
    djcrud.site.routes.append(ItemRouter)
    djcrud.add_perm(ItemRouter, "view,add,change,delete", check=authenticated)
-
-   # djcrud_drf.py
    djcrud_drf.site.register(ItemViewSet)
 
 Open access in ``djcrud.py`` with :func:`~djcrud.add_perm` /
@@ -60,11 +60,13 @@ Generated MCP tools (no manual naming):
 Server setup
 ============
 
-1. ``pip install --pre "djcrud[drf]"``
+1. ``pip install --pre "djcrud[drf,mcp]``
 2. Enable ``djcrud_drf``, ``djcrud_api``, Bearer middleware, API URLs
-   (:doc:`../../tutorial/frontend`)
+   (:doc:`../../tutorial/drf`)
 3. Register ``ModelViewSet`` subclasses on :data:`djcrud_drf.site`
 4. Register permissions in ``djcrud.py``
+5. Include ``djcrud_mcp.django.urls`` in project ``urlpatterns`` (see
+   :doc:`../../tutorial/agents`)
 
 Client setup
 ============
@@ -94,33 +96,59 @@ Aliases: ``DJMVC_*``, ``TILDETTE_*``.
    djcrud-mcp
    djcrud-mcp --call item_list --json '{}'
 
-Registry profiles
-=================
+Host profile API
+================
 
-Optional: limit which registered ViewSets one MCP server exposes.
+When ``djcrud_mcp.django`` URLs are mounted, remote clients fetch profile
+definitions over HTTP (no Django import in the MCP subprocess):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 40 60
+
+   * - Endpoint
+     - Purpose
+   * - ``GET /api/mcp/profiles/``
+     - List registered profile keys
+   * - ``GET /api/mcp/profiles/{key}/``
+     - Profile JSON (instructions, ``api_prefixes``, meta)
+   * - ``GET /api/mcp/viewsets/``
+     - Registered ViewSet ``{model, prefix}`` list (for the ``default`` profile)
+
+MCP profiles
+============
+
+Optional: limit which registered ViewSets one stdio MCP server exposes.
+Declare a class and register it on :data:`djcrud_mcp.site`:
 
 .. code-block:: python
 
-   RegistryProfile(
-       key="items",
-       server_name="myapp-items",
-       viewsets=(ItemViewSet,),  # or models=(Item,)
-       instructions="CRUD for Item via the JSON API.",
-       info_tool_name="item_registry_info",
-   )
+   import djcrud_mcp
 
-Omit ``viewsets`` / ``models`` to expose every registered ``ModelViewSet``.
+   class ItemsMcp(djcrud_mcp.McpProfile):
+       key = "items"
+       server_name = "myapp-items"
+       viewsets = (ItemViewSet,)  # or models=(Item,)
+       instructions = "CRUD for Item via the JSON API."
+       info_tool_name = "item_registry_info"
 
-Custom endpoints only
-=====================
+   djcrud_mcp.site.register(ItemsMcp)
+
+Omit ``viewsets`` / ``models`` on the ``default`` profile class to expose every
+registered ``ModelViewSet``. You can also set ``api_prefixes`` explicitly when
+ViewSet introspection is unavailable.
+
+Custom endpoints
+================
 
 For **non-CRUD** routes (secret prompts, probes, workflow steps):
 
 * Add a DRF :class:`~rest_framework.views.APIView` **or** ViewSet ``@action``
-* Use ``@extend_schema`` so the path appears in ``/api/schema/``, **or**
-* Register :class:`~djcrud_mcp.ExtraTool` on the profile
+* Use ``@extend_schema`` so the path appears in ``/api/schema/``
+* Include the ViewSet (or ``api_prefixes``) on the relevant ``McpProfile``
 
-Standard list/create/update/delete never need this.
+All MCP tools are derived from ``GET /api/schema/``. Standard list/create/update/delete
+never need extra registration.
 
 Authentication
 ==============
@@ -129,15 +157,15 @@ Bearer token on every tool HTTP call. Mint tokens with
 :meth:`~djcrud_api.models.Token.generate` for subprocesses; ``POST /api/login/``
 for local dev. See :doc:`../djcrud_api/index`.
 
-Public API (planned)
-====================
+Public API
+==========
 
-* ``create_mcp_server(...)``
-* ``RegistryProfile`` — ``viewsets`` / ``models`` filter
-* ``register_profile(profile)``
-* ``discover_viewsets()`` — registered ``ModelViewSet`` → API path map
-* ``build_tools_from_schema(schema, viewsets)``
-* ``CrudApi``, ``ExtraTool``
+* :data:`djcrud_mcp.site` — ``register(McpProfile)``, ``get_profile(key)``
+* :class:`~djcrud_mcp.McpProfile` — declarative profile on the Django host
+* :class:`~djcrud_mcp.RegistryProfile` — built profile (serialization / fetch)
+* ``create_mcp_server(...)``, ``fetch_schema(...)``, ``run_stdio()``
+* ``discover_viewsets()`` — host-only ViewSet introspection
+* ``CrudApi``, ``login()``
 
 Further reading
 ===============

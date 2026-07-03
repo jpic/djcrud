@@ -57,7 +57,7 @@ def _ensure_drf_schema_class(settings):
     }
 
 
-def _configure_drf(settings):
+def _install_drf_apps(settings):
     _ensure_drf_schema_class(settings)
 
     installed = list(settings.INSTALLED_APPS)
@@ -69,12 +69,18 @@ def _configure_drf(settings):
     import djcrud_drf
 
     settings.SPECTACULAR_SETTINGS = djcrud_drf.spectacular_settings()
+
+
+def _build_drf_site():
+    import djcrud_drf
+
+    djcrud_drf.site._built = False
     djcrud_drf.site.build()
 
 
 @pytest.fixture
 def drf_settings(settings):
-    _configure_drf(settings)
+    _install_drf_apps(settings)
     return settings
 
 
@@ -116,9 +122,12 @@ def _autodiscover_routes(settings, request):
     """Register per-app routes; mount API URLs unless the test sets its own urlconf."""
     _enable_bearer_middleware(settings)
     _ensure_drf_schema_class(settings)
+    is_drf = request.node.get_closest_marker("drf") is not None
+    if is_drf:
+        _install_drf_apps(settings)
     djcrud.site.build()
-    if request.node.get_closest_marker("drf") is not None:
-        _configure_drf(settings)
+    if is_drf:
+        _build_drf_site()
     elif request.node.get_closest_marker("urls") is None:
         settings.ROOT_URLCONF = "tests.urls"
 
