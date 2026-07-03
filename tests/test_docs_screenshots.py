@@ -156,7 +156,5 @@ def test_capture_api_swagger_screenshot(
     # #swagger-ui container exists immediately (the JS bundle mounts it),
     # but the actual spec fetch + React render of operations happens async.
     # Wait for rendered content so we don't capture the loading spinner.
-    assert browser.is_element_present_by_css(
-        ".swagger-ui .opblock", wait_time=15
-    )
+    assert browser.is_element_present_by_css(".swagger-ui .opblock", wait_time=15)
     capture(browser, "api-swagger-ui")
