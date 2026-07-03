@@ -53,7 +53,7 @@ What changed at a glance:
      - ``{% load djmvc %}``
      - ``{% load djcrud %}``
    * - MCP / agents
-     - ``djmvc-cli``, ``DJMVC_*`` env, path-prefix tool discovery
+     - ``djcrud-cli`` (formerly ``djmvc-cli``), ``DJMVC_*`` env aliases
      - ``djcrud-mcp``, ``DJCRUD_*`` env, ViewSet-based tools (see :doc:`tutorial/agents`)
 
 There is **no** compatibility shim — plan a focused port rather than mixing
@@ -370,7 +370,7 @@ After the port, delete or stop relying on:
 * ``ModelController.json_fields``, ``serialize()``, ``get_<field>_json()``
 * Controller-level ``get_queryset`` / ``has_permission`` overrides (moved to
   registry)
-* ``djmvc-cli`` entry points — replace with ``djcrud-mcp`` when using the MCP
+* ``djmvc-cli`` entry point — renamed to ``djcrud-cli``; standalone MCP uses ``djcrud-mcp``
   extra
 * ``TILDETTE_CONTROLLER_PREFIX`` / path-prefix OpenAPI filtering — replace with
   ViewSet registration (:doc:`design/djcrud_mcp`)
