@@ -1,121 +1,52 @@
-# djcrud Test Suite
+# djcrud test suite
 
-## Overview
+Tests for the djcrud framework and tutorial example apps in `src/djcrud_example/`.
 
-This test suite validates the djcrud framework based on the **actual usage patterns** demonstrated in `djcrud_example` and `djcrud_auth`.
-
-## Test Structure
-
-```
-tests/
-├── settings.py           # Django test settings (SQLite in-memory)
-├── urls.py              # Minimal URL configuration for tests
-├── conftest.py          # Pytest fixtures (requests, users)
-├── test_attribute.py    # Tests for @getter and @cached descriptors
-├── test_clonable.py     # Tests for Clonable mixin and .clone()
-├── test_mvc.py          # Tests for Controller and View classes
-├── test_menu.py         # Tests for menu.get_menu() function
-└── test_integration.py  # Integration tests of full controller hierarchy
-```
-
-## Test Files
-
-### test_attribute.py
-Tests the descriptor system (`djcrud.attribute`):
-- `getter` - Non-caching dual class/instance property
-- `cached` - Caching dual class/instance property
-- Tests cover: class access, instance access, caching behavior, inheritance, metadata preservation
-
-### test_clonable.py
-Tests the `Clonable` mixin:
-- `clone()` method creates subclasses dynamically
-- Attribute override via kwargs
-- Mixin injection via positional args
-- Smart naming with model prefixes
-- Method preservation and chaining
-
-### test_mvc.py
-Tests `Controller` and `View` classes:
-- Controller initialization and urlpatterns generation
-- View properties: `urlpath`, `urlname`, `urlpatterns`
-- View cloning with attributes and models
-- Permission system: `has_perm` (secure by default, requires superuser)
-- Integration with Django's CBV system
-
-### test_menu.py
-Tests the menu system (`djcrud.menu.get_menu`):
-- Filtering views by menu name
-- Permission checking (`has_perm()`)
-- View instantiation with request and kwargs
-- Handling views with/without tags attribute
-
-### test_integration.py
-Full integration tests:
-- Nested controller hierarchies (like `AuthController > UserController`)
-- Multiple views in controllers
-- Cloned views in controllers (like `TemplateView.clone()`)
-- Model binding to views
-- Permission system across hierarchy
-- Real-world example replicating `djcrud_example/urls.py`
-
-## Test Data
-
-Uses Django's built-in models:
-- `django.contrib.auth.models.User`
-- `django.contrib.auth.models.Group`
-
-No custom test models needed - everything uses real Django models.
-
-## Fixtures (conftest.py)
-
-- `rf` - Django RequestFactory
-- `user` - Regular user (not staff, not superuser)
-- `superuser` - Superuser for permission tests
-- `anonymous_request` - Request with AnonymousUser
-- `user_request` - Request with authenticated regular user
-- `superuser_request` - Request with authenticated superuser
-
-## Running Tests
+## Running tests
 
 ```bash
-# Install dependencies
-pip install -e ".[dev]"
+# Fast Python tests (parallel)
+pytest -m "not splinter" -n auto
 
-# Run all tests
-pytest
+# Browser tests (serial; requires Firefox + geckodriver)
+pytest -m splinter -n 0 --splinter-headless
 
-# Run specific test file
-pytest tests/test_attribute.py
+# Tutorial doc integrity (literalinclude paths)
+pytest -m tutorial -n 0
 
-# Run with coverage
-pytest --cov=djcrud --cov-report=html
-
-# Run verbose
-pytest -v
-
-# Run specific test
-pytest tests/test_mvc.py::TestView::test_view_has_perm_with_superuser
+# Full suite
+tox
 ```
 
-## Test Philosophy
+## Key markers
 
-1. **Use real Django models** - No artificial test models, use User/Group
-2. **Test actual usage** - Based on `djcrud_example` and `djcrud_auth` patterns
-3. **Test the public API** - Focus on how users will use the framework
-4. **Secure by default** - Validate that default permissions are restrictive
-5. **Integration over mocking** - Test real Django integration where possible
+| Marker | Purpose |
+|--------|---------|
+| `splinter` | Browser tests — always use `-n 0` |
+| `tutorial` | Validates tutorial example apps referenced from docs |
+| `docs_screenshot` | Captures PNGs into `docs/_static/screenshots/` |
+| `django_db` | Tests requiring database access |
 
-## Known Issues to Fix
+## Example apps
 
-Before tests can pass, these bugs need fixing in `src/djcrud/mvc.py`:
+Tutorial chapters map to example apps:
 
-1. **Line 28**: `results` should be `result` (typo in Controller.urlpatterns)
-2. **Line 47**: `cls` should be `self` (typo in View.urlpatterns)
-3. **Line 54**: `request.is_superuser()` should be `request.user.is_superuser`
+| App | Tutorial chapter |
+|-----|------------------|
+| `routing_example` | `docs/tutorial/routing.rst` |
+| `security_example` | `docs/tutorial/permission.rst` |
+| `views_example` | `docs/tutorial/views.rst` |
+| `drf_example` | `docs/tutorial/frontend.rst` (DRF) |
+| `spa_example` | `docs/tutorial/frontend.rst` (SPA) |
 
-## Coverage Goals
+## Shared fixtures
 
-- **attribute.py**: 100% (critical foundation)
-- **mvc.py**: 95%+ (core framework)
-- **menu.py**: 90%+
-- **Integration**: 85%+ (key workflows)
+`conftest.py` provides:
+
+- `_autodiscover_routes` (autouse) — calls `djcrud.site.build()` before each test
+- `admin_user` — superuser (`admin` / `password`)
+- `browser_login` — Splinter login helper
+- `routing_bulk_items` — seeded `Item` rows for browser tests
+- `many_users` — paginated user list for filter/browser tests
+
+See `docs/contributing.rst` for the full development guide.
