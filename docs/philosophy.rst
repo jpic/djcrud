@@ -148,8 +148,9 @@ the reference templates:
    :language: python
 
 The shell loads Bulma, Unpoly, CSRF config, and sidebar markup; your subclass
-adds only the client bundle. Copy ``base.html`` or extend ``SPAView`` — routing
-and security stay on the djcrud defaults.
+sets :attr:`~djcrud.views.spa.SPAView.mount_element` and adds the client bundle
+via ``class Media``. Copy ``base.html`` or extend ``SPAView`` — routing and
+security stay on the djcrud defaults.
 
 Menus are introspected, not hardcoded
 =====================================

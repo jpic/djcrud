@@ -7,6 +7,7 @@ from djcrud.views.spa import SPAView
 class SpaView(SPAView):
     title = "SPA demo"
     icon = "grid"
+    mount_element = '<div id="app"></div>'
 
     class Media(SPAView.Media):
         js = SPAView.Media.js + (

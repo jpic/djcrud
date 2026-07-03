@@ -40,6 +40,10 @@ class _SpaView:
     mount_element = '<div id="app"></div>'
 
 
+def test_spa_view_default_mount_element():
+    assert SPAView.mount_element == '<div id="app"></div>'
+
+
 def test_spa_view_mount_element_and_module_media():
     class DashboardView(SPAView):
         mount_element = '<div id="app"><p>Loading…</p></div>'
@@ -51,7 +55,7 @@ def test_spa_view_mount_element_and_module_media():
 
     view = DashboardView()
 
-    assert view.get_mount_element() == '<div id="app"><p>Loading…</p></div>'
+    assert view.mount_element == '<div id="app"><p>Loading…</p></div>'
     rendered_js = "".join(view.media.render_js())
     assert 'type="module"' in rendered_js
     assert "myapp/js/dashboard.js" in rendered_js
@@ -60,10 +64,7 @@ def test_spa_view_mount_element_and_module_media():
 
 def test_spa_template_is_minimal_shell():
     spa_view = _SpaView()
-    html = render_to_string(
-        "djcrud/test_spa.html",
-        {"view": spa_view, "mount_element": spa_view.mount_element},
-    )
+    html = render_to_string("djcrud/test_spa.html", {"view": spa_view})
 
     assert '<nav class="navbar"' not in html
     assert "djcrud-spa-body" in html
@@ -142,13 +143,11 @@ def test_apply_unpoly_target_appends_vary():
 class _BodyTargetTemplateView(TemplateViewMixin, generic.TemplateView):
     unpoly_target = "body"
     template_name = "djcrud/test_spa.html"
+    mount_element = '<div id="app"></div>'
 
     @property
     def media(self):
         return Media(media=SpaShellMedia)
-
-    def get_mount_element(self):
-        return '<div id="app"></div>'
 
 
 def test_unpoly_target_response_header(rf):
@@ -157,9 +156,7 @@ def test_unpoly_target_response_header(rf):
     view.setup(request)
     view.request = request
 
-    response = view.render_to_response(
-        {"view": view, "mount_element": view.get_mount_element()},
-    )
+    response = view.render_to_response({"view": view})
 
     assert response["X-Up-Target"] == "body"
     assert "X-Up-Target" in response["Vary"]

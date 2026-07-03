@@ -12,23 +12,21 @@ class SPAView(TemplateView):
     Subclass and extend :class:`Media` to load your client ES modules with
     :class:`~django.forms.widgets.Script` (``type="module"``).
     ``djcrud/base_spa.html`` is the default template (``unpoly_target = 'body'``
-    so menu links full-reload across shells). An empty ``#app`` mount node is
-    rendered by default (:attr:`mount_selector`).
+    so menu links full-reload across shells). Set :attr:`mount_element` to the
+    HTML your client bundle attaches to; the template renders
+    ``{{ view.mount_element|safe }}``.
 
     Attributes:
         default_template_name (str): ``base_spa.html`` under ``djcrud/``.
         unpoly_target (str): ``'body'`` — cross-shell navigation uses plain links.
         tags (list[str]): ``['navigation']`` — appears in the sidebar menu.
-        mount_selector (str): CSS selector for the client mount node (``'#app'``).
-        mount_element (str | None): Optional initial HTML inside ``[up-main]``;
-            overrides the default mount node when set.
+        mount_element (str): Bootstrap HTML inside ``[up-main]`` (default ``#app`` div).
     """
 
     default_template_name = "base_spa.html"
     unpoly_target = "body"
     tags = ["navigation"]
-    mount_element = None
-    mount_selector = "#app"
+    mount_element = '<div id="app"></div>'
 
     class Media(SpaShellMedia):
         pass
@@ -51,15 +49,3 @@ class SPAView(TemplateView):
     def media(self):
         """Merged :class:`~django.forms.Media` for this view (shell + subclass)."""
         return Media(media=getattr(type(self), "Media", SpaShellMedia))
-
-    def get_mount_element(self):
-        """HTML rendered inside ``[up-main]`` before the client bundle runs."""
-        if mount := getattr(type(self), "mount_element", None):
-            return mount
-        selector = self.mount_selector.lstrip("#")
-        return f'<div id="{selector}"></div>'
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-        context["mount_element"] = self.get_mount_element()
-        return context

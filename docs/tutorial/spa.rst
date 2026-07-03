@@ -24,12 +24,35 @@ View and registration
 Subclass :py:class:`~djcrud.views.spa.SPAView` and append it to
 :data:`djcrud.site` — no model router required. Extend ``class Media`` to append
 your ES module paths as :class:`~django.forms.widgets.Script` entries with
-``type="module"``. The shell uses ``djcrud/base_spa.html`` with sidebar
-navigation and a default ``#app`` mount node —
+``type="module"``.
 :attr:`~djcrud.route.Route.urlpath` defaults to the view codename (``spa/`` for
 :class:`SpaView`):
 
 .. literalinclude:: ../../src/djcrud_example/spa_example/djcrud.py
+
+Mounting your app
+-----------------
+
+There is no ``index.html`` in the frontend package. Django renders
+:file:`djcrud/base_spa.html` (sidebar, CSRF, ``{{ view.media }}``); your
+bootstrap HTML and client bundle fill in the rest.
+
+Put the mount node on your view — same pattern as ``icon`` or ``tags`` (see
+:doc:`philosophy`):
+
+.. code-block:: python
+
+   mount_element = '<div id="app"></div>'
+
+:file:`djcrud/base_spa.html` renders it inside ``[up-main]`` via
+``{{ view.mount_element|safe }}``. Your ES module must query the same element
+and attach your framework:
+
+.. literalinclude:: ../../src/djcrud_example/spa_example/frontend/src/main.js
+
+After ``npm run build``, Vite writes the bundle to
+``spa_example/static/spa_example/js/app.js``. Django serves it via the
+``Script("spa_example/js/app.js", type="module")`` entry in :file:`djcrud.py`.
 
 Authentication
 --------------
@@ -53,13 +76,9 @@ SPA shell template
 ------------------
 
 :file:`djcrud/base_spa.html` renders a collapsible sidebar (``is-hidden`` by
-default), introspected navigation, CSRF meta tags, and
-``{{ view.media.css }}`` / ``{{ view.media.js }}`` from the view's
-:class:`~django.forms.Media` — no inline JavaScript. The client mounts on the
-default ``#app`` node (:attr:`~djcrud.views.spa.SPAView.mount_selector`).
-Override :attr:`~djcrud.views.spa.SPAView.mount_element` or
-:meth:`~djcrud.views.spa.SPAView.get_mount_element` only when you need custom
-initial markup.
+default), introspected navigation, CSRF meta tags, the mount node (see
+`Mounting your app`_), and ``{{ view.media.css }}`` / ``{{ view.media.js }}``
+from the view's :class:`~django.forms.Media` — no inline JavaScript.
 
 Svelte app
 ----------
