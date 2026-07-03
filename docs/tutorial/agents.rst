@@ -38,23 +38,13 @@ and ``GET /api/schema/``.
 
 .. literalinclude:: ../../src/djcrud_example/drf_example/article_viewset.py
 
-Default profile
----------------
+MCP profiles
+------------
 
-With no ``McpProfile`` registered, the ``default`` profile exposes every
-``ModelViewSet`` on :data:`djcrud_drf.site`:
-
-.. code-block:: bash
-
-   export DJCRUD_TOKEN=<raw_key>
-   djcrud-mcp -mcp
-
-Named profiles
---------------
-
-When you need **multiple** stdio MCP servers (tasks vs admin, public vs internal),
-declare a :class:`~djcrud_mcp.McpProfile` on the Django host and register it on
-:data:`djcrud_mcp.site` — same pattern as :meth:`djcrud_drf.site.register`:
+Declare a :class:`~djcrud_mcp.McpProfile` on the Django host and register it on
+:data:`djcrud_mcp.site` — same pattern as :meth:`djcrud_drf.site.register`.
+Every stdio MCP client uses a registered profile; remote clients fetch it from
+``GET /api/mcp/profiles/{key}/`` at startup.
 
 .. code-block:: python
 
@@ -90,6 +80,11 @@ Remote client:
 
 The client calls ``GET /api/mcp/profiles/articles/`` for instructions and API
 prefixes, then ``GET /api/schema/`` to build tools.
+
+Use ``key = "default"`` (and ``DJCRUD_MCP_REGISTRY=default``) for a single server
+that exposes every registered ``ModelViewSet``. Register additional profiles with
+distinct keys when you run several stdio MCP servers (tasks vs admin, public vs
+internal).
 
 Run
 ---

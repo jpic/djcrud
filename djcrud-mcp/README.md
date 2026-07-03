@@ -12,7 +12,7 @@ djcrud-mcp -mcp
 
 ## Django host
 
-Declare `McpProfile` classes and register them on `djcrud_mcp.site` (like `djcrud_drf.site.register`):
+Every stdio MCP client needs a host-registered profile. Declare `McpProfile` classes and register them on `djcrud_mcp.site` (like `djcrud_drf.site.register`):
 
 ```python
 import djcrud_mcp

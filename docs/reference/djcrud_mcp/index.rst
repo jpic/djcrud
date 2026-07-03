@@ -17,8 +17,9 @@ Design spec: :doc:`../../design/djcrud_mcp`.
 CRUD without decorators
 =======================
 
-Register a ViewSet the same way as :doc:`../../tutorial/drf` — MCP picks
-it up automatically:
+Register a ViewSet the same way as :doc:`../../tutorial/drf`, then include it on
+a registered :class:`~djcrud_mcp.McpProfile` — MCP tools follow from
+``GET /api/schema/``:
 
 .. code-block:: python
 
@@ -65,8 +66,9 @@ Server setup
    (:doc:`../../tutorial/drf`)
 3. Register ``ModelViewSet`` subclasses on :data:`djcrud_drf.site`
 4. Register permissions in ``djcrud.py``
-5. Include ``djcrud_mcp.django.urls`` in project ``urlpatterns`` (see
-   :doc:`../../tutorial/agents`)
+5. Declare and register :class:`~djcrud_mcp.McpProfile` classes on
+   :data:`djcrud_mcp.site` (required — see :doc:`../../tutorial/agents`)
+6. Include ``djcrud_mcp.django.urls`` in project ``urlpatterns``
 
 Client setup
 ============
@@ -113,13 +115,13 @@ definitions over HTTP (no Django import in the MCP subprocess):
    * - ``GET /api/mcp/profiles/{key}/``
      - Profile JSON (instructions, ``api_prefixes``, meta)
    * - ``GET /api/mcp/viewsets/``
-     - Registered ViewSet ``{model, prefix}`` list (for the ``default`` profile)
+     - Registered ViewSet ``{model, prefix}`` list (host introspection)
 
 MCP profiles
 ============
 
-Optional: limit which registered ViewSets one stdio MCP server exposes.
-Declare a class and register it on :data:`djcrud_mcp.site`:
+Required on the Django host: declare a class and register it on
+:data:`djcrud_mcp.site` for every stdio MCP client:
 
 .. code-block:: python
 
@@ -134,9 +136,11 @@ Declare a class and register it on :data:`djcrud_mcp.site`:
 
    djcrud_mcp.site.register(ItemsMcp)
 
-Omit ``viewsets`` / ``models`` on the ``default`` profile class to expose every
-registered ``ModelViewSet``. You can also set ``api_prefixes`` explicitly when
-ViewSet introspection is unavailable.
+Omit ``viewsets`` / ``models`` on a profile with ``key = "default"`` to expose
+every registered ``ModelViewSet``. Set ``viewsets`` / ``models`` to limit a
+profile to a subset. Register multiple profiles when you run several stdio MCP
+servers. You can also set ``api_prefixes`` explicitly when ViewSet introspection
+is unavailable.
 
 Custom endpoints
 ================

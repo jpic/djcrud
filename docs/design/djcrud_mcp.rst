@@ -15,8 +15,9 @@ Agents need machine CRUD without a hand-written SDK. djcrud already exposes
 Goals
 -----
 
-* **Register once** — ``djcrud_drf.site.register(ItemViewSet)`` is enough for
-  HTML *and* MCP, same as today for HTML + DRF.
+* **Register once** — ``djcrud_drf.site.register(ItemViewSet)`` for HTML/DRF, plus
+  ``djcrud_mcp.site.register(ItemMcp)`` listing that ViewSet (or ``key =
+  "default"`` with no filter) for MCP.
 * **Permissions on the server** — :class:`~djcrud_drf.ModelViewSet` already
   calls :func:`~djcrud.has_permission` and :func:`~djcrud.get_queryset`; the MCP
   bridge is a Bearer HTTP proxy.
@@ -115,12 +116,13 @@ CRUD discovery (default)
 That is the full MCP CRUD setup. Custom ``@action`` methods use the method name
 as the permission shortcode (``publish`` → ``publish`` rule).
 
-MCP profiles (optional grouping)
---------------------------------
+MCP profiles
+------------
 
-When one stdio MCP server should expose **a subset** of registered ViewSets
-(e.g. tasks vs admin models), declare a :class:`~djcrud_mcp.McpProfile` on the
-Django host and register it on :data:`djcrud_mcp.site`:
+Declare a :class:`~djcrud_mcp.McpProfile` on the Django host and register it on
+:data:`djcrud_mcp.site`. Registration is required for every stdio MCP client —
+remote subprocesses fetch the built profile over HTTP and never synthesize one
+locally:
 
 .. code-block:: python
 
@@ -135,13 +137,10 @@ Django host and register it on :data:`djcrud_mcp.site`:
 
    djcrud_mcp.site.register(ItemsMcp)
 
-Default profile: **all** ``ModelViewSet`` registrations on
-:data:`djcrud_drf.site` (synthesized when no explicit ``default`` profile is
-registered).
-
-Remote MCP subprocesses fetch the built profile from
-``GET /api/mcp/profiles/{key}/`` — they do not import Django or declare
-profiles locally.
+Set ``viewsets`` / ``models`` to limit one profile to a subset (e.g. tasks vs
+admin). Omit them on a profile with ``key = "default"`` to expose every
+``ModelViewSet`` on :data:`djcrud_drf.site`. Register multiple profiles when you
+run several stdio MCP servers with different keys.
 
 Custom (non-CRUD) endpoints
 ---------------------------
