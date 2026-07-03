@@ -13,6 +13,7 @@ hand-wiring ``urls.py``, with secure defaults and Bulma templates out of the box
    migrating-from-djmvc
    demo
    tutorial/index
+   design/djcrud_mcp
    reference/index
    contributing
 
