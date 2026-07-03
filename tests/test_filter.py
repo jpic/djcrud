@@ -8,10 +8,8 @@ from django import forms
 from django.template import Context, Template
 from django.views import generic
 
-from djcrud.view import ViewMixin
 from djcrud.views.filter import FilterMixin
-from djcrud.views.list import ListMixin, ListView
-from djcrud.views.search import SearchMixin
+from djcrud.views.list import ListView
 from djcrud.views.template import TemplateViewMixin
 from djcrud.model import ModelMixin
 from djcrud_example.routing_example.models import Item
