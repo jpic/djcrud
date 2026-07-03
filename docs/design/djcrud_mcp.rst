@@ -128,11 +128,10 @@ locally:
 
    import djcrud_mcp
 
-   class ItemsMcp(djcrud_mcp.McpProfile):
-       key = "items"
+   class ExampleMcp(djcrud_mcp.McpProfile):
        viewsets = (ItemViewSet,)   # or models=(Item,)
 
-   djcrud_mcp.site.register(ItemsMcp)
+   djcrud_mcp.site.register(ExampleMcp)
 
 Profile build lifecycle
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -141,8 +140,8 @@ Same model as HTML routes and DRF ViewSets:
 
 1. **Declare** — class attributes on ``McpProfile`` (``key``, ``viewsets``, optional
    overrides).
-2. **Register** — ``djcrud_mcp.site.register(ItemsMcp)`` stores the class.
-3. **Build** — ``site.build()`` calls ``ItemsMcp().build()``, resolving ViewSet
+2. **Register** — ``djcrud_mcp.site.register(ExampleMcp)`` stores the class.
+3. **Build** — ``site.build()`` calls ``ExampleMcp().build()``, resolving ViewSet
    prefixes once and caching them on the instance.
 4. **Serve** — ``GET /api/mcp/profiles/{key}/`` returns ``profile.to_dict()`` for
    remote ``djcrud-client`` subprocesses.
@@ -166,14 +165,8 @@ Computed fields (``@property`` unless overridden on the class):
    * - ``meta["name"]``
      - Same as ``server_name``
 
-Mark one profile ``default = True`` (or register only one). ``GET
-/api/mcp/profiles/`` includes a ``default`` key; clients pass ``--registry KEY``
-or omit it to use that default.
-
-Set ``viewsets`` / ``models`` to limit one profile to a subset (e.g. tasks vs
-admin). Omit them on a profile with ``key = "default"`` to expose every
-``ModelViewSet`` on :data:`djcrud_drf.site`. Register multiple profiles when you
-run several stdio MCP servers with different keys.
+Register one profile per project. Set ``viewsets`` / ``models`` to list the API
+surfaces agents may call.
 
 Custom (non-CRUD) endpoints
 ---------------------------
@@ -212,15 +205,6 @@ Package layout
      server.py      # create_mcp_server()
      api.py         # CrudApi, fetch_profile()
      config.py
-
-Application example (Tildette)
-------------------------------
-
-Tildette declares two host profiles — ``tasks`` and ``mcp`` — in
-``tildette_tasks/mcp_profile.py`` and ``tildette_mcp/mcp_profile.py``, each
-registered with ``djcrud_mcp.site.register(...)``. The sandbox
-``tildette-client`` subprocess fetches them over HTTP; it does not ship profile
-definitions in the workspace package.
 
 Related docs
 ------------

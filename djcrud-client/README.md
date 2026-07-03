@@ -13,4 +13,4 @@ djcrud-client -mcp
 
 Declare `McpProfile` classes in your app's `djcrud.py` and register them on `djcrud_mcp.site` (see `djcrud_example/mcp_example/djcrud.py` in the djcrud repo).
 
-Add `djcrud_mcp` to `INSTALLED_APPS` and include `djcrud_drf.site` URLs on the host. `djcrud_mcp/djcrud.py` registers profile ViewSets at `GET /api/mcp/profiles/{key}/`. `GET /api/mcp/profiles/` also returns the host `default` key. Mark one profile with `default = True` (or register only one); clients omit `--registry` to use that default.
+Add `djcrud_mcp` to `INSTALLED_APPS` and include `djcrud_drf.site` URLs on the host. Register one `McpProfile` in your app's `djcrud.py` (see `mcp_example/djcrud.py`). Run `djcrud-client -mcp` with `DJCRUD_TOKEN` set.

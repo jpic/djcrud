@@ -22,11 +22,10 @@ Server setup
    (:doc:`../../tutorial/drf`)
 3. Register ``ModelViewSet`` subclasses on :data:`djcrud_drf.site`
 4. Register permissions in ``djcrud.py``
-5. Declare and register :class:`~djcrud_mcp.McpProfile` classes on
-   :data:`djcrud_mcp.site` (required — see :doc:`../../tutorial/agents`)
+5. Register one :class:`~djcrud_mcp.McpProfile` on :data:`djcrud_mcp.site`
+   (see :doc:`../../tutorial/agents`)
 6. Add ``djcrud_mcp`` to ``INSTALLED_APPS`` and include :data:`djcrud_drf.site`
-   URLs — profile API ViewSets register from :file:`djcrud_mcp/djcrud.py`` via
-   autodiscovery at ``/api/mcp/``
+   URLs
 
 .. code-block:: python
 
@@ -37,21 +36,22 @@ Server setup
        "djcrud_example.mcp_example",
    ]
 
-   urlpatterns = [
-       # ...
-   ] + djcrud.site.build().urlpatterns + djcrud_drf.site.build().urlpatterns
+   urlpatterns = (
+       djcrud.site.build().urlpatterns
+       + djcrud_drf.site.build().urlpatterns
+   )
 
-MCP profiles
-============
+MCP profile
+===========
 
 Tutorial: ``djcrud_example.mcp_example`` (see :doc:`../../tutorial/agents`).
 
 .. literalinclude:: ../../src/djcrud_example/mcp_example/djcrud.py
 
-:meth:`~djcrud_mcp.site.McpSite.build` instantiates each registered class and
+:meth:`~djcrud_mcp.site.McpSite.build` instantiates the registered class and
 resolves ``api_prefixes``. ``server_name``, ``instructions``, and
-``info_tool_name`` are ``@property`` defaults from the profile ``key`` and
-ViewSet models unless you override class attributes.
+``info_tool_name`` are ``@property`` defaults from the ViewSet models unless you
+override class attributes.
 
 Host profile API
 ================
@@ -63,7 +63,7 @@ Host profile API
    * - Endpoint
      - Purpose
    * - ``GET /api/mcp/profiles/``
-     - ``{"profiles": [...], "default": "<key>"}``
+     - Host MCP profile key (single registered profile)
    * - ``GET /api/mcp/profiles/{key}/``
      - Profile JSON (instructions, ``api_prefixes``, meta)
    * - ``GET /api/mcp/viewsets/``
@@ -88,8 +88,7 @@ no Django). FastMCP, schema tool building, and HTTP proxying live in
    pip install djcrud-client
    export DJCRUD_TOKEN=<raw_key>
    djcrud-client -mcp
-   djcrud-client -mcp --registry articles
-   djcrud-client --call item_list --json '{}'
+   djcrud-client --call article_list --json '{}'
 
 Further reading
 ===============

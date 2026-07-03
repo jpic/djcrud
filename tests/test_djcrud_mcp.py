@@ -301,12 +301,11 @@ def test_mcp_profiles_endpoint(api_client, drf_settings):
     response = api_client.get("/api/mcp/profiles/")
     assert response.status_code == 200
     payload = response.json()
-    assert "articles" in payload["profiles"]
-    assert "products" in payload["profiles"]
-    assert payload["default"] == "articles"
+    assert payload["profiles"] == ["default"]
+    assert payload["default"] == "default"
 
-    detail = api_client.get("/api/mcp/profiles/articles/")
+    detail = api_client.get("/api/mcp/profiles/default/")
     assert detail.status_code == 200
     body = detail.json()
-    assert body["server_name"].endswith("-articles")
     assert "/api/article/" in body["api_prefixes"]
+    assert "/api/product/" in body["api_prefixes"]
