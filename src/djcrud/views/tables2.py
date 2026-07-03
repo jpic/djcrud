@@ -1,235 +1,228 @@
-"""
-Tables2 support for djcrud views using django-tables2.
+import functools
 
-Moved from mixins.py. Uses table_fields getter and generates Table
-dynamically with model and fields (no longer relies on UserTable or Meta in subclasses).
-"""
-
-import django_tables2 as tables
-from django.conf import settings
+import django_tables2
 from django.template.loader import render_to_string
-from django.utils.module_loading import import_string
-from django_tables2 import RequestConfig
-from djcrud import attribute
-from djcrud.mvc import View  # base for Tables2Mixin (avoids circular import with views/__init__.py)
+from django.utils.html import format_html
+from django.utils.safestring import mark_safe
+from django.utils.translation import gettext_lazy as _
+
+from .log import ADDITION, CHANGE, DELETION, format_logentry_message
 
 
-class ActionsColumn(tables.Column):
-    """
-    Shared django-tables2 column for object actions.
-
-    Uses the frontend-specific djcrud/_actions_column.html template
-    (provided by djcrud_bulma and djcrud_bootstrap) to render buttons
-    for the object menu. The template receives `actions` (from get_menu)
-    and the view (via table._djcrud_view).
-    """
-
-    empty_values = ()  # Always render column
+class ActionsColumn(django_tables2.Column):
+    empty_values = ()
     template_name = "djcrud/_actions_column.html"
     exclude_from_export = True
 
     def __init__(self, *args, **kwargs):
-        kwargs.setdefault("verbose_name", "Actions")
-        kwargs.setdefault("orderable", False)  # Ensure column cannot be sorted
+        kwargs.setdefault("verbose_name", _("Actions"))
+        kwargs.setdefault("orderable", False)
+        kwargs.setdefault(
+            "attrs",
+            {
+                "th": {"class": "has-text-right"},
+                "td": {"class": "has-text-right"},
+            },
+        )
         super().__init__(*args, **kwargs)
 
     def render(self, record, table):
-        """Provide context for the template (actions list + view reference)."""
-        view = getattr(table, "_djcrud_view", None)
-        if not view or not view._controller:
-            return ""
+        actions = table.view.router.get_tagged_views(
+            "object",
+            request=table.view.request,
+            object=record,
+        )
+        context = {
+            "actions": actions,
+            "view": table.view,
+            "record": record,
+        }
+        return render_to_string(self.template_name, context, request=table.view.request)
 
-        from djcrud.menu import get_menu
-        actions = get_menu(
-            view._controller, "object", view.request, object=record
+
+class CheckboxColumn(django_tables2.Column):
+    empty_values = ()
+    template_name = "djcrud/_checkbox_column.html"
+    exclude_from_export = True
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault(
+            "verbose_name", mark_safe(render_to_string("djcrud/_checkbox_header.html"))
+        )
+        kwargs.setdefault("orderable", False)
+        super().__init__(*args, **kwargs)
+
+    def render(self, record, table):
+        actions = table.view.router.get_tagged_views(
+            "list_action",
+            request=table.view.request,
+            object=record,
         )
         if not actions:
             return ""
-
-        # Render the frontend-specific template with context
-        # (table._djcrud_view provides full view context for templates)
-        context = {
-            "actions": actions,
-            "view": view,
-            "record": record,
-        }
-        return render_to_string(self.template_name, context, request=view.request)
-
-
-class Tables2Mixin(View):
-    """
-    Add django-tables2 support to ListView.
-
-    We never define a get_context_data method (the base mvc.View provides one that injects
-    `view=self` and `site_controller=root_controller` for templates). Templates can access all
-    attributes and methods of the view object (e.g. view.table, view.table_fields, view.main_menu).
-
-    Uses self.table_fields (getter) and dynamically creates Table with
-    model=self.model and fields=self.table_fields. Subclasses should not
-    override with a hardcoded *Table class anymore.
-    """
-    table_pagination = {'per_page': 25}
-    table_template_name = None
-    per_page_options = '10,25,50,100'  # Options for rows per page selector
-    # table_attrs removed: classes now hardcoded in frontend table templates (bulma.html + bootstrap5.html)
-    # (consistent with philosophy of preferring templates over Python/settings for frontend differences)
-
-    def get_table_template_name(self):
-        """Frontend-specific table template (set by AppConfig.ready() in djcrud_bulma or djcrud_bootstrap)."""
-        return (
-            self.table_template_name
-            or getattr(
-                settings,
-                'DJCRUD_TABLES2_TEMPLATE',
-                'django_tables2/bootstrap5.html',
-            )
+        return render_to_string(
+            self.template_name,
+            {"record": record},
+            request=table.view.request,
         )
 
 
-    @attribute.getter
-    def table_fields(self):
-        """Return list of fields for the table: 'id' + first 3 model fields.
+def _logentry_field_verbose_name(field_name):
+    from django.contrib.admin.models import LogEntry
 
-        If 'id' is already in the first fields, it avoids duplication.
-        Uses model's _meta.get_fields() for reliable field ordering.
-        """
-        if not self.model:
-            return ['id']
+    return LogEntry._meta.get_field(field_name).verbose_name
 
-        try:
-            # Get all concrete fields in declaration/ Meta order
-            all_fields = [
-                f.name for f in self.model_meta.get_fields()
-                if f.concrete and not f.is_relation  # avoid relations for basic tables
-            ]
-            # Ensure 'id' or 'pk' is first if present
-            pk_field = self.model_meta.pk.name if self.model_meta.pk else 'id'
-            fields = [pk_field]
 
-            # Add up to first 3 other fields (avoiding pk duplicate)
-            for f in all_fields:
-                if f not in fields and len(fields) < 4:  # id + 3 others = 4 max
-                    fields.append(f)
-                    if len(fields) == 4:
-                        break
+class LogActionColumn(django_tables2.Column):
+    colors = {
+        ADDITION: "success",
+        CHANGE: "warning",
+        DELETION: "danger",
+    }
 
-            return fields
-        except (AttributeError, TypeError):
-            # Fallback for non-model or errors
-            return ['id']
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault(
+            "verbose_name",
+            _logentry_field_verbose_name("action_flag"),
+        )
+        kwargs.setdefault("orderable", True)
+        super().__init__(*args, **kwargs)
 
-    @attribute.getter
-    def table_class(self):
-        """Return a django-tables2 Table class configured for this model and fields.
+    def render(self, value, record=None):
+        if record is None:
+            return format_html('<span class="tag is-light">{}</span>', value)
+        return format_html(
+            '<span class="tag is-{}">{}</span>',
+            self.colors.get(record.action_flag, "light"),
+            record.get_action_flag_display(),
+        )
 
-        Must return a Table (not a UserTable or similar hardcoded class).
-        Uses the table_fields getter and adds Actions column if object_menu exists.
-        """
-        if not self.model:
-            # Fallback generic table
-            table_template_name = self.get_table_template_name()
 
-            class FallbackTable(tables.Table):
-                class Meta:
-                    template_name = table_template_name
+class LogMessageColumn(django_tables2.Column):
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault(
+            "verbose_name",
+            _logentry_field_verbose_name("change_message"),
+        )
+        kwargs.setdefault("orderable", False)
+        super().__init__(*args, **kwargs)
 
-            return FallbackTable
+    def render(self, value):
+        return format_logentry_message(value)
 
-        # Check if we need to add actions column
-        # Look for any views with 'object' in their tags
-        add_actions = False
-        if self._controller:
-            for v in self._controller.views:
-                if hasattr(v, 'tags') and 'object' in getattr(v, 'tags', []):
-                    add_actions = True
+
+class Tables2Mixin:
+    """django-tables2 integration for list views.
+
+    Attributes:
+        table_template (str): Partial template wrapping the rendered table.
+        table_attributes (dict): Extra attributes on the generated
+            ``Table`` subclass.
+    """
+
+    table_template = "djcrud/_tables2.html"
+
+    def _declared_table_fields(self):
+        for cls in type(self).__mro__:
+            if "table_fields" in cls.__dict__:
+                value = cls.__dict__["table_fields"]
+                if isinstance(value, list):
+                    return list(value)
+                break
+        return None
+
+    def _auto_table_fields(self):
+        all_fields = [
+            f.name
+            for f in self.model_meta.get_fields()
+            if f.concrete and not f.is_relation
+        ]
+        pk_field = self.model_meta.pk.name if self.model_meta.pk else "id"
+        fields = [pk_field]
+
+        for f in all_fields:
+            if f not in fields and len(fields) < 4:
+                fields.append(f)
+                if len(fields) == 4:
                     break
 
-        # Build fields list (data fields + actions if needed)
-        fields_list = list(self.table_fields)
-        if add_actions and 'actions' not in fields_list:
-            fields_list.append('actions')
+        if self.add_actions:
+            fields.append("actions")
 
-        # Create Meta class first to avoid closure issues
-        table_template_name = self.get_table_template_name()
+        return fields
 
-        class TableMeta:
-            model = self.model
-            fields = fields_list
-            template_name = table_template_name
+    @functools.cached_property
+    def table_fields(self):
+        """Column names from clone or auto-detected model fields."""
+        if declared := self._declared_table_fields():
+            return declared
+        return self._auto_table_fields()
 
-        # Create the table class
-        class DynamicTable(tables.Table):
-            Meta = TableMeta
+    @functools.cached_property
+    def resolved_table_fields(self):
+        fields = list(self.table_fields)
+        if self.add_checkbox and "checkbox" not in fields:
+            fields.insert(0, "checkbox")
+        return fields
 
-        # Make ID/PK column link to detail view if model has get_absolute_url
-        # Check if instances of this model will have get_absolute_url method
-        try:
-            # Try to check if the model class or instances have get_absolute_url
-            has_get_absolute_url = (
-                hasattr(self.model, 'get_absolute_url') or
-                'get_absolute_url' in dir(self.model)
-            )
-        except (AttributeError, TypeError):
-            has_get_absolute_url = False
+    @functools.cached_property
+    def table_meta(self):
+        return type(
+            "Meta",
+            tuple(),
+            dict(
+                model=self.model,
+                fields=self.resolved_table_fields,
+                template_name=self.table_template,
+            ),
+        )
 
-        if has_get_absolute_url:
-            pk_field = self.model._meta.pk.name if self.model._meta.pk else 'id'
-            if pk_field in fields_list:
-                # Use a custom column that calls get_absolute_url on each record
-                from django.utils.html import format_html
+    @functools.cached_property
+    def table_class(self):
+        attributes = getattr(self, "table_attributes", {})
+        if "Meta" not in attributes:
+            attributes["Meta"] = self.table_meta
 
-                class PKLinkColumn(tables.Column):
-                    def render(self, value, record):
-                        if hasattr(record, 'get_absolute_url'):
-                            return format_html('<a href="{}">{}</a>', record.get_absolute_url(), value)
-                        return value
+        if "actions" in attributes["Meta"].fields and "actions" not in attributes:
+            attributes["actions"] = ActionsColumn()
 
-                DynamicTable.base_columns[pk_field] = PKLinkColumn()
+        if "checkbox" in attributes["Meta"].fields and "checkbox" not in attributes:
+            attributes["checkbox"] = CheckboxColumn()
 
-        if add_actions:
-            DynamicTable.base_columns['actions'] = ActionsColumn()
+        cls = type(
+            f"{self.model.__name__}Table",
+            (django_tables2.Table,),
+            attributes,
+        )
+        return cls
 
-        return DynamicTable
-
-    @attribute.cached
+    @functools.cached_property
     def table(self):
-        """Return the configured table instance for templates.
+        """Rendered django-tables2 ``Table`` for the current object list."""
+        table = self.table_class(self.object_list)
 
-        Templates access this via {{ view.table }}. Calls get_table() internally.
-        """
-        return self.get_table()
+        table.view = self
 
-    def get_table(self, **kwargs):
-        """Create and configure the table instance.
-
-        Called from templates via {{ view.table }} (or directly if mixin order
-        puts Tables2Mixin before the base view's get_context_data from mvc.View).
-        """
-        table_class = self.table_class  # uses the getter
-        queryset = self.get_queryset()
-        table = table_class(queryset, **kwargs)
-
-        # Store reference to view so ActionsColumn can access it
-        table._djcrud_view = self
-
-        # Add per_page_options to table for template access
-        table.per_page_options = self.per_page_options
-
-        # Get per_page from query parameter if present
-        pagination_config = self.table_pagination.copy()
-        try:
-            per_page = int(self.request.GET.get('per_page', pagination_config.get('per_page', 25)))
-            # Validate that it's one of the allowed options
-            allowed_options = [int(x) for x in self.per_page_options.split(',')]
-            if per_page in allowed_options:
-                pagination_config['per_page'] = per_page
-        except (ValueError, TypeError):
-            pass
-
-        # Configure pagination
-        RequestConfig(
-            self.request,
-            paginate=pagination_config
-        ).configure(table)
+        django_tables2.RequestConfig(self.request).configure(table)
 
         return table
+
+    @functools.cached_property
+    def add_actions(self):
+        """Whether to add an per-row actions column."""
+        for v in self.router.routes:
+            if "object" in getattr(v, "tags", []):
+                return True
+
+    @functools.cached_property
+    def add_checkbox(self):
+        """Whether to add list-action selection checkboxes."""
+        return bool(getattr(self, "list_actions", []))
+
+    def sort_url(self, column):
+        """URL toggling sort order for *column*."""
+        return self.querystring(
+            **{
+                self.table.prefixed_order_by_field: column.order_by_alias.next,
+            }
+        )

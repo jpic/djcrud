@@ -1,0 +1,15 @@
+INSTALLED_APPS = [
+    "dal",
+    "dal_alight",
+    "queryset_sequence",
+    "dal_queryset_sequence",
+    "djcrud",
+    "djcrud_dal",
+    "djcrud_dal_topbar",
+    "djcrud_auth",
+    "djcrud_history",
+    "djcrud_bulma",
+    "crispy_forms",
+    "crispy_bulma",
+    "django_tables2",
+]
