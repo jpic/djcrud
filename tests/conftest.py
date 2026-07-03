@@ -77,6 +77,17 @@ def drf_settings(settings):
     _configure_drf(settings)
     return settings
 
+
+@pytest.fixture
+def api_client(client, drf_settings, db):
+    user = get_user_model().objects.create_superuser(
+        username="apiuser",
+        email="api@example.com",
+        password="test",
+    )
+    client.force_login(user)
+    return client
+
 User = get_user_model()
 
 

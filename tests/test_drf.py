@@ -6,18 +6,6 @@ from django.contrib.auth import get_user_model
 pytestmark = pytest.mark.drf
 
 
-@pytest.fixture
-def api_client(client, drf_settings, db):
-    User = get_user_model()
-    user = User.objects.create_superuser(
-        username="apiuser",
-        email="api@example.com",
-        password="test",
-    )
-    client.force_login(user)
-    return client
-
-
 @pytest.mark.django_db
 def test_drf_create_list_detail_update_delete(api_client):
     response = api_client.post(
