@@ -39,7 +39,7 @@ ViewSet registration lives in ``drf_example/djcrud.py``. The ``publish``
 ``GET /api/schema/``:
 
 .. literalinclude:: ../../src/djcrud_example/drf_example/djcrud.py
-   :lines: 27-39
+   :lines: 18-38
 
 MCP profile
 -----------
