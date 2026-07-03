@@ -1,3 +1,5 @@
+import re
+
 from django.urls import include, path
 
 from .clonable import Clonable
@@ -6,6 +8,32 @@ from .permissions import get_queryset as registry_get_queryset
 from .permissions import has_permission as registry_has_permission
 from .registry import Registry
 from .route import Route
+
+
+def _camel_to_kebab(name):
+    s1 = re.sub(r"(.)([A-Z][a-z]+)", r"\1-\2", name)
+    return re.sub(r"([a-z0-9])([A-Z])", r"\1-\2", s1).lower()
+
+
+def model_router_codename(router_cls):
+    """URL segment from a :class:`~djcrud.ModelRouter` subclass name.
+
+    ``SecuredDocumentRouter`` → ``secured-document``; plain ``ModelRouter``
+    (or ``{Model}Router``) falls back to :attr:`~djcrud.ModelRouter.model`.
+    """
+    name = router_cls.__name__
+    if name.endswith("Router"):
+        stem = name[: -len("Router")]
+    else:
+        stem = name
+    model = getattr(router_cls, "model", None)
+    if not stem or stem == "Model":
+        if model is not None:
+            return model.__name__.lower()
+        return stem.lower() or "model"
+    if model is not None and stem == model.__name__:
+        return model.__name__.lower()
+    return _camel_to_kebab(stem)
 
 
 class RoutesDescriptor:

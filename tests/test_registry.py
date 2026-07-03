@@ -37,10 +37,10 @@ def test_register_is_idempotent_by_codename():
 
 
 def test_runtime_delete():
-    class Home(djcrud.generic.TemplateView):
+    class Home(djcrud.views.TemplateView):
         pass
 
-    class Extra(djcrud.generic.TemplateView):
+    class Extra(djcrud.views.TemplateView):
         pass
 
     class MySite(Router):
@@ -56,10 +56,10 @@ def test_runtime_delete():
 
 
 def test_whole_entry_swap():
-    class Home(djcrud.generic.TemplateView):
+    class Home(djcrud.views.TemplateView):
         pass
 
-    class Dashboard(djcrud.generic.TemplateView):
+    class Dashboard(djcrud.views.TemplateView):
         urlpath = ""
 
     class MySite(Router):

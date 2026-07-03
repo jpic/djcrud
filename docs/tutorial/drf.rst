@@ -5,7 +5,7 @@ This chapter covers the optional JSON API over Django REST Framework.
 Example app: ``drf_example`` (``Product`` and ``Article`` ViewSets at ``/api/``).
 
 Enable ``djcrud[drf]``, add the DRF apps to ``INSTALLED_APPS``, and merge API
-URLs in ``urls.py``. :func:`~djcrud.add_perm` rules
+URLs in ``urls.py``. :func:`~djcrud.permissions.add_perm` rules
 from :doc:`permission` apply to HTML views and DRF ViewSets — one ruleset for
 both surfaces.
 
@@ -68,11 +68,11 @@ Subclass :class:`~djcrud_drf.ModelViewSet`, set ``model``, and register on
    djcrud_drf.site.register(ProductViewSet)
 
 That is the full CRUD setup — list, create, retrieve, update, and destroy at
-``/api/product/`` with permissions from :func:`~djcrud.add_perm` on the same
+``/api/product/`` with permissions from :func:`~djcrud.permissions.add_perm` on the same
 model.
 
 Custom actions use ``@action`` on the ViewSet; register permission rules with
-:func:`~djcrud.add_perm` using the action name as the shortcode (see
+:func:`~djcrud.permissions.add_perm` using the action name as the shortcode (see
 ``publish`` below).
 
 Example app

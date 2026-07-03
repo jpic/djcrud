@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-class LoginView(djcrud.generic.FormView):
+class LoginView(djcrud.views.FormView):
     form_class = AuthenticationForm
     tags = ["topbar", "navigation"]
     icon = "box-arrow-in-right"
@@ -55,7 +55,7 @@ class LoginView(djcrud.generic.FormView):
         return super().form_valid(form)
 
 
-class LogoutView(djcrud.generic.FormView):
+class LogoutView(djcrud.views.FormView):
     tags = ["topbar", "navigation"]
     icon = "box-arrow-right"
     form_attributes = {
@@ -259,7 +259,7 @@ class GroupRouter(
         icon="collection",
         routes=djcrud.ModelRouter.routes
         + [
-            djcrud.generic.ListView.clone(
+            djcrud.views.ListView.clone(
                 table_fields=["id", "name"],
             ),
         ],
@@ -273,12 +273,12 @@ class GroupRouter(
         ).order_by("name")
 
 
-class UserCreateView(djcrud.generic.CreateView):
+class UserCreateView(djcrud.views.CreateView):
     def get_form_class(self):
         return get_custom_user_creation_form()
 
 
-class UserUpdateView(djcrud.generic.UpdateView):
+class UserUpdateView(djcrud.views.UpdateView):
     def get_form_class(self):
         return get_custom_user_change_form()
 
@@ -289,7 +289,7 @@ class UserRouter(
         icon="people",
         routes=djcrud.ModelRouter.routes
         + [
-            djcrud.generic.ListView.clone(
+            djcrud.views.ListView.clone(
                 table_fields=[
                     "id",
                     "username",

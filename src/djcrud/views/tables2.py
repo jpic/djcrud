@@ -41,6 +41,16 @@ class ActionsColumn(django_tables2.Column):
 
 
 class CheckboxColumn(django_tables2.Column):
+    """Selection checkbox column for the list action bar.
+
+    Only rendered for rows where the current user has at least one permitted
+    ``list_action`` (via ``router.get_tagged_views('list_action', object=record)``).
+
+    Each checkbox receives ``data-pk`` plus ``data-list-actions="codename,..."``
+    listing exactly which list actions are allowed for that row. The
+    ``<list-action-bar>`` component uses these attributes to show only the
+    actions permitted for the entire current selection.
+    """
     empty_values = ()
     template_name = "djcrud/_checkbox_column.html"
     exclude_from_export = True
@@ -62,7 +72,10 @@ class CheckboxColumn(django_tables2.Column):
             return ""
         return render_to_string(
             self.template_name,
-            {"record": record},
+            {
+                "record": record,
+                "allowed_actions": [a.codename for a in actions],
+            },
             request=table.view.request,
         )
 
@@ -216,7 +229,12 @@ class Tables2Mixin:
 
     @functools.cached_property
     def add_checkbox(self):
-        """Whether to add list-action selection checkboxes."""
+        """Whether to add list-action selection checkboxes.
+
+        When true, a ``CheckboxColumn`` is inserted. Checkboxes are only
+        emitted for rows that have at least one allowed list action, and carry
+        ``data-list-actions`` so the bar can filter actions client-side.
+        """
         return bool(getattr(self, "list_actions", []))
 
     def sort_url(self, column):

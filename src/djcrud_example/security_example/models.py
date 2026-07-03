@@ -4,11 +4,16 @@ from django.db import models
 
 class Document(models.Model):
     title = models.CharField(max_length=200)
+    published = models.BooleanField(default=False)
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="documents",
     )
+
+    def publish(self):
+        self.published = True
+        self.save(update_fields=["published"])
 
     def __str__(self):
         return self.title

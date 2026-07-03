@@ -11,6 +11,7 @@ Each class below combines mixins documented in :doc:`../mixins/index`.
    create
    update
    delete
+   objectform
    list_action
    form
    template

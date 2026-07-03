@@ -5,15 +5,12 @@ Goal
 ----
 
 Scope which rows a user can reach and which actions they may perform. Rules
-registered in ``djcrud.py`` with :func:`~djcrud.add_perm` and
-:func:`~djcrud.add_queryset` are **shared** across every CRUD surface:
-**HTML** pages, the **API** (DRF ViewSets), and **MCP** agents that proxy
-Bearer calls to ``/api/``.
+registered in ``djcrud.py`` with :func:`~djcrud.permissions.add_perm` are **shared** across
+every CRUD surface: **HTML** pages, the **API** (DRF ViewSets), and **MCP**
+agents that proxy Bearer calls to ``/api/``.
 
-The ``djcrud_example.security_example`` app demonstrates owner-based rules on
-the ``Document`` model at ``/secured-document/`` in :file:`djcrud.py`. If you
-are porting from djmvc controller ``get_queryset`` overrides, see
-:doc:`../migrating-from-djmvc`.
+The ``djcrud_example.security_example`` app demonstrates this on a single
+``Document`` model at ``/secured-document/``.
 
 Expected behavior
 -----------------
@@ -41,26 +38,16 @@ Expected behavior
 Permission registry
 -------------------
 
-:meth:`~djcrud.Site.build` imports every ``djcrud.py`` module. Define check
-and scoper functions, register rules, and append the router.
-
-Bind one *check* to several actions with comma-separated shortcodes:
-
-.. code-block:: python
-
-   djcrud.add_perm(ItemRouter, "view,add,change,delete", check=djcrud.authenticated)
-   djcrud.add_perm(Article, "publish", check=can_publish)
-
-Full secured-document example:
+:meth:`~djcrud.Site.build` imports every ``djcrud.py`` module. Register rules,
+then append the router:
 
 .. literalinclude:: ../../src/djcrud_example/security_example/djcrud.py
 
-* Anonymous users may list and view every row (``view`` check always returns
-  ``True``).
-* Authenticated users may create rows; change and delete require ownership (or
-  superuser).
-* ``add_queryset`` narrows update and delete querysets so other users' rows
-  return 404.
+* ``view`` — everyone (``lambda …: True``); ``add_queryset`` hides drafts from
+  strangers (published rows only, unless owner or superuser).
+* ``add`` — authenticated users only.
+* ``change`` / ``delete`` — owner or superuser (``secured_document_change``).
+* ``publish`` — owner of a draft only (``can_publish``).
 
 Try it
 ------
@@ -69,12 +56,23 @@ Log in as two users (see :doc:`../install`), create documents with different
 owners, and visit
 `http://localhost:8000/secured-document/ <http://localhost:8000/secured-document/>`_.
 
-Each user can change and delete only their own rows; anonymous visitors can
-browse list and detail.
+For **Publish**, open a draft you own at
+`http://localhost:8000/secured-document/<pk>/ <http://localhost:8000/secured-document/%3Cpk%3E/>`_.
+
+.. figure:: /_static/screenshots/publish-action-menu.png
+   :alt: Object menu with Publish action on a draft document
+   :align: center
+   :width: 90%
+
+.. figure:: /_static/screenshots/publish-action-success.png
+   :alt: Document detail after publishing
+   :align: center
+   :width: 90%
 
 Tests
 -----
 
-`tests/test_security_example.py on GitHub <https://github.com/jpic/djcrud/blob/master/tests/test_security_example.py>`_
+* `tests/test_security_example.py <https://github.com/jpic/djcrud/blob/master/tests/test_security_example.py>`_
 
-Next: :doc:`views` customizes list views, object actions, and bulk list actions.
+Next: :doc:`drf` adds an optional JSON API; :doc:`spa` adds the SPA shell and
+client codegen.

@@ -8,7 +8,7 @@ from .views import AuthRouter
 
 User = get_user_model()
 
-djcrud.add_search(User)
-djcrud.add_search(Group)
+djcrud.permissions.add_search(User)
+djcrud.permissions.add_search(Group)
 djcrud.site.routes.append(AuthRouter)
 settings.LOGIN_URL = reverse_lazy("site:auth:login")

@@ -56,6 +56,7 @@
             <button type="button" class="button" data-role="clear">{% trans "Clear selection" %}</button>
             {% for action in view.list_actions %}
             <a href="{{ action.url }}"
+               data-codename="{{ action.codename }}"
                class="button is-{{ action.color|default:'primary' }}"
                {{ action|unpoly_attributes:'list_action_bar'|html_attributes }}>
                 {% if action.icon %}<span class="icon"><i class="bi bi-{{ action.icon }}"></i></span>{% endif %}

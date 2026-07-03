@@ -110,7 +110,7 @@ Routes are managed by an ordered registry allowing surgical overrides by codenam
 class ItemRouter(djcrud.ModelRouter):
     model = Item
     routes = djcrud.ModelRouter.routes + [
-        djcrud.generic.ListView.clone(filter_fields=[...]),  # Override default ListView
+        djcrud.views.ListView.clone(filter_fields=[...]),  # Override default ListView
     ]
 ```
 
@@ -126,7 +126,7 @@ MyView.clone(
 )
 ```
 
-Opt models into site search with ``djcrud.add_search(Item)`` in ``djcrud.py``.
+Opt models into site search with ``djcrud.permissions.add_search(Item)`` in ``djcrud.py``.
 
 **Key file:** `src/djcrud/clonable.py`
 

@@ -36,10 +36,10 @@ What changed at a glance:
      - ``myapp/djcrud.py``
    * - Row scoping
      - ``ModelController.get_queryset(self, view)``
-     - :func:`~djcrud.add_queryset`
+     - :func:`~djcrud.permissions.add_queryset`
    * - Action / object gates
      - ``has_permission_object()``, ``has_permission_backend()``
-     - :func:`~djcrud.add_perm`
+     - :func:`~djcrud.permissions.add_perm`
    * - JSON CRUD
      - Same URL as HTML (``wants_json``, ``json_*``, ``get_swagger_*``)
      - DRF :class:`~djcrud_drf.ModelViewSet` at ``/api/<model>/``
@@ -127,7 +127,7 @@ Phase B — rename surface (mechanical)
    - ``import djmvc`` → ``import djcrud``
    - ``djmvc.Controller`` → ``djcrud.Router``
    - ``djmvc.ModelController`` → ``djcrud.ModelRouter``
-   - ``djmvc.generic`` → ``djcrud.generic``
+   - ``djmvc.generic`` → ``djcrud.views``
    - ``djmvc.site`` → ``djcrud.site``
    - ``from djmvc.`` → ``from djcrud.``
 
@@ -165,17 +165,17 @@ Registry API
    * - djmvc pattern
      - djcrud replacement
    * - ``ModelController.get_queryset(self, view)``
-     - :func:`~djcrud.add_queryset(model, scoper=...)`
+     - :func:`~djcrud.permissions.add_queryset(model, scoper=...)`
    * - ``has_permission_object()`` on action views
-     - :func:`~djcrud.add_perm(model, "<shortcode>", check=...)`
+     - :func:`~djcrud.permissions.add_perm(model, "<shortcode>", check=...)`
    * - ``has_permission_backend()`` on a view
-     - :func:`~djcrud.add_perm` with full perm string
+     - :func:`~djcrud.permissions.add_perm` with full perm string
    * - ``ModelController.has_permission(self, view)``
-     - :func:`~djcrud.add_perm` on the router
+     - :func:`~djcrud.permissions.add_perm` on the router
 
-Predicates compose with :func:`~djcrud.any_of`, :func:`~djcrud.all_of`,
-:func:`~djcrud.authenticated`, :func:`~djcrud.superuser`, and
-:func:`~djcrud.is_owner`.
+Predicates compose with :func:`~djcrud.permissions.any_of`, :func:`~djcrud.permissions.all_of`,
+:func:`~djcrud.permissions.authenticated`, :func:`~djcrud.permissions.superuser`, and
+:func:`~djcrud.permissions.is_owner`.
 
 Example — owner-scoped queryset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -208,8 +208,9 @@ Example — owner-scoped queryset
    class FileRouter(djcrud.ModelRouter):
        model = File
 
-   djcrud.add_queryset(File, scoper=file_queryset)
-   djcrud.add_perm(FileRouter, "view,add,change,delete", check=djcrud.authenticated)
+   djcrud.permissions.add_queryset(File, scoper=file_queryset)
+   from djcrud.permissions import authenticated
+   djcrud.permissions.add_perm(FileRouter, "view,add,change,delete", check=authenticated)
 
 Full worked example: ``djcrud_example.security_example`` in
 :file:`src/djcrud_example/security_example/djcrud.py` and :doc:`tutorial/permission`.
@@ -234,19 +235,21 @@ Example — custom object action
 
 .. code-block:: python
 
+   from djcrud.permissions import is_owner
+
    def can_publish(user, *, obj, **ctx):
        if not user.is_authenticated:
            return False
        if obj is not None and (
-           not djcrud.is_owner(user, obj=obj, **ctx) or obj.published
+           not is_owner(user, obj=obj, **ctx) or obj.published
        ):
            return False
        return True
 
-   djcrud.add_perm(Article, "publish", check=can_publish)
+   djcrud.permissions.add_perm(Article, "publish", check=can_publish)
 
 The custom action's ``permission_shortcode`` (or DRF ``@action`` method name)
-must match the shortcode passed to :func:`~djcrud.add_perm`.
+must match the shortcode passed to :func:`~djcrud.permissions.add_perm`.
 
 Phase D — API and agents
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -297,7 +300,7 @@ MCP tool suffix (``article_publish`` → ``publish`` rule):
            article.publish()
            return Response(self.get_serializer(article).data)
 
-   djcrud.add_perm(Article, "publish", check=can_publish)
+   djcrud.permissions.add_perm(Article, "publish", check=can_publish)
 
 See :doc:`tutorial/agents` for the full single-file example.
 

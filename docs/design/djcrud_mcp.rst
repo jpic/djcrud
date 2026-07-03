@@ -110,7 +110,8 @@ CRUD discovery (default)
    import djcrud_drf
 
    djcrud.site.routes.append(ItemRouter)
-   djcrud.add_perm(ItemRouter, "view,add,change,delete", check=djcrud.authenticated)
+   from djcrud.permissions import authenticated
+   djcrud.permissions.add_perm(ItemRouter, "view,add,change,delete", check=authenticated)
    djcrud_drf.site.register(ItemViewSet)
 
 That is the full MCP CRUD setup. Custom ``@action`` methods use the method name

@@ -7,6 +7,7 @@ from django.urls import reverse
 from djcrud.views.log import ADDITION
 from djcrud_dal_topbar.lookup import find_detail_url, iter_searchable_list_views
 from djcrud_example.routing_example.models import Item
+from djcrud_example.search_example.models import Page
 
 User = get_user_model()
 
@@ -63,13 +64,13 @@ def test_site_search_excludes_models_without_add_search(admin_client, admin_user
 
 
 @pytest.mark.django_db
-def test_site_search_includes_item(admin_client, admin_user):
-    Item.objects.create(name="searchable_item_xyz")
+def test_site_search_includes_page(admin_client, admin_user):
+    Page.objects.create(title="searchable_page_xyz")
     admin_client.force_login(admin_user)
-    response = admin_client.get(reverse("site:autocomplete"), {"q": "searchable_item"})
+    response = admin_client.get(reverse("site:autocomplete"), {"q": "searchable_page"})
     assert response.status_code == 200
     content = response.content.decode()
-    assert "searchable_item_xyz" in content
+    assert "searchable_page_xyz" in content
     assert "data-url" in content
 
 
@@ -86,26 +87,26 @@ def test_search_landing_page(admin_client, admin_user):
 
 @pytest.mark.django_db
 def test_search_get_shows_results(admin_client, admin_user):
-    Item.objects.create(name="get_item_xyz")
+    Page.objects.create(title="get_page_xyz")
     admin_client.force_login(admin_user)
-    response = admin_client.get(reverse("site:search"), {"q": "get_item"})
+    response = admin_client.get(reverse("site:search"), {"q": "get_page"})
     assert response.status_code == 200
     content = response.content.decode()
-    assert "get_item_xyz" in content
-    assert "djcrud-search-results-header" in content
+    assert "get_page_xyz" in content
+    assert "djcrud-search-results-header" not in content
     assert "table" in content
 
 
 @pytest.mark.django_db
 def test_search_results_page(admin_client, admin_user):
-    Item.objects.create(name="results_item_xyz")
+    Page.objects.create(title="results_page_xyz")
     admin_client.force_login(admin_user)
-    response = admin_client.get(reverse("site:search"), {"q": "results_item"})
+    response = admin_client.get(reverse("site:search"), {"q": "results_page"})
     assert response.status_code == 200
     content = response.content.decode()
-    assert "results_item_xyz" in content
+    assert "results_page_xyz" in content
     assert "table" in content
-    assert "djcrud-search-results-header" in content
+    assert "djcrud-search-results-header" not in content
     assert reverse("site:autocomplete") in content
 
 
@@ -115,7 +116,9 @@ def test_iter_searchable_list_views_respects_add_search(rf, admin_user):
     request.user = admin_user
     models = {view.model for view in iter_searchable_list_views(request)}
     assert User in models
-    assert Item in models
+    from djcrud_example.search_example.models import Page as SearchPage
+
+    assert SearchPage in models
     from django.contrib.auth.models import Group
 
     assert Group in models

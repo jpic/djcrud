@@ -25,7 +25,7 @@ class ApiLoginView(View):
         return JsonResponse(body, status=status)
 
 
-class TokenCreateView(djcrud.generic.CreateView):
+class TokenCreateView(djcrud.views.CreateView):
     """Create a named API token via HTML form (raw key shown once)."""
 
     fields = ["name", "expires"]
@@ -53,10 +53,10 @@ class TokenRouter(djcrud.ModelRouter):
     icon = "key"
 
     routes = [
-        djcrud.generic.ListView,
-        djcrud.generic.DetailView,
+        djcrud.views.ListView,
+        djcrud.views.DetailView,
         TokenCreateView,
-        djcrud.generic.DeleteView,
+        djcrud.views.DeleteView,
     ]
 
     def get_queryset(self, *, user, model, action, perm, obj=None):

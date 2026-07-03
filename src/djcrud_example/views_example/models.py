@@ -21,11 +21,3 @@ class Article(models.Model):
 
     def __str__(self):
         return self.title
-
-
-class Post(models.Model):
-    title = models.CharField(max_length=200)
-    category = models.CharField(max_length=50, blank=True)
-
-    def __str__(self):
-        return self.title

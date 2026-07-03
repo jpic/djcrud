@@ -4,7 +4,7 @@ from .search import SearchMixin
 from .form import FormMixin, FormView
 from .modelform import ModelFormMixin
 from .object import ObjectMixin, ObjectTemplateView
-from .objectform import ObjectFormMixin, ObjectModelFormMixin
+from .objectform import ObjectFormMixin, ObjectFormView, ObjectModelFormMixin
 from .pagination import PaginationMixin
 from .template import TemplateView, TemplateViewMixin
 from .list import DetailListView, ListView

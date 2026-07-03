@@ -14,10 +14,6 @@
 
 {% block content %}
 {% if view.show_results %}
-<div class="djcrud-search-results-header mb-5">
-    {% include "djcrud/_search_form.html" with variant="results" %}
-</div>
-
 {% if view.table and view.object_list %}
     {% render_table view.table %}
 {% else %}

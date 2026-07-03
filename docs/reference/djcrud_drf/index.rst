@@ -66,7 +66,7 @@ Set ``log_actions = False`` on a ViewSet subclass to disable logging, or pass a
 Permissions
 ===========
 
-:func:`~djcrud.add_perm` and :func:`~djcrud.add_queryset` registered in each
+:func:`~djcrud.permissions.add_perm` and :func:`~djcrud.permissions.add_queryset` registered in each
 app's ``djcrud.py`` apply to HTML views and DRF ViewSets for that app. See
 :mod:`djcrud.permissions`.
 

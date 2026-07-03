@@ -7,28 +7,11 @@ those modules via autodiscovery (like Django admin's ``admin.py``).
 
 from django.utils.module_loading import autodiscover_modules
 
-from .permissions import (
-    add_perm,
-    add_queryset,
-    add_search,
-    all_of,
-    any_of,
-    authenticated,
-    get_queryset,
-    has_permission,
-    has_site_permission,
-    is_owner,
-    owner,
-    perm_code,
-    remove_perm,
-    remove_queryset,
-    remove_search,
-    superuser,
-)
-from .router import Router
+from . import permissions
+from .router import Router, model_router_codename
 from .view import View
 from .model import ModelMixin
-from .views import generic
+from . import views
 
 
 class ModelRouter(ModelMixin, Router):
@@ -44,22 +27,22 @@ class ModelRouter(ModelMixin, Router):
     """
 
     routes = [
-        generic.ListView,
-        generic.DetailView,
-        generic.UpdateView,
-        generic.DeleteView,
-        generic.DeleteObjectsView,
-        generic.CreateView,
+        views.ListView,
+        views.DetailView,
+        views.UpdateView,
+        views.DeleteView,
+        views.DeleteObjectsView,
+        views.CreateView,
     ]
 
     @property
     def codename(self):
-        """URL segment from :attr:`model` name (lowercase)."""
-        return self.model.__name__.lower()
+        """URL segment from the router class name (kebab-case) or :attr:`model`."""
+        return model_router_codename(type(self))
 
     def has_permission(self, *, user, model, action, perm, obj=None):
         """Return whether *user* may perform *action* via the permission registry."""
-        return has_permission(
+        return permissions.has_permission(
             user=user,
             model=model,
             action=action,
@@ -69,7 +52,7 @@ class ModelRouter(ModelMixin, Router):
 
     def get_queryset(self, *, user, model, action, perm, obj=None):
         """Return rows visible to *user* via the permission registry, then all rows."""
-        return get_queryset(
+        return permissions.get_queryset(
             user=user,
             model=model,
             action=action,
@@ -78,7 +61,7 @@ class ModelRouter(ModelMixin, Router):
         )
 
 
-class Home(generic.TemplateView):
+class Home(views.TemplateView):
     """Site root page at ``/``."""
 
     urlpath = ""

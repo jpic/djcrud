@@ -263,7 +263,8 @@ Custom element conventions
   ``[up-list]`` / ``[up-table]`` partial updates (see
   :file:`list-action-bar.js`).
 - Config via HTML attributes (``table``, ``scope``, ``target``) and ``data-*``
-  hooks (``data-pk``, ``data-role``, ``data-list-action``).
+  hooks (``data-pk``, ``data-role``, ``data-list-action``, ``data-codename``,
+  ``data-list-actions``).
 - Export classes and pure helpers for Vitest.
 - Expose ``window.djcrud*`` functions when templates or Python need to call JS
   (e.g. ``djcrudClearListActionSelections``).
@@ -298,6 +299,18 @@ Templates and JS agree on tags, attributes, and ``data-*`` hooks.
 **List action bar** — :file:`src/djcrud_bulma/templates/djcrud/list.html` wraps
 bulk actions in ``<list-action-bar>`` and passes i18n labels via
 ``data-count-label-*`` attributes.
+
+Row checkboxes (``data-pk``) are rendered by ``CheckboxColumn`` only for rows
+where at least one ``list_action`` is permitted. Each checkbox carries
+``data-list-actions="codename1,codename2,..."`` listing the allowed actions for
+that specific row (computed via ``router.get_tagged_views('list_action',
+object=record)``).
+
+Action links inside the bar receive ``data-codename="..."`` (matching the view
+codename, e.g. ``deleteobjects``). The ``ListActionBar`` JS component
+intersects the ``data-list-actions`` of the currently selected rows and
+dynamically hides any action buttons that are not allowed for the whole
+selection.
 
 **Python bridge** — :file:`src/djcrud/views/list_action.py`:
 

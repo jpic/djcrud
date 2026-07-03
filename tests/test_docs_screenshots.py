@@ -12,8 +12,11 @@ import time
 import pytest
 from django.urls import reverse
 
+from djcrud_example.action_example.models import Memo
+from djcrud_example.security_example.models import Document
+from djcrud_example.listaction_example.models import Post
 from djcrud_example.routing_example.models import Item
-from djcrud_example.views_example.models import Article, Post
+from djcrud_example.views_example.models import Article
 
 from doc_screenshots import assert_all_captured, capture, prepare_browser
 
@@ -48,7 +51,6 @@ def test_capture_doc_screenshots(browser, live_server, browser_login, admin_user
             title=f"Article {i}",
             body="body",
             category="news" if i % 2 == 0 else "blog",
-            published=False,
         )
     for title in ("Morning post", "Evening post", "Weekend post"):
         Post.objects.create(title=title, category="news")
@@ -82,15 +84,31 @@ def test_capture_doc_screenshots(browser, live_server, browser_login, admin_user
     assert browser.is_text_present("Article 0", wait_time=5)
     capture(browser, "article-detail")
 
-    draft = Article.objects.create(title="Draft article", published=False)
+    memo = Memo.objects.create(title="Draft memo")
     browser.visit(
-        f"{live_server.url}{reverse('site:article:detail', args=[draft.pk])}"
+        f"{live_server.url}{reverse('site:memo:detail', args=[memo.pk])}"
+    )
+    assert browser.is_text_present("Duplicate", wait_time=5)
+    capture(browser, "duplicate-action-menu")
+
+    browser.find_by_css('a[href$="/duplicate/"]').first.click()
+    assert browser.is_element_present_by_css('[up-main="modal"]', wait_time=5)
+    browser.find_by_css('[up-main="modal"] form[method="post"] button[type="submit"]').first.click()
+    assert browser.is_text_present("was changed successfully", wait_time=5)
+    time.sleep(0.3)
+    capture(browser, "duplicate-action-success")
+
+    draft = Document.objects.create(title="Draft document", published=False, owner=admin_user)
+    browser.visit(
+        f"{live_server.url}{reverse('site:secured-document:detail', args=[draft.pk])}"
     )
     assert browser.is_text_present("Publish", wait_time=5)
     capture(browser, "publish-action-menu")
 
     browser.find_by_css('a[href$="/publish/"]').first.click()
-    assert browser.is_text_present("Article published", wait_time=5)
+    assert browser.is_element_present_by_css('[up-main="modal"]', wait_time=5)
+    browser.find_by_css('[up-main="modal"] form[method="post"] button[type="submit"]').first.click()
+    assert browser.is_text_present("was changed successfully", wait_time=5)
     time.sleep(0.3)
     capture(browser, "publish-action-success")
 

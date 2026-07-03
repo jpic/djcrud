@@ -60,8 +60,8 @@ One permissions framework, every surface
 
 Permissions **always** go through djcrud's registry — not ad hoc checks in
 templates, views, serializers, or future tool handlers. Register rules once in
-each app's ``djcrud.py`` with :func:`~djcrud.add_perm` and
-:func:`~djcrud.add_queryset`; :meth:`~djcrud.Site.build` imports them
+each app's ``djcrud.py`` with :func:`~djcrud.permissions.add_perm` and
+:func:`~djcrud.permissions.add_queryset`; :meth:`~djcrud.Site.build` imports them
 automatically.
 
 The same rules drive every CRUD surface you hang off the route tree:
@@ -76,8 +76,8 @@ The same rules drive every CRUD surface you hang off the route tree:
   auth stack (see :doc:`design/djcrud_mcp`)
 
 Your application code lives **inside** this framework: predicates such as
-:func:`~djcrud.superuser`, :func:`~djcrud.authenticated`, :func:`~djcrud.is_owner`,
-:func:`~djcrud.any_of`, and :func:`~djcrud.all_of` compose the checks you
+:func:`~djcrud.permissions.superuser`, :func:`~djcrud.permissions.authenticated`, :func:`~djcrud.permissions.is_owner`,
+:func:`~djcrud.permissions.any_of`, and :func:`~djcrud.permissions.all_of` compose the checks you
 register. Override a router or view only when a route needs a one-off escape
 hatch.
 
@@ -90,9 +90,10 @@ CRUD to regular users, anonymous visitors, or API tokens — only superusers pas
 until you add rules.
 
 Every view checks permissions **before** dispatch: anonymous users go to login;
-authenticated users who fail the check get 403. Navigation, object menus, and
-list-action bars call the same checks, so UI never advertises routes the user
-cannot use.
+authenticated users who fail the check get 403. Navigation, object menus, and list-action bars call the same checks.
+For list actions with per-row permissions the checkboxes and bar buttons are
+filtered client-side so the UI only offers actions the user may perform on the
+selected rows.
 
 Open access deliberately in ``djcrud.py``:
 
@@ -102,17 +103,17 @@ Open access deliberately in ``djcrud.py``:
    from djcrud.permissions import authenticated, is_owner, superuser, any_of
 
    # Grant list/detail to any logged-in user on this router
-   djcrud.add_perm(ItemRouter, "view", check=authenticated)
+   djcrud.permissions.add_perm(ItemRouter, "view", check=authenticated)
 
    # Writes: owner or superuser
-   djcrud.add_perm(
+   djcrud.permissions.add_perm(
        ItemRouter,
        "change",
        check=any_of(superuser, is_owner),
    )
 
    # Narrow row visibility for writes (see tutorial/permission)
-   djcrud.add_queryset(Item, "change", scoper=my_change_queryset)
+   djcrud.permissions.add_queryset(Item, "change", scoper=my_change_queryset)
 
 Model routers delegate to the registry:
 
@@ -194,7 +195,7 @@ Optional packages (``djcrud_auth``, ``djcrud_history``, ``djcrud_debug``) plug i
 the same way: add to ``INSTALLED_APPS``, routes appear. See :doc:`install`.
 
 The optional :doc:`reference/djcrud_drf/index` package adds a DRF layer on
-``/api/`` that calls the **same** :func:`~djcrud.add_perm` registry as HTML
+``/api/`` that calls the **same** :func:`~djcrud.permissions.add_perm` registry as HTML
 views — install with ``pip install djcrud[drf]`` when you need REST; widen API
 access with the same ``djcrud.py`` rules, not duplicate serializer guards.
 

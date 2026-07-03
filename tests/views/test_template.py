@@ -2,7 +2,7 @@ import djcrud
 
 
 def test_get_context_data():
-    view = djcrud.generic.TemplateView()
+    view = djcrud.views.TemplateView()
     assert view.get_context_data()["view"] is view
 
 

@@ -131,7 +131,7 @@ def test_get_tagged_views_respects_permissions(rf, admin_user):
 def test_registry_perm_grants_list_access(rf):
     from djcrud_example.models import User
 
-    djcrud.add_perm(Item, "view", check=lambda user, **ctx: True)
+    djcrud.permissions.add_perm(Item, "view", check=lambda user, **ctx: True)
     try:
         reader = User.objects.create_user("reader", password="pass")
         router = djcrud.ModelRouter.clone(model=Item)()
@@ -142,14 +142,14 @@ def test_registry_perm_grants_list_access(rf):
         view.router = router
         assert view.has_permission() is True
     finally:
-        djcrud.remove_perm(Item, "view")
+        djcrud.permissions.remove_perm(Item, "view")
 
 
 @pytest.mark.django_db
 def test_registry_queryset_scopes_list(rf, admin_user):
     Item.objects.create(name="mine")
     Item.objects.create(name="theirs")
-    djcrud.add_queryset(
+    djcrud.permissions.add_queryset(
         Item,
         scoper=lambda user, *, model, action, **ctx: model.objects.filter(name="mine"),
     )
@@ -163,7 +163,7 @@ def test_registry_queryset_scopes_list(rf, admin_user):
         names = list(view.get_queryset().values_list("name", flat=True))
         assert names == ["mine"]
     finally:
-        djcrud.remove_queryset(Item)
+        djcrud.permissions.remove_queryset(Item)
 
 
 @pytest.mark.django_db
@@ -175,7 +175,7 @@ def test_list_with_view_permission_shortcode(rf):
 
     router = djcrud.ModelRouter.clone(
         model=Item,
-        routes=[djcrud.generic.ListView.clone(permission_shortcode="view")],
+        routes=[djcrud.views.ListView.clone(permission_shortcode="view")],
     )()
     router.build()
     request = rf.get("/item/")

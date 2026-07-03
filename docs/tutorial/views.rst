@@ -4,79 +4,27 @@ Views
 Goal
 ----
 
-Replace default views, add object actions, and register bulk list actions.
-``djcrud_example.views_example`` splits each concern into a submodule; ``djcrud.py``
-imports and registers them on :data:`djcrud.site`.
+Replace default views, add object actions, register bulk list actions, and opt
+models into site-wide search. Four tutorial apps each ship a single ``djcrud.py``
+— no extra modules:
 
-Registration
-------------
-
-.. literalinclude:: ../../src/djcrud_example/views_example/djcrud.py
-
-State-based object action
--------------------------
-
-Custom routes are not limited to CRUD. :file:`example_action.py` adds a **Publish**
-object action on ``Article`` (gated by a ``publish`` rule in ``djcrud.py`` — owner
-+ draft only; see :doc:`permission`, :doc:`drf` for the API surface, and
-:doc:`agents` for MCP):
-
-.. literalinclude:: ../../src/djcrud_example/views_example/example_action.py
-
-Try it on a draft article at
-`http://localhost:8000/article/<pk>/ <http://localhost:8000/article/%3Cpk%3E/>`_.
-
-.. figure:: /_static/screenshots/publish-action-menu.png
-   :alt: Object menu with Publish action on a draft article
-   :align: center
-   :width: 90%
-
-   Detail object menu — **Publish** is visible only while the article is a draft.
-
-.. figure:: /_static/screenshots/publish-action-success.png
-   :alt: Article detail after publishing
-   :align: center
-   :width: 90%
-
-   After publishing, the action disappears and the row shows as published.
-
-List action
------------
-
-Bulk actions follow the same pattern as built-in bulk delete (see :doc:`routing`).
-On ``Post``, subclass :py:class:`~djcrud.views.list_action.ListActionView`, tag it
-``list_action``, and append it to the router ``routes``:
-
-.. literalinclude:: ../../src/djcrud_example/views_example/example_listaction.py
-
-Try it at `http://localhost:8000/post/ <http://localhost:8000/post/>`_ — create a
-few posts, select rows, and click **Set category**:
-
-.. figure:: /_static/screenshots/list-action-bar.png
-   :alt: List action bar with row selection
-   :align: center
-   :width: 90%
-
-   Selected rows open the floating ``<list-action-bar>`` with permitted bulk
-   actions.
-
-.. figure:: /_static/screenshots/set-category-modal.png
-   :alt: Set category bulk action modal
-   :align: center
-   :width: 90%
-
-   Custom :py:class:`SetCategoryView` — same pattern as the built-in bulk
-   delete shown in :doc:`routing`.
+* ``views_example`` — cloned :py:class:`~djcrud.views.list.ListView` on ``Article``
+* ``action_example`` — object form action on ``Memo``
+* ``listaction_example`` — bulk action on ``Post``
+* ``search_example`` — :func:`~djcrud.permissions.add_search` opt-in on ``Page``
 
 ListView customization
 ----------------------
 
 :py:class:`~djcrud.views.list.ListView` is the view djcrud invests in by default
 — search, filter, tables2, pagination, and list actions. Clone it to set table
-columns, filter fields, and page size. Add a second update route for a single
-field in the object menu:
+columns, filter fields, and page size:
 
-.. literalinclude:: ../../src/djcrud_example/views_example/example_listview.py
+.. literalinclude:: ../../src/djcrud_example/views_example/djcrud.py
+
+No ``add_perm`` here — default Django permissions apply (superuser passes).
+Log in as ``su`` / ``su`` (see :doc:`routing`). Permission rules are covered in
+:doc:`permission` and the ``security_example`` app.
 
 Visit `http://localhost:8000/article/ <http://localhost:8000/article/>`_.
 
@@ -87,15 +35,76 @@ Visit `http://localhost:8000/article/ <http://localhost:8000/article/>`_.
 
    Cloned list view with custom columns, filter fields, and page size.
 
-Open an article's detail page — the object menu shows both **Change Article**
-and **Change category**:
+Object action
+-------------
 
-.. figure:: /_static/screenshots/article-detail.png
-   :alt: Article detail with object action menu
+Custom routes are not limited to CRUD. ``action_example`` appends a
+**Duplicate** :py:class:`~djcrud.views.objectform.ObjectFormView` that opens a
+confirmation modal from the object menu and calls ``form_valid`` — no
+``add_perm`` here (default superuser access, same as the list view above):
+
+.. literalinclude:: ../../src/djcrud_example/action_example/djcrud.py
+
+Try it on a memo at
+`http://localhost:8000/memo/<pk>/ <http://localhost:8000/memo/%3Cpk%3E/>`_.
+
+.. figure:: /_static/screenshots/duplicate-action-menu.png
+   :alt: Object menu with Duplicate action on a memo
    :align: center
    :width: 90%
 
-   Default update plus :py:class:`CategoryUpdateView` in the object menu.
+   Detail object menu with a custom object action.
+
+.. figure:: /_static/screenshots/duplicate-action-success.png
+   :alt: Memo detail after duplicating
+   :align: center
+   :width: 90%
+
+   After confirming, a success toast is shown.
+
+State-based object actions gated by ``add_perm`` are covered in :doc:`permission`.
+
+List action
+-----------
+
+Bulk actions follow the same pattern as built-in bulk delete (see :doc:`routing`).
+On ``Post``, subclass :py:class:`~djcrud.views.list_action.ListActionView`, tag it
+``list_action``, and append it to the router ``routes``:
+
+.. literalinclude:: ../../src/djcrud_example/listaction_example/djcrud.py
+
+Try it at `http://localhost:8000/post/ <http://localhost:8000/post/>`_ — create a
+few posts, select rows, and click **Set category**:
+
+.. figure:: /_static/screenshots/list-action-bar.png
+   :alt: List action bar with row selection
+   :align: center
+   :width: 90%
+
+   Selected rows open the floating ``<list-action-bar>`` with permitted bulk
+   actions. When list actions are gated per object, only rows the user may
+   act on get checkboxes, and the bar dynamically shows only the actions
+   allowed for the entire current selection.
+
+.. figure:: /_static/screenshots/set-category-modal.png
+   :alt: Set category bulk action modal
+   :align: center
+   :width: 90%
+
+   Custom :py:class:`SetCategoryView` — same pattern as the built-in bulk
+   delete shown in :doc:`routing`.
+
+Site search
+-----------
+
+With ``djcrud_dal_topbar`` installed (see :ref:`install-site-search`), opt a model
+into navbar search and the results page at ``/search/?q=…``. ``search_example``
+registers its own ``Page`` model:
+
+.. literalinclude:: ../../src/djcrud_example/search_example/djcrud.py
+
+Try it at `http://localhost:8000/page/ <http://localhost:8000/page/>`_ after
+creating a few pages, then search from the navbar.
 
 Mixin survey
 ------------
@@ -156,7 +165,10 @@ Forms and objects
 
 List actions and permissions
     :py:class:`~djcrud.views.list_action.ListActionMixin` — bulk actions from the
-    list action bar (see **List action** above)
+    list action bar (see **List action** above). Per-row permissions are
+    reflected both in checkbox visibility (``CheckboxColumn``) and in the
+    dynamic filtering of buttons inside ``<list-action-bar>`` via
+    ``data-list-actions`` / ``data-codename`` attributes.
 
     :py:class:`~djcrud.views.action.ActionMixin` — per-object permission checks
     on delete/update and custom object actions
@@ -189,13 +201,13 @@ Further topics
     `http://localhost:8000/debug/router/ <http://localhost:8000/debug/router/>`_ as
     superuser.
 
-    Internationalization — djcrud ships French translations; wrap user-visible
-    strings in ``gettext`` when overriding views (see ``example_listaction.py``).
-
 Tests
 -----
 
-`tests/test_views_example.py on GitHub <https://github.com/jpic/djcrud/blob/master/tests/test_views_example.py>`_
+* `tests/test_views_example.py <https://github.com/jpic/djcrud/blob/master/tests/test_views_example.py>`_
+* `tests/test_action_example.py <https://github.com/jpic/djcrud/blob/master/tests/test_action_example.py>`_
+* `tests/test_listaction_example.py <https://github.com/jpic/djcrud/blob/master/tests/test_listaction_example.py>`_
+* `tests/test_search_example.py <https://github.com/jpic/djcrud/blob/master/tests/test_search_example.py>`_
 
 Next: :doc:`drf` adds an optional JSON API; :doc:`spa` adds the SPA shell and
 client codegen.

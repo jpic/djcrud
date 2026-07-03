@@ -13,6 +13,8 @@ DOC_SCREENSHOTS = (
     "bulk-delete-modal",
     "article-list",
     "article-detail",
+    "duplicate-action-menu",
+    "duplicate-action-success",
     "publish-action-menu",
     "publish-action-success",
     "list-action-bar",

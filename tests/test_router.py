@@ -1,7 +1,8 @@
 from django.contrib.auth.models import AnonymousUser
 
 import djcrud
-from djcrud.router import Router
+from djcrud.router import Router, model_router_codename
+from djcrud_example.security_example.models import Document
 from djcrud.view import View
 from djcrud_example.routing_example.models import Item
 
@@ -38,6 +39,14 @@ def test_get_tagged_views(rf, admin_user):
     result = site.get_tagged_views("topbar", request=request)
     assert len(result) == 1
     assert type(result[0]).__name__ == "LogoutView"
+
+
+def test_model_router_codename_from_class_name():
+    class SecuredDocumentRouter(djcrud.ModelRouter):
+        model = Document
+
+    assert model_router_codename(SecuredDocumentRouter) == "secured-document"
+    assert model_router_codename(djcrud.ModelRouter.clone(model=Item)) == "item"
 
 
 def test_navigation_list_inherits_router_icon(rf, admin_user):

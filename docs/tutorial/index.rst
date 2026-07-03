@@ -6,7 +6,8 @@ Django app in ``djcrud_example``; source files are included literally and
 validated by ``pytest -m tutorial``.
 
 * **routing** — default HTML CRUD (``routing_example``)
-* **views** — custom HTML views, object actions, list actions (``views_example``)
+* **views** — custom HTML views, object actions, list actions, site search
+  (``views_example``, ``action_example``, ``listaction_example``, ``search_example``)
 * **permission** — row and action rules (``security_example``)
 * **drf** — DRF API and OpenAPI (``drf_example``)
 * **spa** — SPA shell and client codegen (``spa_example``)

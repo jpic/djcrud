@@ -23,15 +23,15 @@ describe('ListActionBar', () => {
                         <tr><th><input type="checkbox" data-master="1"></th></tr>
                     </thead>
                     <tbody>
-                        <tr><td><input type="checkbox" data-pk="1"></td></tr>
-                        <tr><td><input type="checkbox" data-pk="2"></td></tr>
+                        <tr><td><input type="checkbox" data-pk="1" data-list-actions="deleteobjects"></td></tr>
+                        <tr><td><input type="checkbox" data-pk="2" data-list-actions="deleteobjects"></td></tr>
                     </tbody>
                 </table>
             </div>
             <list-action-bar table=".djcrud-list" scope="/users/">
                 <span data-role="count"></span>
                 <button type="button" data-role="clear">Clear selection</button>
-                <a href="/users/deleteobjects/" data-list-action="urlupdate">Delete</a>
+                <a href="/users/deleteobjects/" data-list-action="urlupdate" data-codename="deleteobjects">Delete</a>
             </list-action-bar>
         `
         const bar = document.querySelector('list-action-bar')
@@ -183,5 +183,48 @@ describe('ListActionBar', () => {
 
     it('exposes clearAllListActionSelections on window for form callbacks', () => {
         expect(window.djcrudClearListActionSelections).toBe(clearAllListActionSelections)
+    })
+
+    it('filters action buttons based on data-list-actions intersection', async () => {
+        document.body.innerHTML = `
+            <div class="djcrud-list">
+                <table>
+                    <tbody>
+                        <tr><td><input type="checkbox" data-pk="1" data-list-actions="deleteobjects,publish"></td></tr>
+                        <tr><td><input type="checkbox" data-pk="2" data-list-actions="deleteobjects"></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <list-action-bar table=".djcrud-list" scope="/posts/">
+                <button type="button" data-role="clear">Clear</button>
+                <a href="/posts/deleteobjects/" data-list-action="urlupdate" data-codename="deleteobjects">Delete</a>
+                <a href="/posts/publish/" data-list-action="urlupdate" data-codename="publish">Publish</a>
+            </list-action-bar>
+        `
+        const bar = document.querySelector('list-action-bar')
+        await Promise.resolve()
+
+        // select only pk1 -> both actions visible
+        document.querySelector('[data-pk="1"]').checked = true
+        document.querySelector('[data-pk="1"]').dispatchEvent(new Event('change', { bubbles: true }))
+        expect(bar.querySelector('[data-codename="deleteobjects"]').hidden).toBe(false)
+        expect(bar.querySelector('[data-codename="publish"]').hidden).toBe(false)
+
+        // select both -> only common (deleteobjects)
+        document.querySelector('[data-pk="2"]').checked = true
+        document.querySelector('[data-pk="2"]').dispatchEvent(new Event('change', { bubbles: true }))
+        expect(bar.querySelector('[data-codename="deleteobjects"]').hidden).toBe(false)
+        expect(bar.querySelector('[data-codename="publish"]').hidden).toBe(true)
+
+        // clear -> show all
+        bar.querySelector('[data-role="clear"]').click()
+        expect(bar.querySelector('[data-codename="deleteobjects"]').hidden).toBe(false)
+        expect(bar.querySelector('[data-codename="publish"]').hidden).toBe(false)
+    })
+
+    it('shows all actions when no selection', async () => {
+        const bar = await createFixture()
+        const del = bar.querySelector('[data-codename="deleteobjects"]')
+        expect(del.hidden).toBe(false)
     })
 })

@@ -56,7 +56,11 @@ class ListMixin:
 
     @functools.cached_property
     def list_actions(self):
-        """Permitted bulk-action views for the list action bar."""
+        """Permitted bulk-action views for the list action bar.
+
+        These are the actions shown in the bar (subject to client-side
+        filtering based on ``data-list-actions`` of the selected rows).
+        """
         return self.router.get_tagged_views("list_action", request=self.request)
 
     @property

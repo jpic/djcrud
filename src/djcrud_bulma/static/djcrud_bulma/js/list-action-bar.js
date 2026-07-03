@@ -199,6 +199,7 @@ export class ListActionBar extends HTMLElement {
             const pk = checkbox.getAttribute('data-pk');
             checkbox.checked = this.selectedPks.has(pk);
         }
+        this.updateAllowedActions();
     }
 
     updateMasterCheckbox() {
@@ -235,6 +236,37 @@ export class ListActionBar extends HTMLElement {
         }
     }
 
+    updateAllowedActions() {
+        const selectedCbs = this.visibleRowCheckboxes().filter((cb) => cb.checked);
+        if (selectedCbs.length === 0) {
+            this.showAllActions();
+            return;
+        }
+
+        let intersection = null;
+        for (const cb of selectedCbs) {
+            const raw = cb.dataset.listActions || '';
+            const allowed = raw.split(',').map((s) => s.trim()).filter(Boolean);
+            if (intersection === null) {
+                intersection = new Set(allowed);
+            } else {
+                intersection = new Set([...intersection].filter((code) => allowed.includes(code)));
+            }
+        }
+
+        const allowedSet = intersection || new Set();
+        for (const link of this.querySelectorAll('[data-codename]')) {
+            const code = link.dataset.codename;
+            link.hidden = !allowedSet.has(code);
+        }
+    }
+
+    showAllActions() {
+        for (const link of this.querySelectorAll('[data-codename]')) {
+            link.hidden = false;
+        }
+    }
+
     selectionCountLabel(count) {
         if (count === 1) {
             return this.dataset.countLabelOne || '1 selected';
@@ -251,6 +283,7 @@ export class ListActionBar extends HTMLElement {
         }
         this.hidden = count === 0;
         this.updateActionUrls();
+        this.updateAllowedActions();
     }
 
     clearSelection() {

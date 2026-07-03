@@ -62,7 +62,7 @@ The HTML shell uses the same rules as every djcrud view:
 * **Anonymous users** are redirected to login before the SPA page renders
   (:py:meth:`~djcrud.view.ViewMixin.dispatch`).
 * **Logged-in users** must pass :py:meth:`~djcrud.views.spa.SPAView.has_permission`
-  (superuser by default, or a grant from :func:`~djcrud.add_perm`).
+  (superuser by default, or a grant from :func:`~djcrud.permissions.add_perm`).
 * **CSRF** meta tags are in ``base_spa.html``; Unpoly picks them up via
   ``unpoly-config.js``.
 
