@@ -33,13 +33,12 @@ from the host at startup.
 Example
 -------
 
-Base ViewSet registration lives in ``drf_example/djcrud.py`` (see :doc:`drf`).
-Custom ``@action`` methods — such as **publish** on ``Article`` — can live in a
-separate module imported from ``djcrud.py``. MCP tools (``article_list``,
-``article_create``, ``article_publish``, …) follow from the registered ViewSet
-and ``GET /api/schema/``.
+ViewSet registration lives in ``drf_example/djcrud.py`` (see :doc:`drf`). The
+``publish`` ``@action`` on ``ArticleViewSet`` becomes an MCP tool
+(``article_publish``) via ``GET /api/schema/``:
 
-.. literalinclude:: ../../src/djcrud_example/drf_example/article_viewset.py
+.. literalinclude:: ../../src/djcrud_example/drf_example/djcrud.py
+   :lines: 27-39
 
 MCP profiles (host)
 -------------------

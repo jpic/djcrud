@@ -143,8 +143,7 @@ def test_build_tools_from_schema_prefix_map():
 
 
 def test_registry_profile_filters_viewsets():
-    from djcrud_example.drf_example.djcrud import ProductViewSet
-    from djcrud_example.drf_example.article_viewset import ArticleViewSet
+    from djcrud_example.drf_example.djcrud import ArticleViewSet, ProductViewSet
     from djcrud_mcp import McpProfile
     from djcrud_mcp.profiles import resolve_profile_viewsets
 

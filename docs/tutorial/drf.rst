@@ -2,10 +2,10 @@ DRF API
 =======
 
 This chapter covers the optional JSON API over Django REST Framework.
-Example app: ``drf_example`` (``Product`` ViewSet at ``/api/product/``).
+Example app: ``drf_example`` (``Product`` and ``Article`` ViewSets at ``/api/``).
 
-Enable ``djcrud[drf]`` in ``djcrud_example/settings.py`` and merge API URLs in
-``urls.py`` (entries are commented by default). :func:`~djcrud.add_perm` rules
+Enable ``djcrud[drf]``, add the DRF apps to ``INSTALLED_APPS``, and merge API
+URLs in ``urls.py``. :func:`~djcrud.add_perm` rules
 from :doc:`permission` apply to HTML views and DRF ViewSets — one ruleset for
 both surfaces.
 
@@ -36,6 +36,7 @@ to work with djcrud. Add the apps and merge API URLs:
        "rest_framework",
        "drf_spectacular",
        "djcrud_drf",
+       "djcrud_example.drf_example",  # tutorial app; use your own app in production
    ]
 
 .. code-block:: python
@@ -48,6 +49,43 @@ to work with djcrud. Add the apps and merge API URLs:
        djcrud.site.build().urlpatterns
        + djcrud_drf.site.build().urlpatterns
    )
+
+Define a :class:`~djcrud_drf.ModelViewSet`
+------------------------------------------
+
+Subclass :class:`~djcrud_drf.ModelViewSet`, set ``model``, and register on
+:data:`djcrud_drf.site` from the app's ``djcrud.py`` module (autoloaded by
+:meth:`djcrud.Site.build`):
+
+.. code-block:: python
+
+   import djcrud_drf
+   from .models import Product
+
+   class ProductViewSet(djcrud_drf.ModelViewSet):
+       model = Product
+
+   djcrud_drf.site.register(ProductViewSet)
+
+That is the full CRUD setup — list, create, retrieve, update, and destroy at
+``/api/product/`` with permissions from :func:`~djcrud.add_perm` on the same
+model.
+
+Custom actions use ``@action`` on the ViewSet; register permission rules with
+:func:`~djcrud.add_perm` using the action name as the shortcode (see
+``publish`` below).
+
+Example app
+-----------
+
+``djcrud_example.drf_example`` registers ``ProductViewSet`` and ``ArticleViewSet``
+in ``djcrud.py``. :meth:`djcrud.Site.build` imports that module;
+:meth:`djcrud_drf.DrfSite.build` wires the ViewSets at ``/api/``:
+
+.. literalinclude:: ../../src/djcrud_example/drf_example/djcrud.py
+
+Uncomment the DRF URL merge in ``djcrud_example/urls.py`` when running the
+example project locally.
 
 Moving pieces
 -------------
@@ -68,20 +106,6 @@ Moving pieces
      - Login and token HTML routes from ``djcrud_api`` (``/api/login/``, ``/api/token/``)
    * - :data:`djcrud_drf.api`
      - DRF :class:`~rest_framework.routers.DefaultRouter` for registered ViewSets
-
-Example app
------------
-
-``djcrud_example.drf_example`` registers a ``Product`` ViewSet in ``djcrud.py``.
-:meth:`djcrud.Site.build` imports that module (same autoload as HTML routers);
-:meth:`djcrud_drf.DrfSite.build` then wires the registered ViewSets at ``/api/``:
-
-.. literalinclude:: ../../src/djcrud_example/drf_example/djcrud.py
-   :start-after: docs: product-viewset-begin
-   :end-before: docs: product-viewset-end
-
-Enable DRF and uncomment the matching entries in ``djcrud_example/settings.py``
-and ``djcrud_example/urls.py`` before expecting ``/api/`` routes.
 
 OpenAPI
 -------

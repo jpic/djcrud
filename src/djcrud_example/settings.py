@@ -56,10 +56,9 @@ INSTALLED_APPS = [
     "djcrud_debug",
     # Token model for djcrud_drf login routes (see docs/tutorial/drf.rst)
     "djcrud_api",
-    # DRF tutorial — uncomment when following docs/tutorial/drf.rst:
-    # "rest_framework",
-    # "drf_spectacular",
-    # "djcrud_drf",
+    "rest_framework",
+    "drf_spectacular",
+    "djcrud_drf",
     # template pack
     "djcrud_bulma",
     # used by djcrud_bulma:
