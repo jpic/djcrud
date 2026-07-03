@@ -10,6 +10,13 @@ Install the package
 
 This installs djcrud with all runtime dependencies including the Bulma UI framework.
 
+Upgrading from djmvc
+--------------------
+
+If your project uses the last **djmvc** release (``Controller``,
+``ModelController``, ``djmvc.py``), see :doc:`migrating-from-djmvc` for the
+full breaking-change guide and checklist.
+
 .. note::
 
    The ``--pre`` flag is required to install pre-release versions of dependencies

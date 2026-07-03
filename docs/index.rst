@@ -10,6 +10,7 @@ hand-wiring ``urls.py``, with secure defaults and Bulma templates out of the box
 
    philosophy
    install
+   migrating-from-djmvc
    demo
    tutorial/index
    reference/index

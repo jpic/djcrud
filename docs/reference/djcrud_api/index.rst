@@ -56,6 +56,14 @@ Run migrations after enabling the app:
 
    python manage.py migrate
 
+Upgrading from ``djmvc_api``
+============================
+
+If the database already applied ``djmvc_api`` or ``djmvc_swagger`` migrations,
+``djcrud_api`` migrations ``0002`` and ``0003`` rename the token table and
+rewrite ``django_migrations`` app labels automatically. See
+:ref:`api-token-upgrade` in :doc:`../../migrating-from-djmvc`.
+
 Bearer authentication
 =====================
 

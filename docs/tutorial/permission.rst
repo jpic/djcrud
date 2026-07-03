@@ -11,7 +11,9 @@ registered in ``djcrud.py`` with :func:`~djcrud.add_perm` and
 Bearer calls to ``/api/``.
 
 The ``djcrud_example.security_example`` app demonstrates owner-based rules on
-the ``Document`` model at ``/secured-document/`` in :file:`djcrud.py`.
+the ``Document`` model at ``/secured-document/`` in :file:`djcrud.py`. If you
+are porting from djmvc controller ``get_queryset`` overrides, see
+:doc:`../migrating-from-djmvc`.
 
 Expected behavior
 -----------------
