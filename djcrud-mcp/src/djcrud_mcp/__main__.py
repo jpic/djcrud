@@ -66,7 +66,12 @@ def call_tool(
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="djcrud-mcp")
     parser.add_argument("-mcp", action="store_true", help="Run stdio MCP server")
-    parser.add_argument("--registry", default=None, help="Registry profile key")
+    parser.add_argument(
+        "--registry",
+        default=None,
+        metavar="KEY",
+        help="Profile key (default: host default from GET /api/mcp/profiles/)",
+    )
     parser.add_argument("--call", metavar="TOOL", help="Call one tool and exit")
     parser.add_argument("--json", default="{}", help="Tool arguments as JSON object")
     parser.add_argument("--user", help="Username for /api/login/")

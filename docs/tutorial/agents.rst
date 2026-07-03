@@ -75,15 +75,15 @@ Remote client:
 
 .. code-block:: bash
 
-   export DJCRUD_MCP_REGISTRY=articles
    export DJCRUD_TOKEN=<raw_key>
-   djcrud-mcp -mcp
+   djcrud-mcp -mcp --registry articles
 
-The client calls ``GET /api/mcp/profiles/articles/`` for instructions and API
-prefixes, then ``GET /api/schema/`` to build tools.
+The client calls ``GET /api/mcp/profiles/{key}/`` for instructions and API
+prefixes, then ``GET /api/schema/`` to build tools. Omit ``--registry`` to use
+the host default from ``GET /api/mcp/profiles/``.
 
-Use ``key = "default"`` (and ``DJCRUD_MCP_REGISTRY=default``) for a single server
-that exposes every registered ``ModelViewSet``. Register additional profiles with
+Use ``key = "default"`` and mark ``default = True`` for a single server that
+exposes every registered ``ModelViewSet``. Register additional profiles with
 distinct keys when you run several stdio MCP servers (tasks vs admin, public vs
 internal).
 

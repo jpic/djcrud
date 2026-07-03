@@ -26,6 +26,6 @@ djcrud_mcp.site.register(ArticlesMcp)
 
 Mount `djcrud_mcp.django.urls` so remote clients can fetch profiles at `GET /api/mcp/profiles/{key}/`.
 
-`server_name`, `instructions`, and `info_tool_name` default from the profile key and ViewSets. Mark one profile with `default = True` (or register only one) so clients can resolve the registry without `DJCRUD_MCP_REGISTRY`.
+`server_name`, `instructions`, and `info_tool_name` default from the profile key and ViewSets. Mark one profile with `default = True` (or register only one); clients omit `--registry` to use that host default.
 
 CRUD tools come from `GET /api/schema/` filtered by the profile's ViewSets. Non-CRUD endpoints must be DRF routes documented with `@extend_schema`.

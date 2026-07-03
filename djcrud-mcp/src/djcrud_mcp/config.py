@@ -23,16 +23,10 @@ def get_token() -> str:
 
 
 def get_registry_key(*, base_url: str | None = None) -> str:
-    explicit = _first_env("DJCRUD_MCP_REGISTRY", "TILDETTE_MCP_REGISTRY")
-    if explicit:
-        return explicit.strip().lower()
+    """Host default profile key from ``GET /api/mcp/profiles/`` (not an env var)."""
+    from .api import resolve_registry_key
 
-    if base_url:
-        from .api import resolve_registry_key
-
-        return resolve_registry_key(base_url=base_url)
-
-    return "default"
+    return resolve_registry_key(base_url=(base_url or get_base_url()).rstrip("/"))
 
 
 def get_profile_from_env():

@@ -86,16 +86,17 @@ Client setup
    * - ``DJCRUD_TOKEN``
      - *(empty)*
      - Bearer token (required in production)
-   * - ``DJCRUD_MCP_REGISTRY``
-     - ``default``
-     - Profile key
 
 Aliases: ``DJMVC_*``, ``TILDETTE_*``.
+
+Profile selection is a CLI flag, not an env var. Omit ``--registry`` to use the
+host default from ``GET /api/mcp/profiles/``.
 
 .. code-block:: bash
 
    export DJCRUD_TOKEN=<raw_key>
-   djcrud-mcp
+   djcrud-mcp -mcp
+   djcrud-mcp -mcp --registry articles
    djcrud-mcp --call item_list --json '{}'
 
 Host profile API
