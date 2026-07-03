@@ -22,9 +22,8 @@ State-based object action
 -------------------------
 
 Custom routes are not limited to CRUD. :file:`example_action.py` adds a **Publish**
-object action that appears only while ``Article.published`` is ``False`` — a
-state-based permission check without registering rules in ``djcrud.py`` (see
-:doc:`permission`):
+object action gated by a ``publish`` rule in ``djcrud.py`` (owner + draft only;
+see :doc:`permission` and :doc:`agents` for the DRF equivalent):
 
 .. literalinclude:: ../../src/djcrud_example/views_example/example_action.py
 

@@ -40,7 +40,16 @@ Permission registry
 -------------------
 
 :meth:`~djcrud.Site.build` imports every ``djcrud.py`` module. Define check
-and scoper functions, register rules, and append the router:
+and scoper functions, register rules, and append the router.
+
+Bind one *check* to several actions with comma-separated shortcodes:
+
+.. code-block:: python
+
+   djcrud.add_perm(ItemRouter, "view,add,change,delete", check=djcrud.authenticated)
+   djcrud.add_perm(Article, "publish", check=can_publish, router=ArticleRouter)
+
+Full secured-document example:
 
 .. literalinclude:: ../../src/djcrud_example/security_example/djcrud.py
 

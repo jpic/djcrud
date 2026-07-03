@@ -70,13 +70,13 @@ The same rules drive every CRUD surface you hang off the route tree:
   menus via :py:meth:`~djcrud.router.Router.get_tagged_views`
 - **API** — :doc:`reference/djcrud_drf/index` ViewSets call the same registry
   through :py:meth:`~djcrud.ModelRouter.has_permission`
-- **MCP and other agents** — :doc:`reference/djcrud_mcp/index` discovers tools
-  from the DRF OpenAPI schema (``tags`` + ``operationId``) and proxies Bearer
-  HTTP to ``/api/``; server-side checks use the same registry — no parallel
+- **MCP and other agents** — :doc:`reference/djcrud_mcp/index` mirrors
+  registered :class:`~djcrud_drf.ModelViewSet` CRUD automatically; Bearer HTTP
+  hits the same registry as HTML/API — no per-action decorators, no parallel
   auth stack (see :doc:`design/djcrud_mcp`)
 
 Your application code lives **inside** this framework: predicates such as
-:func:`~djcrud.superuser`, :func:`~djcrud.authenticated`, :func:`~djcrud.owner`,
+:func:`~djcrud.superuser`, :func:`~djcrud.authenticated`, :func:`~djcrud.is_owner`,
 :func:`~djcrud.any_of`, and :func:`~djcrud.all_of` compose the checks you
 register. Override a router or view only when a route needs a one-off escape
 hatch.
@@ -99,7 +99,7 @@ Open access deliberately in ``djcrud.py``:
 .. code-block:: python
 
    import djcrud
-   from djcrud.permissions import authenticated, superuser, any_of, owner
+   from djcrud.permissions import authenticated, is_owner, superuser, any_of
 
    # Grant list/detail to any logged-in user on this router
    djcrud.add_perm(ItemRouter, "view", check=authenticated)
@@ -108,7 +108,7 @@ Open access deliberately in ``djcrud.py``:
    djcrud.add_perm(
        ItemRouter,
        "change",
-       check=any_of(superuser, owner),
+       check=any_of(superuser, is_owner),
    )
 
    # Narrow row visibility for writes (see tutorial/permission)

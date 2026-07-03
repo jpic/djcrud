@@ -7,35 +7,33 @@ Read it before writing code or the :doc:`../tutorial/agents` walkthrough.
 Problem
 -------
 
-Agents (LLM subprocesses, IDE plugins, automation runners) need **machine CRUD**
-without a hand-written SDK for every model. djcrud already emits an OpenAPI
-schema from :doc:`../reference/djcrud_drf/index` at ``GET /api/schema/``.
-``djcrud_mcp`` turns that schema into **stdio MCP tools** that proxy
-authenticated HTTP calls back to the same DRF endpoints humans reach through the
-browser or ``curl``.
+Agents need machine CRUD without a hand-written SDK. djcrud already exposes
+:class:`~djcrud_drf.ModelViewSet` on ``/api/<model>/`` with the same
+:mod:`djcrud.permissions` registry as HTML. ``djcrud_mcp`` turns those
+**registered ViewSets** into stdio MCP tools — no per-action decorators.
 
 Goals
 -----
 
-* **One permission registry** — MCP is another client surface; rules registered
-  with :func:`~djcrud.add_perm` and :func:`~djcrud.add_queryset` in ``djcrud.py``
-  apply on the server when the token hits a ViewSet. No parallel auth stack.
-* **Schema-driven tools** — discover operations from OpenAPI; avoid hard-coded
-  URL prefixes per application.
-* **Stable tool names** — use ``operationId`` from the schema so agent prompts
-  survive URL layout changes.
-* **Thin subprocess** — no Django ORM in the MCP bridge; only ``httpx`` and
-  ``mcp``.
+* **Register once** — ``djcrud_drf.site.register(ItemViewSet)`` is enough for
+  HTML *and* MCP, same as today for HTML + DRF.
+* **Permissions on the server** — :class:`~djcrud_drf.ModelViewSet` already
+  calls :func:`~djcrud.has_permission` and :func:`~djcrud.get_queryset`; the MCP
+  bridge is a Bearer HTTP proxy.
+* **Automatic tool names** — ``{model}_{action}`` (e.g. ``item_list``,
+  ``item_create``) derived from the ViewSet model and DRF action, matching
+  :data:`~djcrud_drf.viewsets.ACTION_SHORTCODES` semantics.
+* **No ``@extend_schema`` on CRUD** — drf-spectacular already documents
+  registered ViewSets; MCP reads ``GET /api/schema/`` and filters by known API
+  paths.
 
 Non-goals
 ---------
 
-* **Host-side MCP registry** — storing user MCP server configs, secret vaults,
-  probe/render pipelines (application-specific; see Tildette ``djacp_mcp``).
-* **Django URL routes for MCP** — transport is stdio between agent and
-  subprocess, not HTTP into Django.
-* **Sandbox / gVisor spawn** — how the host starts the subprocess is an
-  application concern.
+* Host-side MCP registry (user server vaults — application code, e.g. Tildette
+  ``djacp_mcp``).
+* Django URL routes for MCP stdio transport.
+* Re-declaring permissions in the MCP client.
 
 Architecture
 ------------
@@ -43,159 +41,118 @@ Architecture
 ::
 
    ┌──────────────────┐     stdio MCP      ┌─────────────────────┐
-   │ Agent (Claude,   │ ◄────────────────► │ djcrud_mcp          │
-   │ Grok, Cursor, …) │                    │ (FastMCP subprocess)│
+   │ Agent            │ ◄────────────────► │ djcrud_mcp          │
    └──────────────────┘                    └──────────┬──────────┘
-                                                      │ HTTP Bearer
+                                                      │
+                        GET /api/schema/  +  Bearer HTTP /api/<model>/
                                                       ▼
                                            ┌─────────────────────┐
-                                           │ Django + djcrud_drf │
-                                           │ GET /api/schema/    │
-                                           │ CRUD /api/<model>/  │
+                                           │ djcrud_drf          │
+                                           │ ModelViewSet        │
                                            └──────────┬──────────┘
-                                                      │
                                                       ▼
                                            ┌─────────────────────┐
                                            │ djcrud.permissions  │
-                                           │ registry            │
                                            └─────────────────────┘
 
-On startup the bridge:
+CRUD discovery (default)
+------------------------
 
-1. Fetches ``GET /api/schema/`` (OpenAPI 3 JSON).
-2. Selects operations whose ``tags`` match a :class:`~djcrud_mcp.RegistryProfile`.
-3. Registers one MCP tool per operation (name from ``operationId``).
-4. On tool call, issues ``Authorization: Bearer <token>`` to the matching path.
+1. **Registered ViewSets** — introspect :data:`djcrud_drf.site` (same registry
+   as URL building) to learn each model's API path:
+   ``/api/{model.__name__.lower()}/``.
+2. **Schema fetch** — ``GET /api/schema/``; keep operations whose path matches
+   a registered ViewSet prefix.
+3. **Tool naming** — for each standard DRF action on that path:
 
-Authentication
---------------
+   .. list-table::
+      :header-rows: 1
+      :widths: 25 25 50
 
-MCP tools never send a password. Two ways to obtain a Bearer token:
+      * - HTTP
+        - DRF action
+        - MCP tool name
+      * - ``GET /api/item/``
+        - list
+        - ``item_list``
+      * - ``POST /api/item/``
+        - create
+        - ``item_create``
+      * - ``GET /api/item/{id}/``
+        - retrieve
+        - ``item_retrieve``
+      * - ``PUT /api/item/{id}/``
+        - update
+        - ``item_update``
+      * - ``PATCH /api/item/{id}/``
+        - partial_update
+        - ``item_partial_update``
+      * - ``DELETE /api/item/{id}/``
+        - destroy
+        - ``item_destroy``
 
-**Environment (production path for subprocesses)**
+   Naming uses the model's lowercase name (same rule as
+   :meth:`~djcrud_drf.ModelViewSet.build_router`).
 
-The host generates or reuses a token and injects it before ``Popen``:
+4. **Permissions** — no client-side gate. The token's user hits
+   ``ModelViewSet.check_permissions`` / ``check_object_permissions``; denied
+   actions return 403 over HTTP.
 
-.. code-block:: bash
-
-   export DJCRUD_BASE_URL=http://127.0.0.1:8000
-   export DJCRUD_TOKEN=<raw_key>
-
-Compatibility aliases (documented, not primary):
-
-* ``DJMVC_BASE_URL`` / ``DJMVC_TOKEN`` — legacy djmvc naming
-* ``TILDETTE_BASE_URL`` / ``TILDETTE_TOKEN`` — Tildette deployments
-
-**Login exchange (development / CLI)**
-
-When no token env is set, the console entry may call:
-
-.. code-block:: http
-
-   POST /api/login/
-   Content-Type: application/json
-
-   {"username": "...", "password": "..."}
-
-Response (1-hour token by default):
-
-.. code-block:: json
-
-   {"token": "...", "expires": "...", "prefix": "..."}
-
-See :doc:`../reference/djcrud_api/index` for token storage and middleware.
-
-Server-side token minting (recommended for agents):
+**Application code for CRUD:**
 
 .. code-block:: python
 
-   from djcrud_api.models import Token
+   # djcrud.py
+   djcrud.site.routes.append(ItemRouter)
+   djcrud.add_perm(ItemRouter, "view,add,change,delete", check=djcrud.authenticated)
 
-   _, raw_key = Token.generate(user=user, name="agent session")
-   # Pass raw_key to subprocess env — never enqueue in Celery messages.
+   # djcrud_drf.py
+   djcrud_drf.site.register(ItemViewSet)
 
-Permissions
------------
+That is the full MCP CRUD setup. Custom ``@action`` methods use the method name
+as the permission shortcode (``publish`` → ``publish`` rule).
 
-The MCP bridge **does not** re-implement permission checks. Each HTTP call
-carries a Bearer token; Django middleware sets ``request.user``; DRF ViewSets
-call the same registry as HTML views.
+Registry profiles (optional grouping)
+-------------------------------------
 
-Implications for application authors:
-
-* Register ``add_perm`` / ``add_queryset`` before exposing a ViewSet to agents.
-* Scoped querysets return 404 for out-of-scope PKs — same as the HTML UI.
-* A token always maps to **one user** — design agent tokens per thread owner,
-  not shared service accounts, unless intentional.
-
-Tool discovery
---------------
-
-Legacy clients (Tildette ``tildette_client``) filter schema ``paths`` by URL
-prefix (``/taskssection``, ``/mcpsection``). That couples tool sets to djcrud
-HTML section layout.
-
-**djcrud_mcp uses OpenAPI tags.**
-
-Tag every DRF endpoint that should appear in a given MCP server:
-
-.. code-block:: python
-
-   from drf_spectacular.utils import extend_schema
-
-   class ItemViewSet(djcrud_drf.ModelViewSet):
-       model = Item
-
-       @extend_schema(tags=["myapp-items"], operation_id="item_list")
-       def list(self, request, *args, **kwargs):
-           return super().list(request, *args, **kwargs)
-
-       @extend_schema(tags=["myapp-items"], operation_id="item_create")
-       def create(self, request, *args, **kwargs):
-           return super().create(request, *args, **kwargs)
-
-Custom :class:`~rest_framework.views.APIView` routes follow the same pattern.
-
-**Registry profiles** map MCP server names to tag sets:
+When one MCP server should expose **a subset** of registered ViewSets (e.g.
+tasks vs admin models), a :class:`~djcrud_mcp.RegistryProfile` lists **models
+or ViewSet classes** — not OpenAPI tags:
 
 .. code-block:: python
 
    RegistryProfile(
        key="items",
        server_name="myapp-items",
-       openapi_tags=("myapp-items",),
-       instructions="CRUD for Item rows via the JSON API.",
+       viewsets=(ItemViewSet,),   # or models=(Item,)
+       instructions="...",
        info_tool_name="item_registry_info",
    )
 
-``filter_operations(schema, tags=profile.openapi_tags)`` returns matching
-``(path, method, operation)`` triples.
+Default profile: **all** ``ModelViewSet`` registrations on
+:data:`djcrud_drf.site`.
 
-Tool naming
------------
+Custom (non-CRUD) endpoints
+---------------------------
 
-Primary: ``operation["operationId"]`` from the schema.
+Only non-standard routes need explicit schema surfacing:
 
-Fallback (when ``operationId`` is missing): path-heuristic naming compatible with
-legacy ``tildette_client.tools.tool_name_for_operation`` so migrations can
-compare old and new tool sets.
+* Standalone :class:`~rest_framework.views.APIView` (workflow steps, probes)
+* ``@action`` on a ViewSet for one-off operations
 
-Every profile exposes a **registry info** meta-tool (``info_tool_name``) returning
-JSON metadata (capabilities, setup hints) for the agent system prompt.
+Use ``@extend_schema`` (or :class:`~djcrud_mcp.ExtraTool`) **only** for these.
+Register them on the profile's ``extra_tools`` list or a dedicated custom
+APIView with a documented path under ``/api/``.
 
-Extra tools
------------
+Authentication
+--------------
 
-Not every agent action is model CRUD. Applications register
-:class:`~djcrud_mcp.ExtraTool` handlers alongside schema-derived tools:
+Same as :doc:`../reference/djcrud_api/index`:
 
-* Secret prompts, config render, health probes, turn lifecycle, etc.
-* Implemented as Python callables with explicit ``name`` and ``description``.
-* Should still call HTTP endpoints that are **also** in the schema when possible,
-  so ``/api/schema/`` remains the discovery source of truth.
+* Subprocess: ``DJCRUD_TOKEN`` in env (host calls ``Token.generate``)
+* Dev CLI: ``POST /api/login/`` or ``--user`` / ``--password``
 
-Tildette's ``_register_mcp_secret_tools()`` becomes ``ExtraTool`` registrations
-in a Tildette-specific profile module — not part of generic ``djcrud_mcp``.
+Passwords are never sent per tool call.
 
 Package layout (planned)
 ------------------------
@@ -203,86 +160,38 @@ Package layout (planned)
 ::
 
    src/djcrud_mcp/
-     __init__.py      # create_mcp_server, RegistryProfile, register_profile
-     __main__.py      # djcrud-mcp console script
-     api.py           # CrudApi, login()
-     config.py        # env: base URL, token, registry key
-     schema.py        # filter_operations, build_tools
-     tools.py         # render_path, split_arguments, tool naming
-     profiles.py      # RegistryProfile, get_profile, REGISTRIES
-     server.py        # create_mcp_server()
-     extras.py        # ExtraTool
-
-Optional Django app (``apps.py``) for server-side profile autodiscover is **v2**.
-v1 keeps profiles in the subprocess (env ``DJCRUD_MCP_REGISTRY`` or CLI
-``--registry``).
-
-Distribution
-------------
-
-* Same ``djcrud`` wheel as core and ``djcrud_drf``.
-* Optional extra: ``pip install "djcrud[mcp]"`` → ``mcp``, ``httpx``.
-* Console script: ``djcrud-mcp`` (stdio server) and ``djcrud-mcp --call``.
-
-Server prerequisites
---------------------
-
-On the Django host:
-
-1. ``pip install "djcrud[drf]"`` — DRF + drf-spectacular.
-2. ``djcrud_api`` in ``INSTALLED_APPS`` + Bearer middleware.
-3. ViewSets registered on :data:`djcrud_drf.site` with ``@extend_schema`` tags.
-4. Permission rules in ``djcrud.py``.
-
-Client prerequisites
---------------------
-
-On the machine or sandbox running the MCP subprocess:
-
-1. ``pip install "djcrud[mcp]"`` (or inherit from application image).
-2. ``DJCRUD_TOKEN`` and ``DJCRUD_BASE_URL`` in the environment.
-3. ``djcrud-mcp`` or application wrapper (e.g. ``tildette-client``) on ``PATH``.
+     viewsets.py    # discover registered ModelViewSets, api_path_for(model)
+     schema.py      # filter schema paths by registered prefixes
+     tools.py       # tool_name(model, action), render_path, split_arguments
+     server.py      # create_mcp_server()
+     profiles.py    # RegistryProfile(viewsets=..., models=...)
+     api.py         # CrudApi
+     config.py
+     extras.py      # ExtraTool for non-CRUD only
 
 Tildette mapping
 ----------------
 
-When Tildette adopts ``djcrud_mcp``, ``tildette_client`` becomes a thin profile
-layer:
+Replace URL-prefix filtering (``/taskssection``) with ViewSet/model-based
+discovery after DRF migration:
 
 .. list-table::
    :header-rows: 1
-   :widths: 35 65
+   :widths: 40 60
 
    * - tildette_client today
-     - djcrud_mcp target
-   * - ``filter_paths(controller_prefix)``
-     - ``filter_operations(openapi_tags)``
-   * - ``tool_name_for_operation()`` heuristics
-     - ``operationId`` primary
-   * - ``TildetteApi``
-     - ``CrudApi``
-   * - ``TASKS_PROFILE``, ``MCP_PROFILE``
-     - Tildette ``profiles.py`` registering into ``djcrud_mcp``
+     - djcrud_mcp
+   * - ``controller_prefix="/taskssection"``
+     - ``models=(Task,)`` or ``viewsets=(TaskViewSet,)``
+   * - ``tool_name_for_operation()`` path heuristics
+     - ``{model}_{action}`` from registered ViewSet
    * - ``_register_mcp_secret_tools()``
-     - ``ExtraTool`` list on MCP profile
-   * - ``tildette-client`` entry point
-     - imports ``djcrud_mcp``, adds Tildette profiles
-
-Sandbox spawn (``tildette_process.tasks.agent``, ``tildette_acp.mcp``) stays in
-Tildette; it only changes imports and env var names.
-
-OpenAPI request bodies
-----------------------
-
-drf-spectacular emits OpenAPI 3 ``requestBody`` (not Swagger 2 ``in: body``
-parameters). ``split_arguments()`` must read both shapes so tool input schemas
-stay accurate.
+     - ``ExtraTool`` only (non-CRUD)
 
 Related docs
 ------------
 
-* :doc:`../reference/djcrud_mcp/index` — install and public API
-* :doc:`../tutorial/agents` — hands-on walkthrough
-* :doc:`../reference/djcrud_drf/index` — ViewSets and schema
-* :doc:`../reference/djcrud_api/index` — Bearer tokens
-* :doc:`../philosophy` — one registry, every surface
+* :doc:`../reference/djcrud_mcp/index`
+* :doc:`../tutorial/agents`
+* :doc:`../reference/djcrud_drf/index`
+* :doc:`../philosophy`

@@ -32,17 +32,22 @@ Register in each app's ``djcrud.py`` (with HTML router):
 
 .. code-block:: python
 
+   # myapp/djcrud.py
    import djcrud
-   import djcrud_drf
    from .models import Item
 
    class ItemRouter(djcrud.ModelRouter):
        model = Item
 
+   djcrud.site.routes.append(ItemRouter)
+
+   # myapp/djcrud_drf.py
+   import djcrud_drf
+   from .models import Item
+
    class ItemViewSet(djcrud_drf.ModelViewSet):
        model = Item
 
-   djcrud.site.routes.append(ItemRouter)
    djcrud_drf.site.register(ItemViewSet)
 
 Permissions

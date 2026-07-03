@@ -71,15 +71,17 @@ Moving pieces
 Example app
 ~~~~~~~~~~~
 
-``djcrud_example.drf_example`` registers both an HTML router and a ViewSet:
+``djcrud_example.drf_example`` registers HTML in ``djcrud.py`` and the ViewSet in
+``djcrud_drf.py`` (autodiscovered by :meth:`djcrud_drf.DrfSite.build`):
 
 .. literalinclude:: ../../src/djcrud_example/drf_example/models.py
 
 .. literalinclude:: ../../src/djcrud_example/drf_example/djcrud.py
 
-The ``try``/``except`` guard lets the example project load without the ``[drf]``
-extra; follow this chapter to enable DRF and uncomment the matching entries in
-``djcrud_example/settings.py`` and ``djcrud_example/urls.py``.
+.. literalinclude:: ../../src/djcrud_example/drf_example/djcrud_drf.py
+
+Enable DRF and uncomment the matching entries in ``djcrud_example/settings.py``
+and ``djcrud_example/urls.py`` before expecting ``/api/`` routes.
 
 OpenAPI
 ~~~~~~~
