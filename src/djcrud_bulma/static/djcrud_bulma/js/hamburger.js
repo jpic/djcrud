@@ -1,66 +1,69 @@
 // Web Component for hamburger menu toggle
 export class HamburgerMenu extends HTMLElement {
     connectedCallback() {
-        console.log('HamburgerMenu connected');
+        if (this._initialized) {
+            this.syncState();
+            return;
+        }
+        this._initialized = true;
 
         // Get target from data attribute or default to sidebar ID
         this.targetSelector = this.getAttribute('target') || '#sidebar';
-        console.log('Target selector:', this.targetSelector);
 
-        // Create hamburger icon structure (using <a> as per Bulma docs)
+        // Use <button> so Unpoly nav feedback won't strip is-active from <a> in <nav>
         this.innerHTML = `
-            <a class="navbar-burger" role="button" aria-label="menu" aria-expanded="false">
+            <button type="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
                 <span aria-hidden="true"></span>
                 <span aria-hidden="true"></span>
                 <span aria-hidden="true"></span>
                 <span aria-hidden="true"></span>
-            </a>
+            </button>
         `;
 
-        // Add click handler to the burger element
         const burger = this.querySelector('.navbar-burger');
         if (burger) {
             burger.addEventListener('click', (event) => {
-                console.log('Hamburger clicked');
-                event.preventDefault();
                 event.stopPropagation();
                 this.toggle();
             });
         }
+
+        this.syncState();
     }
 
-    toggle() {
-        console.log('Toggle called');
+    syncState() {
         const burger = this.querySelector('.navbar-burger');
         const target = document.querySelector(this.targetSelector);
 
-        console.log('Burger:', burger);
-        console.log('Target:', target);
-
         if (!burger || !target) {
-            console.log('Missing burger or target!');
             return;
         }
 
-        // Toggle active state
-        const isActive = burger.classList.toggle('is-active');
-        burger.setAttribute('aria-expanded', isActive.toString());
+        const isOpen = !target.classList.contains('is-hidden');
+        burger.classList.toggle('is-active', isOpen);
+        burger.setAttribute('aria-expanded', String(isOpen));
+    }
 
-        // Toggle target visibility
-        target.classList.toggle('is-hidden-mobile');
+    toggle() {
+        const target = document.querySelector(this.targetSelector);
 
-        console.log('Toggled! isActive:', isActive);
+        if (!this.querySelector('.navbar-burger') || !target) {
+            return;
+        }
+
+        target.classList.toggle('is-hidden');
+        this.syncState();
     }
 
     close() {
-        const burger = this.querySelector('.navbar-burger');
         const target = document.querySelector(this.targetSelector);
 
-        if (!burger || !target) return;
+        if (!this.querySelector('.navbar-burger') || !target) {
+            return;
+        }
 
-        burger.classList.remove('is-active');
-        burger.setAttribute('aria-expanded', 'false');
-        target.classList.add('is-hidden-mobile');
+        target.classList.add('is-hidden');
+        this.syncState();
     }
 }
 

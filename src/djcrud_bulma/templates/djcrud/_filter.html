@@ -1,0 +1,26 @@
+{% load crispy_forms_tags djcrud i18n %}
+{% if view.filter_form %}
+<aside class="djcrud-filter-sidebar{% if not view.has_active_filters %} is-hidden{% endif %}"
+       id="djcrud-filter-sidebar">
+    <form method="get" class="djcrud-filter-form"
+          {{ view.filter_attributes|html_attributes }}>
+        {{ view.filter_form|crispy }}
+        <div class="field">
+            <p class="control">
+                <button type="submit" class="button is-primary is-fullwidth">
+                    {{ view.filter_submit_label }}
+                </button>
+            </p>
+        </div>
+        {% if view.has_active_filters %}
+        <div class="field">
+            <p class="control">
+                <a href="{{ view.clear_filter_url }}" class="button is-fullwidth djcrud-filter-clear"
+                   up-follow up-target="{{ view.filter_target }}" up-history>{% trans "Clear" %}</a>
+            </p>
+        </div>
+        {% endif %}
+    </form>
+    {{ view.filter_form.media }}
+</aside>
+{% endif %}

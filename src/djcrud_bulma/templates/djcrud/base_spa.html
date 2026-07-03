@@ -1,0 +1,35 @@
+{% load djcrud i18n %}
+{# Views using this base must set unpoly_target = 'body'. #}
+{# Name SPA templates *base_spa.html so menu links full-reload across shells. #}
+<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="csrf-param" content="csrfmiddlewaretoken">
+    <title>{% block title %}{{ view.router.root.title }}{% endblock %}</title>
+    {{ view.media.css }}
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="djcrud-spa-body">
+    <div class="djcrud-layout-spa">
+        {% block sidebar %}
+        <aside class="menu p-4 djcrud-sidebar is-hidden" id="sidebar">
+            <p class="menu-label">{% trans "Navigation" %}</p>
+            {% include "djcrud/_navigation_menu.html" %}
+        </aside>
+        {% endblock %}
+
+        <main class="djcrud-main-spa" up-main>
+            {% block content %}{{ mount_element|safe }}{% endblock %}
+        </main>
+    </div>
+
+    {% include 'djcrud/_flashes.html' %}
+
+    <script src="https://unpkg.com/unpoly@3.9.2/unpoly.js"></script>
+    {{ view.media.js }}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

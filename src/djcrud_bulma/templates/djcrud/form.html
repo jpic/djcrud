@@ -1,5 +1,5 @@
-{% extends "djcrud/base.html" %}
-{% load crispy_forms_tags %}
+{% extends 'djcrud/base.html' %}
+{% load djcrud crispy_forms_tags i18n %}
 
 {% block content %}
 <div class="columns is-centered">
@@ -24,16 +24,21 @@
             {% block before_form %}{% endblock %}
 
             <form method="post"
-                  up-submit
-                  up-layer="any"
-                  up-accept-location="*"
-                  up-on-accepted="up.visit(value.response.url)"
-                  {% block form_attrs %}{% endblock %}
-                  {% if form.is_multipart %}enctype="multipart/form-data"{% endif %}>
+                {% block form_attrs %}
+                {{ view.form_attributes|html_attributes }}
+                {% endblock %}
+                {% if form.is_multipart %}enctype="multipart/form-data"{% endif %}>
                 {% csrf_token %}
-                {% if view.get_next_url %}
-                <input type="hidden" name="next" value="{{ view.get_next_url }}">
+
+                {% block before_message %}{% endblock %}
+
+                {% block message %}
+                {% if view.message %}
+                <p>{{ view.message }}</p>
                 {% endif %}
+                {% endblock %}
+
+                <input type="hidden" name="next" value="{% if request.POST.next %}{{ request.POST.next }}{% elif request.GET.next %}{{ request.GET.next }}{% elif request.META.HTTP_REFERER %}{{ request.META.HTTP_REFERER }}{% else %}/{% endif %}">
 
                 {% block form_content %}
                 {% block form_fields %}
@@ -45,21 +50,25 @@
                     {% block form_buttons %}
                     {% if view.cancel_url %}
                     <p class="control">
-                        <button type="button" class="button" up-dismiss>Cancel</button>
+                        <button type="button" class="button" up-dismiss>{% trans "Close" %}</button>
                     </p>
                     {% endif %}
                     <p class="control">
-                        <button type="submit" class="button is-primary">
-                            {% block submit_button_content %}
-                            Save
+                        <button type="submit" class="button is-{{ view.color|default:'primary' }}">
+                            {% block submit_button_label %}
+                            {{ view.submit_button_label }}
                             {% endblock %}
                         </button>
                     </p>
                     {% endblock %}
                 </div>
             </form>
+            {{ form.media }}
         </div>
         {% endblock %}
     </div>
 </div>
 {% endblock %}
+
+{% block extra_css %}{{ block.super }}{{ form.media.css }}{% endblock %}
+{% block extra_js %}{{ block.super }}{{ form.media.js }}{% endblock %}

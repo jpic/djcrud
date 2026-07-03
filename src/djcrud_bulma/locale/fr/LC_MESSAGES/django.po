@@ -1,0 +1,123 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-06-28 12:49+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: src/djcrud_bulma/templates/djcrud/_actions_column.html:20
+msgid "Actions"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_deletion_preview.html:13
+msgid "Summary"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_deletion_preview.html:22
+msgid "Objects"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_error.html:5
+#, python-format
+msgid "HTTP %(error_status)s"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_flashes.html:11
+msgid "dismiss"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_filter.html:19
+msgid "Clear"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_tables2.html:9
+msgid "Filters"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:11
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:13
+msgid "Paginate by:"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:21
+msgid "pagination"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:24
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:28
+msgid "First page"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:35
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:39
+msgid "Previous page"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:56
+msgid "Page number"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:57
+#, python-format
+msgid "of %(num_pages)s"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:62
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:66
+msgid "Next page"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:73
+#: src/djcrud_bulma/templates/djcrud/_pagination.html:77
+msgid "Last page"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/base.html:16
+#: src/djcrud_bulma/templates/djcrud/base.html:19
+msgid "Toggle navigation"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/base.html:48
+msgid "Navigation"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/base.html:69
+msgid "Breadcrumbs"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/detaillist.html:56
+#: src/djcrud_bulma/templates/djcrud/list.html:54
+msgid "Clear selection"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/form.html:53
+#: src/djcrud_bulma/templates/djcrud/form_delete.html:25
+#: src/djcrud_bulma/templates/djcrud/form_delete.html:38
+msgid "Close"
+msgstr ""
+
+#: src/djcrud_bulma/templates/djcrud/form_delete.html:7
+#, python-format
+msgid ""
+"\n"
+"    %(counter)s selected item could not be found and was ignored.\n"
+"    "
+msgid_plural ""
+"\n"
+"    %(counter)s selected items could not be found and were ignored.\n"
+"    "
+msgstr[0] ""
+msgstr[1] ""

@@ -1,0 +1,264 @@
+html,
+body {
+    min-height: 100%;
+}
+
+/* always display hamburger icon, cancels a bulma default */
+.navbar-burger {
+    display: flex !important;
+}
+
+/* Custom layout - two divs side by side */
+.djcrud-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar - fixed width */
+.djcrud-sidebar {
+    width: 250px;
+    min-width: 250px;
+    border-right: 1px solid #dbdbdb;
+    margin-left: 0;
+}
+
+/* Main content - expands to fill remaining space */
+.djcrud-main {
+    flex: 1;
+    min-width: 0;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+/* SPA layout shell (base_spa.html + client frameworks such as Svelte) */
+.djcrud-spa-body {
+    min-height: 100vh;
+    margin: 0;
+}
+
+.djcrud-layout-spa {
+    display: flex;
+    min-height: 100vh;
+}
+
+.djcrud-layout-spa > .djcrud-sidebar {
+    flex: 0 0 250px;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.djcrud-layout-spa > .djcrud-sidebar.is-hidden {
+    display: none;
+}
+
+.djcrud-main-spa {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-height: 0;
+    min-width: 0;
+}
+
+/* SPA client chrome (e.g. Svelte): match Bulma navbar burger colors */
+.djcrud-spa-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    min-height: 0;
+    min-width: 0;
+}
+
+.djcrud-spa-toolbar.navbar {
+    border-bottom: 1px solid #dbdbdb;
+    flex-shrink: 0;
+}
+
+/* Pagination footer: paginate-by on the left, page controls on the right */
+.djcrud-pagination-footer,
+.djcrud-table-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    margin-top: 1rem;
+    max-width: 100%;
+}
+
+.djcrud-per-page {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.djcrud-per-page-label {
+    font-size: 0.875rem;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.djcrud-table-pagination {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.djcrud-table-pagination .button {
+    flex-shrink: 0;
+}
+
+.djcrud-page-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.djcrud-page-form .input {
+    width: 3.75rem;
+    text-align: center;
+}
+
+.djcrud-page-form-total {
+    font-size: 0.875rem;
+    white-space: nowrap;
+}
+
+[up-table] {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+.djcrud-list-toolbar {
+    margin-bottom: 1rem;
+}
+
+.djcrud-list-body {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.djcrud-filter-sidebar {
+    width: 16rem;
+    min-width: 16rem;
+    flex-shrink: 0;
+    padding: 1rem;
+    border-right: 1px solid #dbdbdb;
+}
+
+.djcrud-filter-sidebar.is-hidden {
+    display: none;
+}
+
+.djcrud-list-content {
+    flex: 1;
+    min-width: 0;
+}
+
+filter-sidebar-toggle {
+    display: inline-block;
+}
+
+.djcrud-filter-form .field {
+    margin-bottom: 0.75rem;
+}
+
+autocomplete-select,
+autocomplete-light {
+    display: block;
+    width: 100%;
+}
+
+.djcrud-filter-form autocomplete-select {
+    width: 100%;
+}
+
+.djcrud-listaction-bar {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    border: 1px solid #dbdbdb;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(10, 10, 10, 0.12);
+    max-width: calc(100vw - 2rem);
+}
+
+.djcrud-listaction-count {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.djcrud-object-list {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+}
+
+.djcrud-object-list li + li {
+    margin-top: 0.35rem;
+}
+
+.djcrud-deletion-summary,
+.djcrud-deletion-objects {
+    list-style: disc;
+    margin-left: 1.25rem;
+}
+
+.djcrud-deletion-objects ul {
+    list-style: circle;
+    margin-left: 1.25rem;
+}
+
+/* Toast notifications via Unpoly [up-flashes] */
+[up-flashes],
+.djcrud-flashes {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9997;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+    pointer-events: none;
+    max-width: min(32rem, calc(100vw - 2rem));
+    width: 100%;
+}
+
+[up-flashes] .djcrud-toast,
+.djcrud-flashes .djcrud-toast {
+    pointer-events: auto;
+    margin-bottom: 0;
+    padding: 0.75rem 2.5rem 0.75rem 1rem;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+    animation: djcrud-toast-in 0.25s ease-out;
+}
+
+[up-flashes] .djcrud-toast .delete,
+.djcrud-flashes .djcrud-toast .delete {
+    position: absolute;
+    right: 0.35rem;
+    top: 0.5rem;
+}
+
+@keyframes djcrud-toast-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.5rem);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -1,0 +1,15 @@
+{% load i18n %}
+<div up-flashes class="djcrud-flashes" role="alert">
+    {% for message in messages %}
+    <div class="notification djcrud-toast is-light
+        {% if 'error' in message.tags %}is-danger
+        {% elif 'success' in message.tags %}is-success
+        {% elif 'warning' in message.tags %}is-warning
+        {% elif 'info' in message.tags %}is-info
+        {% else %}is-info{% endif %}"
+        data-nonce="{{ forloop.counter }}-{{ message|slugify }}">
+        <button class="delete" aria-label="{% trans 'dismiss' %}"></button>
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>

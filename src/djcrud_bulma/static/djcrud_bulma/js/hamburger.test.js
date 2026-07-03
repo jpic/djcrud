@@ -3,29 +3,29 @@ import { HamburgerMenu } from './hamburger.js'
 
 describe('HamburgerMenu Web Component', () => {
     beforeEach(() => {
-        // Register the custom element
         if (!customElements.get('hamburger-menu')) {
             customElements.define('hamburger-menu', HamburgerMenu)
         }
-        // Clean up the DOM
         document.body.innerHTML = ''
     })
 
     const createHamburgerWithSidebar = (targetId = 'sidebar') => {
-        // Create sidebar
         const sidebar = document.createElement('aside')
         sidebar.id = targetId
         sidebar.className = 'djcrud-sidebar'
         document.body.appendChild(sidebar)
 
-        // Create hamburger menu
         const hamburger = document.createElement('hamburger-menu')
         if (targetId !== 'sidebar') {
             hamburger.setAttribute('target', `#${targetId}`)
         }
         document.body.appendChild(hamburger)
 
-        return { hamburger, sidebar }
+        return {
+            hamburger,
+            sidebar,
+            burger: hamburger.querySelector('.navbar-burger'),
+        }
     }
 
     describe('initialization', () => {
@@ -34,17 +34,15 @@ describe('HamburgerMenu Web Component', () => {
         })
 
         it('should render hamburger with correct structure', () => {
-            const { hamburger } = createHamburgerWithSidebar()
+            const { burger } = createHamburgerWithSidebar()
 
-            const burger = hamburger.querySelector('.navbar-burger')
             expect(burger).toBeTruthy()
-            expect(burger.tagName).toBe('A')
-            expect(burger.getAttribute('role')).toBe('button')
+            expect(burger.tagName).toBe('BUTTON')
+            expect(burger.getAttribute('type')).toBe('button')
             expect(burger.getAttribute('aria-label')).toBe('menu')
-            expect(burger.getAttribute('aria-expanded')).toBe('false')
-
-            const spans = burger.querySelectorAll('span[aria-hidden="true"]')
-            expect(spans.length).toBe(4)
+            expect(burger.getAttribute('aria-expanded')).toBe('true')
+            expect(burger.classList.contains('is-active')).toBe(true)
+            expect(burger.querySelectorAll('span[aria-hidden="true"]').length).toBe(4)
         })
 
         it('should use default target selector when not specified', () => {
@@ -65,76 +63,63 @@ describe('HamburgerMenu Web Component', () => {
 
     describe('toggle functionality', () => {
         it('should toggle sidebar visibility when clicked', () => {
-            const { hamburger, sidebar } = createHamburgerWithSidebar()
-            const burger = hamburger.querySelector('.navbar-burger')
+            const { burger, sidebar } = createHamburgerWithSidebar()
 
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(false)
-            expect(burger.classList.contains('is-active')).toBe(false)
-
-            hamburger.click()
-
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(true)
+            expect(sidebar.classList.contains('is-hidden')).toBe(false)
             expect(burger.classList.contains('is-active')).toBe(true)
-            expect(burger.getAttribute('aria-expanded')).toBe('true')
-        })
 
-        it('should toggle back when clicked again', () => {
-            const { hamburger, sidebar } = createHamburgerWithSidebar()
-            const burger = hamburger.querySelector('.navbar-burger')
+            burger.click()
 
-            hamburger.click()
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(true)
-
-            hamburger.click()
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(false)
+            expect(sidebar.classList.contains('is-hidden')).toBe(true)
             expect(burger.classList.contains('is-active')).toBe(false)
             expect(burger.getAttribute('aria-expanded')).toBe('false')
         })
 
+        it('should toggle back when clicked again', () => {
+            const { burger, sidebar } = createHamburgerWithSidebar()
+
+            burger.click()
+            expect(sidebar.classList.contains('is-hidden')).toBe(true)
+
+            burger.click()
+            expect(sidebar.classList.contains('is-hidden')).toBe(false)
+            expect(burger.classList.contains('is-active')).toBe(true)
+            expect(burger.getAttribute('aria-expanded')).toBe('true')
+        })
+
         it('should handle multiple clicks correctly', () => {
-            const { hamburger, sidebar } = createHamburgerWithSidebar()
+            const { burger, sidebar } = createHamburgerWithSidebar()
 
-            hamburger.click()
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(true)
+            burger.click()
+            expect(sidebar.classList.contains('is-hidden')).toBe(true)
 
-            hamburger.click()
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(false)
+            burger.click()
+            expect(sidebar.classList.contains('is-hidden')).toBe(false)
 
-            hamburger.click()
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(true)
-
-            hamburger.click()
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(false)
+            burger.click()
+            expect(sidebar.classList.contains('is-hidden')).toBe(true)
         })
     })
 
     describe('close method', () => {
         it('should close the menu when close() is called', () => {
-            const { hamburger, sidebar } = createHamburgerWithSidebar()
-            const burger = hamburger.querySelector('.navbar-burger')
+            const { hamburger, burger, sidebar } = createHamburgerWithSidebar()
 
-            // Open menu first
-            hamburger.click()
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(true)
-            expect(burger.classList.contains('is-active')).toBe(true)
+            burger.click()
+            expect(sidebar.classList.contains('is-hidden')).toBe(true)
 
-            // Close menu
             hamburger.close()
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(true)
+            expect(sidebar.classList.contains('is-hidden')).toBe(true)
             expect(burger.classList.contains('is-active')).toBe(false)
             expect(burger.getAttribute('aria-expanded')).toBe('false')
         })
 
         it('should be idempotent when menu is already closed', () => {
-            const { hamburger, sidebar } = createHamburgerWithSidebar()
-            const burger = hamburger.querySelector('.navbar-burger')
-
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(false)
-            expect(burger.classList.contains('is-active')).toBe(false)
+            const { hamburger, burger, sidebar } = createHamburgerWithSidebar()
 
             hamburger.close()
 
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(true)
+            expect(sidebar.classList.contains('is-hidden')).toBe(true)
             expect(burger.classList.contains('is-active')).toBe(false)
         })
     })
@@ -148,12 +133,11 @@ describe('HamburgerMenu Web Component', () => {
             const hamburger = document.createElement('hamburger-menu')
             hamburger.setAttribute('target', '#custom-menu')
             document.body.appendChild(hamburger)
+            const burger = hamburger.querySelector('.navbar-burger')
 
-            expect(customSidebar.classList.contains('is-hidden-mobile')).toBe(false)
+            burger.click()
 
-            hamburger.click()
-
-            expect(customSidebar.classList.contains('is-hidden-mobile')).toBe(true)
+            expect(customSidebar.classList.contains('is-hidden')).toBe(true)
         })
 
         it('should handle multiple hamburger menus with different targets', () => {
@@ -173,13 +157,13 @@ describe('HamburgerMenu Web Component', () => {
             hamburger2.setAttribute('target', '#menu2')
             document.body.appendChild(hamburger2)
 
-            hamburger1.click()
-            expect(sidebar1.classList.contains('is-hidden-mobile')).toBe(true)
-            expect(sidebar2.classList.contains('is-hidden-mobile')).toBe(false)
+            hamburger1.querySelector('.navbar-burger').click()
+            expect(sidebar1.classList.contains('is-hidden')).toBe(true)
+            expect(sidebar2.classList.contains('is-hidden')).toBe(false)
 
-            hamburger2.click()
-            expect(sidebar1.classList.contains('is-hidden-mobile')).toBe(true)
-            expect(sidebar2.classList.contains('is-hidden-mobile')).toBe(true)
+            hamburger2.querySelector('.navbar-burger').click()
+            expect(sidebar1.classList.contains('is-hidden')).toBe(true)
+            expect(sidebar2.classList.contains('is-hidden')).toBe(true)
         })
     })
 
@@ -189,10 +173,10 @@ describe('HamburgerMenu Web Component', () => {
             hamburger.setAttribute('target', '#nonexistent')
             document.body.appendChild(hamburger)
 
-            expect(() => hamburger.click()).not.toThrow()
+            expect(() => hamburger.querySelector('.navbar-burger').click()).not.toThrow()
         })
 
-        it('should handle dynamically added to DOM (unpoly/htmx simulation)', () => {
+        it('should handle dynamically added to DOM', () => {
             const sidebar = document.createElement('aside')
             sidebar.id = 'sidebar'
             document.body.appendChild(sidebar)
@@ -204,21 +188,19 @@ describe('HamburgerMenu Web Component', () => {
             const hamburger = container.querySelector('hamburger-menu')
             const burger = hamburger.querySelector('.navbar-burger')
 
-            expect(burger).toBeTruthy()
-
-            hamburger.click()
-            expect(sidebar.classList.contains('is-hidden-mobile')).toBe(true)
+            burger.click()
+            expect(sidebar.classList.contains('is-hidden')).toBe(true)
         })
 
         it('should stop event propagation', () => {
-            const { hamburger } = createHamburgerWithSidebar()
+            const { burger } = createHamburgerWithSidebar()
 
             let propagated = false
             document.body.addEventListener('click', () => {
                 propagated = true
             })
 
-            hamburger.click()
+            burger.click()
 
             expect(propagated).toBe(false)
         })

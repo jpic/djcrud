@@ -1,31 +1,30 @@
 {% extends "djcrud/base.html" %}
-{% load djcrud_tags %}
+{% load djcrud %}
 
 {% block content %}
 <div class="level mb-5">
     <div class="level-left">
         <h1 class="title is-3">
             {% if view.icon %}<span class="icon{% if view.color %} has-text-{{ view.color }}{% endif %}"><i class="bi bi-{{ view.icon }}"></i></span>{% endif %}
-            {{ view.title }}
+            {{ view.object }}
         </h1>
     </div>
     <div class="level-right">
-        {% if view.controller %}
-            {% eval view.controller.get_tagged_views 'object' request exclude_current=view object=view.object as object_menu %}
+        {% if view.router %}
+            {% eval view.router.model_router.get_tagged_views 'object' request=request object=view.object as object_menu %}
         {% endif %}
         {% if object_menu %}
         <div class="buttons">
             {% for menu_item in object_menu %}
+            {% if menu_item.url != request.path_info %}
             <a href="{{ menu_item.url }}"
                class="button is-outlined is-{{ menu_item.color|default:'primary' }}"
                {% if menu_item.action %}{{ menu_item.action }}{% endif %}
-               {% if menu_item.urlname == 'edit' or menu_item.urlname == 'delete' %}
-               up-layer="new modal"
-               up-size="medium"
-               {% endif %}>
+               {{ menu_item|unpoly_attributes:'object_menu'|html_attributes }}>
                 {% if menu_item.icon %}<span class="icon"><i class="bi bi-{{ menu_item.icon }}"></i></span>{% endif %}
                 <span>{{ menu_item.title }}</span>
             </a>
+            {% endif %}
             {% endfor %}
         </div>
         {% endif %}

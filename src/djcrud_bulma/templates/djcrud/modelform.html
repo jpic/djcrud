@@ -1,10 +1,10 @@
 {% extends "djcrud/form.html" %}
-{% load djcrud_tags %}
+{% load djcrud %}
 
 {% block title_actions %}
 <div class="buttons are-small">
-    {% if view.controller %}
-        {% eval view.controller.get_tagged_views 'model' request exclude_current=view as model_menu %}
+    {% if view.router %}
+        {% eval view.router.get_tagged_views 'model' request=request as model_menu %}
     {% endif %}
     {% for action in model_menu %}
     <a href="{{ action.url }}" class="button is-primary is-outlined">{{ action.title }}</a>

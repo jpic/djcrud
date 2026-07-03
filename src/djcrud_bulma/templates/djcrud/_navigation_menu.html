@@ -1,0 +1,15 @@
+{% load djcrud %}
+<ul class="menu-list" up-nav role="navigation">
+    {% eval view.router.root.get_tagged_views 'navigation' request=request as navigation_menu %}
+    {% for menu_item in navigation_menu %}
+    <li>
+        <a class="{% if menu_item.url == request.path_info %}is-active{% endif %}"
+           href="{{ menu_item.url }}"
+           up-alias="{{ menu_item.url }}?*"
+           {{ menu_item|unpoly_attributes:'navigation'|html_attributes }}>
+           {% if menu_item.icon %}<span class="icon{% if menu_item.color %} has-text-{{ menu_item.color }}{% endif %}"><i class="bi bi-{{ menu_item.icon }}"></i></span>{% endif %}
+            <span>{{ menu_item.title }}</span>
+        </a>
+    </li>
+    {% endfor %}
+</ul>

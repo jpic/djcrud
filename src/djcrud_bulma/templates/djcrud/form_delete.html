@@ -1,0 +1,40 @@
+{% extends 'djcrud/form.html' %}
+{% load i18n %}
+
+{% block before_message %}
+{% if view.invalid_pks %}
+<div class="notification is-warning is-light">
+    {% blocktrans count counter=view.invalid_pks %}
+    {{ counter }} selected item could not be found and was ignored.
+    {% plural %}
+    {{ counter }} selected items could not be found and were ignored.
+    {% endblocktrans %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block message %}
+{{ block.super }}
+{% include "djcrud/_object_list.html" %}
+{% endblock %}
+
+{% block form_buttons %}
+{% if view.cancel_url %}
+<p class="control">
+    <button type="button" class="button" up-dismiss>{% trans "Close" %}</button>
+</p>
+{% endif %}
+{% if view.can_confirm_delete %}
+<p class="control">
+    <button type="submit" class="button is-{{ view.color|default:'danger' }}">
+        {% block submit_button_label %}
+        {{ view.submit_button_label }}
+        {% endblock %}
+    </button>
+</p>
+{% else %}
+<p class="control">
+    <button type="button" class="button" up-dismiss>{% trans "Close" %}</button>
+</p>
+{% endif %}
+{% endblock %}

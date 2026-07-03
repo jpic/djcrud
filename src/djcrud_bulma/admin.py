@@ -1,4 +1,3 @@
 from django.contrib import admin
 
-
-__all__ = ["admin"]
+# Register your models here.

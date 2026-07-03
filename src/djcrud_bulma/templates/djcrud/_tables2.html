@@ -1,0 +1,81 @@
+{% load djcrud django_tables2 i18n l10n %}
+{% block table-wrapper %}
+<div class="djcrud-list" up-list>
+    {% if table.view.filter_form %}
+    <div class="djcrud-list-toolbar">
+        <filter-sidebar-toggle target="#djcrud-filter-sidebar"
+                               class="button{% if table.view.has_active_filters %} is-primary{% endif %}">
+            <span class="icon"><i class="bi bi-funnel"></i></span>
+            <span>{% trans "Filters" %}</span>
+        </filter-sidebar-toggle>
+    </div>
+    <div class="djcrud-list-body">
+        {% include "djcrud/_filter.html" with view=table.view %}
+        <div class="djcrud-list-content">
+            <div class="table-container" up-table>
+    {% else %}
+    <div class="table-container" up-table>
+    {% endif %}
+        {% block table %}
+        <table class="table is-striped is-hoverable is-fullwidth"{% if table.attrs %}{{ table.attrs.as_html }}{% endif %}>
+            {% block table.thead %}
+            {% if table.show_header %}
+                <thead {{ table.attrs.thead.as_html }}>
+                    <tr>
+                    {% for column in table.columns %}
+                        <th {{ column.attrs.th.as_html }}>
+                            {% if column.orderable %}
+                                {% eval table.view.sort_url column as sort_url %}
+                                <a href="{{ sort_url }}" up-follow up-target="[up-list]" up-history>{{ column.header }}</a>
+                            {% else %}
+                                {{ column.header }}
+                            {% endif %}
+                        </th>
+                    {% endfor %}
+                    </tr>
+                </thead>
+            {% endif %}
+            {% endblock table.thead %}
+            {% block table.tbody %}
+                <tbody {{ table.attrs.tbody.as_html }}>
+                {% for row in table.paginated_rows %}
+                    {% block table.tbody.row %}
+                    <tr {{ row.attrs.as_html }}>
+                        {% for column, cell in row.items %}
+                            <td {{ column.attrs.td.as_html }}>{% if column.localize == None %}{{ cell }}{% else %}{% if column.localize %}{{ cell|localize }}{% else %}{{ cell|unlocalize }}{% endif %}{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endblock table.tbody.row %}
+                {% empty %}
+                    {% if table.empty_text %}
+                    {% block table.tbody.empty_text %}
+                    <tr><td colspan="{{ table.columns|length }}">{{ table.empty_text }}</td></tr>
+                    {% endblock table.tbody.empty_text %}
+                    {% endif %}
+                {% endfor %}
+                </tbody>
+            {% endblock table.tbody %}
+            {% block table.tfoot %}
+            {% if table.has_footer %}
+                <tfoot {{ table.attrs.tfoot.as_html }}>
+                    <tr>
+                    {% for column in table.columns %}
+                        <td {{ column.attrs.tf.as_html }}>{{ column.footer }}</td>
+                    {% endfor %}
+                    </tr>
+                </tfoot>
+            {% endif %}
+            {% endblock table.tfoot %}
+        </table>
+        {% endblock table %}
+
+        {% block pagination %}
+        {% include "djcrud/_pagination.html" with view=table.view %}
+        {% endblock pagination %}
+    </div>
+    {% if table.view.filter_form %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock table-wrapper %}

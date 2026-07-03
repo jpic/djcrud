@@ -7,27 +7,29 @@
         <div>
             <h1 class="title is-3">
                 {% if view.icon %}<span class="icon{% if view.color %} has-text-{{ view.color }}{% endif %}"><i class="bi bi-{{ view.icon }}"></i></span>{% endif %}
-                {{ view.title }}
+                {{ view.object }}
             </h1>
         </div>
     </div>
     <div class="level-right">
+        {% if view.router %}
+            {% eval view.router.model_router.get_tagged_views 'object' request=request object=view.object as object_menu %}
+        {% endif %}
+        {% if object_menu %}
         <div class="buttons">
-            {% if view.router %}
-                {% eval view.router.get_tagged_views 'model' request=request as model_menu %}
-            {% endif %}
-            {% for action in model_menu %}
-            <a
-                href="{{ action.url }}"
-                class="button is-{{ action.color|default:'primary' }}"
-                {% if action.action %}{{ action.action }}{% endif %}
-                {{ action|unpoly_attributes:'model_menu'|html_attributes }}
-            >
-               {% if action.icon %}<span class="icon"><i class="bi bi-{{ action.icon }}"></i></span>{% endif %}
-               <span>{{ action.title }}</span>
+            {% for menu_item in object_menu %}
+            {% if menu_item.url != request.path_info %}
+            <a href="{{ menu_item.url }}"
+               class="button is-outlined is-{{ menu_item.color|default:'primary' }}"
+               {% if menu_item.action %}{{ menu_item.action }}{% endif %}
+               {{ menu_item|unpoly_attributes:'object_menu'|html_attributes }}>
+                {% if menu_item.icon %}<span class="icon"><i class="bi bi-{{ menu_item.icon }}"></i></span>{% endif %}
+                <span>{{ menu_item.title }}</span>
             </a>
+            {% endif %}
             {% endfor %}
         </div>
+        {% endif %}
     </div>
 </div>
 

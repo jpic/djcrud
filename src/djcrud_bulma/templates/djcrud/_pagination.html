@@ -1,0 +1,83 @@
+{% load djcrud i18n %}
+{% if view.page %}
+<div class="djcrud-pagination-footer">
+    <form method="get"
+          class="djcrud-per-page djcrud-per-page-form"
+          {{ view.pagination_form_attributes|html_attributes }}>
+        {% for name, value in view.per_page_form_hidden_fields %}
+        <input type="hidden" name="{{ name }}" value="{{ value }}">
+        {% endfor %}
+        <input type="hidden" name="{{ view.page_kwarg }}" value="1">
+        <span class="djcrud-per-page-label">{% trans "Paginate by:" %}</span>
+        <div class="select is-small">
+            <select name="{{ view.per_page_kwarg }}" aria-label="{% trans 'Paginate by:' %}">
+                {% for option in view.per_page_option_list %}
+                <option value="{{ option }}"{% if option == view.paginator.per_page|stringformat:"s" %} selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    <nav class="djcrud-table-pagination" role="navigation" aria-label="{% trans 'pagination' %}">
+        {% if view.page.has_previous %}
+        {% eval view.pagination_url 1 as first_url %}
+        <a class="button is-small" href="{{ first_url }}" up-follow up-target="{{ view.pagination_target }}" up-history aria-label="{% trans 'First page' %}">
+            <i class="bi bi-chevron-bar-left"></i>
+        </a>
+        {% else %}
+        <span class="button is-small" disabled aria-label="{% trans 'First page' %}">
+            <i class="bi bi-chevron-bar-left"></i>
+        </span>
+        {% endif %}
+
+        {% if view.page.has_previous %}
+        {% eval view.pagination_url view.page.previous_page_number as prev_url %}
+        <a class="button is-small" href="{{ prev_url }}" up-follow up-target="{{ view.pagination_target }}" up-history aria-label="{% trans 'Previous page' %}">
+            <i class="bi bi-chevron-left"></i>
+        </a>
+        {% else %}
+        <span class="button is-small" disabled aria-label="{% trans 'Previous page' %}">
+            <i class="bi bi-chevron-left"></i>
+        </span>
+        {% endif %}
+
+        <form method="get"
+              class="djcrud-page-form"
+              {{ view.pagination_form_attributes|html_attributes }}>
+            {% for name, value in view.page_form_hidden_fields %}
+            <input type="hidden" name="{{ name }}" value="{{ value }}">
+            {% endfor %}
+            <input type="number"
+                   name="{{ view.page_kwarg }}"
+                   class="input is-small"
+                   value="{{ view.page.number }}"
+                   min="1"
+                   max="{{ view.paginator.num_pages }}"
+                   aria-label="{% trans 'Page number' %}">
+            <span class="djcrud-page-form-total">{% blocktrans with num_pages=view.paginator.num_pages %}of {{ num_pages }}{% endblocktrans %}</span>
+        </form>
+
+        {% if view.page.has_next %}
+        {% eval view.pagination_url view.page.next_page_number as next_url %}
+        <a class="button is-small" href="{{ next_url }}" up-follow up-target="{{ view.pagination_target }}" up-history aria-label="{% trans 'Next page' %}">
+            <i class="bi bi-chevron-right"></i>
+        </a>
+        {% else %}
+        <span class="button is-small" disabled aria-label="{% trans 'Next page' %}">
+            <i class="bi bi-chevron-right"></i>
+        </span>
+        {% endif %}
+
+        {% if view.page.has_next %}
+        {% eval view.pagination_url view.paginator.num_pages as last_url %}
+        <a class="button is-small" href="{{ last_url }}" up-follow up-target="{{ view.pagination_target }}" up-history aria-label="{% trans 'Last page' %}">
+            <i class="bi bi-chevron-bar-right"></i>
+        </a>
+        {% else %}
+        <span class="button is-small" disabled aria-label="{% trans 'Last page' %}">
+            <i class="bi bi-chevron-bar-right"></i>
+        </span>
+        {% endif %}
+    </nav>
+</div>
+{% endif %}
