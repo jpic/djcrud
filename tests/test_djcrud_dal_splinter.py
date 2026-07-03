@@ -82,7 +82,7 @@ def test_user_update_groups_autocomplete(
         input_css="#div_id_groups autocomplete-select-input input",
     )
     capture(browser, "user-update-groups-selected")
-    browser.find_by_css('button[type="submit"]').first.click()
+    browser.find_by_css('form[method="post"] button[type="submit"]').first.click()
 
     assert browser.is_text_present("member", wait_time=5)
     member.refresh_from_db()
