@@ -14,7 +14,12 @@ class McpProfileListView(APIView):
 
     def get(self, request):
         del request
-        return Response({"profiles": site.list_keys()})
+        return Response(
+            {
+                "profiles": site.list_keys(),
+                "default": site.default_key(),
+            }
+        )
 
 
 class McpProfileDetailView(APIView):

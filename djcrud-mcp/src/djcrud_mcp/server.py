@@ -40,7 +40,11 @@ def create_mcp_server(
     extra_headers: dict[str, str] | None = None,
 ) -> FastMCP:
     base_url = (base_url or get_base_url()).rstrip("/")
-    registry_key = profile if isinstance(profile, str) else (registry or get_registry_key())
+    registry_key = (
+        profile
+        if isinstance(profile, str)
+        else (registry or get_registry_key(base_url=base_url))
+    )
     if isinstance(profile, str) or profile is None:
         profile = _load_profile(registry_key, base_url=base_url)
     token = token if token is not None else get_token()

@@ -74,7 +74,7 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
 
     base_url = get_base_url()
-    registry = args.registry or get_registry_key()
+    registry = args.registry or get_registry_key(base_url=base_url)
 
     if args.call:
         token = resolve_token(

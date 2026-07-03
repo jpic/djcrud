@@ -88,13 +88,44 @@ class CrudApi:
             return response.json()
 
 
-def list_profiles(*, base_url: str) -> list[str]:
+def fetch_profile_catalog(*, base_url: str) -> tuple[list[str], str | None]:
     payload = CrudApi(base_url=base_url, token="").fetch_json("/api/mcp/profiles/")
     if isinstance(payload, dict):
         keys = payload.get("profiles", payload.get("keys", []))
+        default = payload.get("default")
     else:
         keys = payload
-    return [str(key) for key in keys]
+        default = None
+    profiles = [str(key).strip().lower() for key in keys]
+    default_key = (
+        str(default).strip().lower()
+        if isinstance(default, str) and default.strip()
+        else None
+    )
+    return profiles, default_key
+
+
+def list_profiles(*, base_url: str) -> list[str]:
+    profiles, _default = fetch_profile_catalog(base_url=base_url)
+    return profiles
+
+
+def resolve_registry_key(*, base_url: str, explicit: str | None = None) -> str:
+    from .profiles import DEFAULT_PROFILE_KEY
+
+    if explicit and explicit.strip():
+        return explicit.strip().lower()
+
+    try:
+        profiles, default_key = fetch_profile_catalog(base_url=base_url)
+        if default_key:
+            return default_key
+        if len(profiles) == 1:
+            return profiles[0]
+    except Exception:
+        pass
+
+    return DEFAULT_PROFILE_KEY
 
 
 def fetch_profile(*, base_url: str, key: str):

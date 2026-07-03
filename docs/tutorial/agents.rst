@@ -53,10 +53,11 @@ Every stdio MCP client uses a registered profile; remote clients fetch it from
 
    class ArticlesMcp(djcrud_mcp.McpProfile):
        key = "articles"
-       server_name = "myapp-articles"
-       instructions = "Article CRUD via /api/article/."
-       info_tool_name = "article_registry_info"
        viewsets = (ArticleViewSet,)
+
+   ``server_name``, ``instructions``, and ``info_tool_name`` default from the
+   profile ``key`` and registered ViewSets (override only when you need custom
+   agent guidance).
 
    djcrud_mcp.site.register(ArticlesMcp)
 

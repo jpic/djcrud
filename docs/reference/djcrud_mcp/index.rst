@@ -129,12 +129,13 @@ Required on the Django host: declare a class and register it on
 
    class ItemsMcp(djcrud_mcp.McpProfile):
        key = "items"
-       server_name = "myapp-items"
        viewsets = (ItemViewSet,)  # or models=(Item,)
-       instructions = "CRUD for Item via the JSON API."
-       info_tool_name = "item_registry_info"
 
    djcrud_mcp.site.register(ItemsMcp)
+
+``server_name``, ``instructions``, and ``info_tool_name`` are derived from the
+profile ``key`` and ViewSet models unless you override them (e.g. custom agent
+guidance for non-CRUD workflows).
 
 Omit ``viewsets`` / ``models`` on a profile with ``key = "default"`` to expose
 every registered ``ModelViewSet``. Set ``viewsets`` / ``models`` to limit a

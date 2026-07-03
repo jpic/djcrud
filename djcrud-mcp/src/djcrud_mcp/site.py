@@ -36,7 +36,7 @@ class McpSite:
             )
             profiles[profile.key] = profile
 
-        if DefaultMcpProfile.key not in profiles:
+        if not self._profile_classes and DefaultMcpProfile.key not in profiles:
             profiles[DefaultMcpProfile.key] = DefaultMcpProfile.build_registry_profile(
                 resolve_viewsets=resolve_viewsets
             )
@@ -47,12 +47,43 @@ class McpSite:
     def list_keys(self, *, resolve_viewsets: bool = True) -> list[str]:
         return sorted(self.build(resolve_viewsets=resolve_viewsets))
 
+    def default_key(self, *, resolve_viewsets: bool = True) -> str | None:
+        from .profiles import DEFAULT_PROFILE_KEY
+
+        profiles = self.build(resolve_viewsets=resolve_viewsets)
+        if not profiles:
+            return None
+
+        flagged = [
+            profile_class.key.strip().lower()
+            for profile_class in self._profile_classes
+            if getattr(profile_class, "default", False)
+        ]
+        if len(flagged) > 1:
+            raise ValueError(
+                "Multiple MCP profiles marked default: "
+                + ", ".join(sorted(flagged))
+            )
+        if len(flagged) == 1:
+            return flagged[0]
+
+        if len(self._profile_classes) == 1:
+            return self._profile_classes[0].key.strip().lower()
+
+        if DEFAULT_PROFILE_KEY in profiles:
+            return DEFAULT_PROFILE_KEY
+
+        return None
+
     def get_profile(
         self, key: str | None = None, *, resolve_viewsets: bool = True
     ) -> RegistryProfile:
-        from .profiles import DEFAULT_PROFILE_KEY
-
-        registry_key = (key or DEFAULT_PROFILE_KEY).strip().lower()
+        if key is None or not str(key).strip():
+            registry_key = self.default_key(resolve_viewsets=resolve_viewsets)
+            if registry_key is None:
+                raise ValueError("No MCP profile key given and host has no default profile")
+        else:
+            registry_key = str(key).strip().lower()
         profiles = self.build(resolve_viewsets=resolve_viewsets)
         try:
             return profiles[registry_key]

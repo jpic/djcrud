@@ -130,12 +130,14 @@ locally:
 
    class ItemsMcp(djcrud_mcp.McpProfile):
        key = "items"
-       server_name = "myapp-items"
        viewsets = (ItemViewSet,)   # or models=(Item,)
-       instructions = "..."
-       info_tool_name = "item_registry_info"
 
    djcrud_mcp.site.register(ItemsMcp)
+
+``server_name``, ``instructions``, and ``info_tool_name`` default from the profile
+``key`` and registered ViewSets — same sane-defaults philosophy as CRUD tool
+names. Override ``instructions`` (and related fields) only for bespoke agent
+workflows.
 
 Set ``viewsets`` / ``models`` to limit one profile to a subset (e.g. tasks vs
 admin). Omit them on a profile with ``key = "default"`` to expose every

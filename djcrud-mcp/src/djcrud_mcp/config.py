@@ -22,11 +22,21 @@ def get_token() -> str:
     return _first_env("DJCRUD_TOKEN", "DJMVC_TOKEN", "TILDETTE_TOKEN")
 
 
-def get_registry_key() -> str:
-    return _first_env("DJCRUD_MCP_REGISTRY", "TILDETTE_MCP_REGISTRY") or "default"
+def get_registry_key(*, base_url: str | None = None) -> str:
+    explicit = _first_env("DJCRUD_MCP_REGISTRY", "TILDETTE_MCP_REGISTRY")
+    if explicit:
+        return explicit.strip().lower()
+
+    if base_url:
+        from .api import resolve_registry_key
+
+        return resolve_registry_key(base_url=base_url)
+
+    return "default"
 
 
 def get_profile_from_env():
     from .server import _load_profile
 
-    return _load_profile(get_registry_key(), base_url=get_base_url())
+    base_url = get_base_url()
+    return _load_profile(get_registry_key(base_url=base_url), base_url=base_url)
