@@ -1,0 +1,17 @@
+{
+  "name": "spa-example-frontend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "api:schema": "cd ../../../.. && python manage.py spectacular --file src/djcrud_example/spa_example/frontend/openapi.json --format openapi-json",
+    "api:generate": "openapi-generator-cli generate -i openapi.json -g javascript --additional-properties=usePromises=true,modelPropertyNaming=original -o src/api",
+    "api": "npm run api:schema && npm run api:generate"
+  },
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.15.0",
+    "@sveltejs/vite-plugin-svelte": "^5.0.0",
+    "svelte": "^5.0.0",
+    "vite": "^6.0.0"
+  }
+}
