@@ -1,0 +1,41 @@
+{% extends "djcrud/base.html" %}
+{% load django_tables2 i18n static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'dal_alight/autocomplete-light.css' %}">
+<link rel="stylesheet" href="{% static 'djcrud_dal_topbar/css/site-search.css' %}">
+{% endblock %}
+
+{% block layout_class %}{% if view.show_results %}djcrud-layout{% else %}djcrud-layout djcrud-search-landing{% endif %}{% endblock %}
+
+{% block sidebar %}{% if view.show_results %}{{ block.super }}{% endif %}{% endblock %}
+
+{% block main_class %}{% if view.show_results %}p-5 djcrud-main{% else %}djcrud-main djcrud-search-landing-main{% endif %}{% endblock %}
+
+{% block content %}
+{% if view.show_results %}
+<div class="djcrud-search-results-header mb-5">
+    {% include "djcrud/_search_form.html" with variant="results" %}
+</div>
+
+{% if view.table and view.object_list %}
+    {% render_table view.table %}
+{% else %}
+    <div class="notification is-info is-light">
+        {{ view.empty_list_message }}
+    </div>
+{% endif %}
+
+{% else %}
+<div class="djcrud-search-landing-box">
+    <h1 class="title has-text-centered mb-6">{{ view.title }}</h1>
+    {% include "djcrud/_search_form.html" with variant="landing" %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'dal_alight/autocomplete-light.js' %}" type="module"></script>
+<script src="{% static 'dal_alight/dal-django.js' %}" type="module"></script>
+<script src="{% static 'djcrud_dal_topbar/js/site-search.js' %}" type="module"></script>
+{% endblock %}

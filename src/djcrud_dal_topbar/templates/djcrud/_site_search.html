@@ -1,14 +1,6 @@
-{% load i18n static %}
+{% load static %}
 <div class="navbar-item djcrud-site-search-wrap">
-    <div class="field mb-0">
-        <div class="control">
-            <autocomplete-light url="{% url 'site:search' %}" class="djcrud-site-search"
-                                minimum-characters="2">
-                <input type="text" class="input" slot="input" placeholder="{% trans 'Search…' %}"
-                       autocomplete="off" aria-label="{% trans 'Search' %}">
-            </autocomplete-light>
-        </div>
-    </div>
+    {% include "djcrud/_search_form.html" with variant="compact" %}
 </div>
 <link rel="stylesheet" href="{% static 'dal_alight/autocomplete-light.css' %}">
 <link rel="stylesheet" href="{% static 'djcrud_dal_topbar/css/site-search.css' %}">

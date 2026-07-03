@@ -165,11 +165,11 @@ Registry API
    * - djmvc pattern
      - djcrud replacement
    * - ``ModelController.get_queryset(self, view)``
-     - :func:`~djcrud.add_queryset(model, scoper=..., router=...)`
+     - :func:`~djcrud.add_queryset(model, scoper=...)`
    * - ``has_permission_object()`` on action views
-     - :func:`~djcrud.add_perm(model, "<shortcode>", check=..., router=...)`
+     - :func:`~djcrud.add_perm(model, "<shortcode>", check=...)`
    * - ``has_permission_backend()`` on a view
-     - :func:`~djcrud.add_perm` with router scope or full perm string
+     - :func:`~djcrud.add_perm` with full perm string
    * - ``ModelController.has_permission(self, view)``
      - :func:`~djcrud.add_perm` on the router
 
@@ -197,7 +197,7 @@ Example — owner-scoped queryset
 
 .. code-block:: python
 
-   def file_queryset(user, *, model, action, perm, obj, router, **ctx):
+   def file_queryset(user, *, model, action, perm, obj, **ctx):
        qs = model._default_manager.all()
        if user.is_staff:
            return qs
@@ -208,7 +208,7 @@ Example — owner-scoped queryset
    class FileRouter(djcrud.ModelRouter):
        model = File
 
-   djcrud.add_queryset(File, scoper=file_queryset, router=FileRouter)
+   djcrud.add_queryset(File, scoper=file_queryset)
    djcrud.add_perm(FileRouter, "view,add,change,delete", check=djcrud.authenticated)
 
 Full worked example: ``djcrud_example.security_example`` in
@@ -243,17 +243,10 @@ Example — custom object action
            return False
        return True
 
-   djcrud.add_perm(Article, "publish", check=can_publish, router=ArticleRouter)
+   djcrud.add_perm(Article, "publish", check=can_publish)
 
 The custom action's ``permission_shortcode`` (or DRF ``@action`` method name)
 must match the shortcode passed to :func:`~djcrud.add_perm`.
-
-Router-scoped rules
-^^^^^^^^^^^^^^^^^^^
-
-When two routers share a model (as in the security example), pass
-``router=MyRouter`` or ``router="secured-document"`` (the router
-:attr:`~djcrud.route.Route.codename`) so rules apply only under that URL tree.
 
 Phase D — API and agents
 ~~~~~~~~~~~~~~~~~~~~~~~~

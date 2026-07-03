@@ -127,7 +127,7 @@ def test_bearer_crud_without_csrf(user, product_perms, drf_settings):
     from djcrud_example.drf_example.models import Product
 
     assert user.has_perm("drf_example.change_product")
-    assert _lookup_perm(Product, "change", "drf_example.change_product", None) is None
+    assert _lookup_perm(Product, "change", "drf_example.change_product") is None
     token, raw_key = Token.generate(user=user, name="crud")
     client = Client()
 

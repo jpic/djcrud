@@ -12,11 +12,45 @@
 
 .djcrud-site-search-wrap {
     width: 100%;
-    max-width: 18rem;
+    max-width: 22rem;
 }
 
 .djcrud-site-search-wrap .field {
     margin-bottom: 0;
+}
+
+.djcrud-search-form {
+    width: 100%;
+}
+
+.djcrud-search-form .field.has-addons {
+    flex-wrap: nowrap;
+}
+
+.djcrud-search-landing .djcrud-navbar-center {
+    visibility: hidden;
+}
+
+.djcrud-search-landing-main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 3.25rem);
+    padding: 2rem;
+}
+
+.djcrud-search-landing-box {
+    width: 100%;
+    max-width: 36rem;
+}
+
+.djcrud-search-form--landing .input {
+    height: 3rem;
+    font-size: 1.125rem;
+}
+
+.djcrud-search-results-header {
+    max-width: 42rem;
 }
 
 .djcrud-site-search-group {

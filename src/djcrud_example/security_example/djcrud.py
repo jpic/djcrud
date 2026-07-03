@@ -14,7 +14,7 @@ def secured_document_change(user, *, obj, **ctx):
 secured_document_delete = secured_document_change
 
 
-def document_queryset(user, *, model, action, perm, obj, router, **kwargs):
+def document_queryset(user, *, model, action, perm, obj, **kwargs):
     qs = model.objects.all()
     if action in ("change", "delete"):
         if not user.is_authenticated:
@@ -48,30 +48,25 @@ djcrud.add_perm(
     Document,
     "view",
     check=lambda user, **ctx: True,
-    router="secured-document",
 )
 djcrud.add_perm(
     Document,
     "add",
     check=djcrud.authenticated,
-    router="secured-document",
 )
 djcrud.add_perm(
     Document,
     "change",
     check=secured_document_change,
-    router="secured-document",
 )
 djcrud.add_perm(
     Document,
     "delete",
     check=secured_document_delete,
-    router="secured-document",
 )
 djcrud.add_queryset(
     Document,
     scoper=document_queryset,
-    router="secured-document",
 )
 
 djcrud.site.routes.append(SecuredDocumentRouter)

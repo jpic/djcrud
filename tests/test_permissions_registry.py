@@ -47,37 +47,6 @@ def test_add_queryset_scopes_rows(rf, admin_user):
 
 
 @pytest.mark.django_db
-def test_router_scoped_perm_does_not_apply_to_other_router(rf):
-    from djcrud_example.models import User
-
-    djcrud.add_perm(
-        Item,
-        "view",
-        check=lambda user, **ctx: True,
-        router="scoped-item",
-    )
-    try:
-        reader = User.objects.create_user("reader", password="pass")
-
-        class OtherRouter(djcrud.ModelRouter):
-            model = Item
-
-            @property
-            def codename(self):
-                return "other-item"
-
-        router = OtherRouter()
-        router.build()
-        request = rf.get("/other/")
-        request.user = reader
-        view = type(router.routes["list"])(request=request)
-        view.router = router
-        assert view.has_permission() is False
-    finally:
-        djcrud.remove_perm(Item, "view", router="scoped-item")
-
-
-@pytest.mark.django_db
 def test_perm_string_registration(rf):
     from djcrud_example.models import User
 
@@ -122,10 +91,10 @@ def test_lookup_prefers_specific_action_over_model_wide():
     djcrud.add_perm(Item, check=lambda user, **ctx: False)
     djcrud.add_perm(Item, "view", check=lambda user, **ctx: True)
     try:
-        check = _lookup_perm(Item, "view", "routing_example.view_item", None)
+        check = _lookup_perm(Item, "view", "routing_example.view_item")
         assert check is not None
         assert check(
-            user=None, model=Item, action="view", perm="", obj=None, router=None
+            user=None, model=Item, action="view", perm="", obj=None
         )
     finally:
         djcrud.remove_perm(Item, "view")
@@ -151,8 +120,19 @@ def test_secured_document_rules_registered_from_djcrud_autodiscover():
         Document,
         "view",
         "security_example.view_document",
-        "secured-document",
     )
-    scoper = _lookup_scoper(Document, "view", "secured-document")
+    scoper = _lookup_scoper(Document, "view")
     assert check is not None
     assert scoper is not None
+
+
+def test_add_search_opt_in():
+    from djcrud.permissions import is_search_enabled
+
+    djcrud.remove_search(Item)
+    try:
+        assert is_search_enabled(Item) is False
+        djcrud.add_search(Item)
+        assert is_search_enabled(Item) is True
+    finally:
+        djcrud.add_search(Item)

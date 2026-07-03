@@ -14,12 +14,9 @@ class SearchMixin:
     Attributes:
         search_param (str): GET parameter for the search input. Default
             ``'search'``.
-        site_search (bool): When ``True``, include this list view in navbar
-            site search (:mod:`djcrud_dal_topbar`). Default ``False``.
     """
 
     search_param = "search"
-    site_search = False
 
     @functools.cached_property
     def search_fields(self):

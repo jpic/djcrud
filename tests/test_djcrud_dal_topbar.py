@@ -12,10 +12,10 @@ User = get_user_model()
 
 
 @pytest.mark.django_db
-def test_site_search_route(admin_client, admin_user):
+def test_site_search_autocomplete(admin_client, admin_user):
     User.objects.create_user("member", password="pass")
     admin_client.force_login(admin_user)
-    response = admin_client.get(reverse("site:search"), {"q": "member"})
+    response = admin_client.get(reverse("site:autocomplete"), {"q": "member"})
     assert response.status_code == 200
     content = response.content.decode()
     assert "member" in content
@@ -37,11 +37,11 @@ def test_site_search_excludes_models_without_list_permission(db, client):
     client.force_login(user)
     response = client.get(reverse("site:search"), {"q": "member"})
     assert response.status_code == 200
-    assert b"member" not in response.content
+    assert b"No results found" in response.content
 
 
 @pytest.mark.django_db
-def test_site_search_excludes_models_without_site_search(admin_client, admin_user):
+def test_site_search_excludes_models_without_add_search(admin_client, admin_user):
     marker = "unique_logentry_marker_xyz"
     ct = ContentType.objects.get_for_model(Item)
     LogEntry.objects.create(
@@ -59,14 +59,14 @@ def test_site_search_excludes_models_without_site_search(admin_client, admin_use
 
     response = admin_client.get(reverse("site:search"), {"q": marker})
     assert response.status_code == 200
-    assert marker not in response.content.decode()
+    assert "No results found" in response.content.decode()
 
 
 @pytest.mark.django_db
 def test_site_search_includes_item(admin_client, admin_user):
     Item.objects.create(name="searchable_item_xyz")
     admin_client.force_login(admin_user)
-    response = admin_client.get(reverse("site:search"), {"q": "searchable_item"})
+    response = admin_client.get(reverse("site:autocomplete"), {"q": "searchable_item"})
     assert response.status_code == 200
     content = response.content.decode()
     assert "searchable_item_xyz" in content
@@ -74,7 +74,43 @@ def test_site_search_includes_item(admin_client, admin_user):
 
 
 @pytest.mark.django_db
-def test_iter_searchable_list_views_respects_site_search(rf, admin_user):
+def test_search_landing_page(admin_client, admin_user):
+    admin_client.force_login(admin_user)
+    response = admin_client.get(reverse("site:search"))
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "djcrud-search-landing-box" in content
+    assert "djcrud-search-form--landing" in content
+    assert "djcrud-search-results-header" not in content
+
+
+@pytest.mark.django_db
+def test_search_get_shows_results(admin_client, admin_user):
+    Item.objects.create(name="get_item_xyz")
+    admin_client.force_login(admin_user)
+    response = admin_client.get(reverse("site:search"), {"q": "get_item"})
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "get_item_xyz" in content
+    assert "djcrud-search-results-header" in content
+    assert "table" in content
+
+
+@pytest.mark.django_db
+def test_search_results_page(admin_client, admin_user):
+    Item.objects.create(name="results_item_xyz")
+    admin_client.force_login(admin_user)
+    response = admin_client.get(reverse("site:search"), {"q": "results_item"})
+    assert response.status_code == 200
+    content = response.content.decode()
+    assert "results_item_xyz" in content
+    assert "table" in content
+    assert "djcrud-search-results-header" in content
+    assert reverse("site:autocomplete") in content
+
+
+@pytest.mark.django_db
+def test_iter_searchable_list_views_respects_add_search(rf, admin_user):
     request = rf.get("/search/")
     request.user = admin_user
     models = {view.model for view in iter_searchable_list_views(request)}
@@ -93,5 +129,6 @@ def test_pages_include_site_search_widget(admin_client, admin_user):
     content = response.content.decode()
     assert "djcrud-site-search" in content
     assert reverse("site:search") in content
+    assert reverse("site:autocomplete") in content
     assert "djcrud-site-search-wrap" in content
     assert 'slot="input"' in content

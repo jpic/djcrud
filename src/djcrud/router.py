@@ -78,30 +78,16 @@ class Router(Clonable, Route, metaclass=RouterMeta):
             current = getattr(current, "router", None)
         return None
 
-    def _permission_context(
-        self,
-        *,
-        user,
-        model,
-        action,
-        perm,
-        obj=None,
-        router=None,
-        router_codename=None,
-    ):
+    def _permission_context(self, *, user, model, action, perm, obj=None):
         return dict(
             user=user,
             model=model,
             action=action,
             perm=perm,
             obj=obj,
-            router=router,
-            router_codename=router_codename,
         )
 
-    def has_permission(
-        self, *, user, model, action, perm, obj=None, router=None, router_codename=None
-    ):
+    def has_permission(self, *, user, model, action, perm, obj=None):
         """Delegate permission checks to the nearest :class:`~djcrud.ModelRouter`."""
         ctx = self._permission_context(
             user=user,
@@ -109,17 +95,13 @@ class Router(Clonable, Route, metaclass=RouterMeta):
             action=action,
             perm=perm,
             obj=obj,
-            router=router,
-            router_codename=router_codename,
         )
         model_router = self.model_router
         if model_router is None:
             return registry_has_permission(**ctx)
         return call_with_context(model_router.has_permission, ctx)
 
-    def get_queryset(
-        self, *, user, model, action, perm, obj=None, router=None, router_codename=None
-    ):
+    def get_queryset(self, *, user, model, action, perm, obj=None):
         """Delegate queryset scoping to the nearest :class:`~djcrud.ModelRouter`."""
         ctx = self._permission_context(
             user=user,
@@ -127,8 +109,6 @@ class Router(Clonable, Route, metaclass=RouterMeta):
             action=action,
             perm=perm,
             obj=obj,
-            router=router,
-            router_codename=router_codename,
         )
         model_router = self.model_router
         if model_router is None:

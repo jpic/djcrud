@@ -1,0 +1,19 @@
+{% load i18n static %}
+<form method="get" action="{% url 'site:search' %}" class="djcrud-search-form{% if variant %} djcrud-search-form--{{ variant }}{% endif %}">
+    <div class="field has-addons mb-0">
+        <div class="control is-expanded">
+            <autocomplete-light url="{% url 'site:autocomplete' %}" class="djcrud-site-search"
+                                minimum-characters="2">
+                <input type="text" name="q" class="input" slot="input" placeholder="{% trans 'Search…' %}"
+                       value="{{ view.q|default:'' }}"
+                       autocomplete="off" aria-label="{% trans 'Search' %}">
+            </autocomplete-light>
+        </div>
+        <div class="control">
+            <button type="submit" class="button{% if variant == 'landing' %} is-primary is-medium{% endif %}"
+                    aria-label="{% trans 'Search' %}">
+                <span class="icon{% if variant == 'landing' %} is-medium{% endif %}"><i class="bi bi-search"></i></span>
+            </button>
+        </div>
+    </div>
+</form>

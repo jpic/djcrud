@@ -36,14 +36,7 @@ class SPAView(TemplateView):
         from djcrud.permissions import has_site_permission
 
         ctx = self.permission_context()
-        return has_site_permission(
-            user=ctx["user"],
-            perm=ctx["perm"],
-            action=ctx["action"],
-            model=ctx["model"],
-            obj=ctx["obj"],
-            router=ctx["router"],
-        )
+        return has_site_permission(**ctx)
 
     @cached_property
     def media(self):

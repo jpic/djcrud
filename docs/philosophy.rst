@@ -112,7 +112,7 @@ Open access deliberately in ``djcrud.py``:
    )
 
    # Narrow row visibility for writes (see tutorial/permission)
-   djcrud.add_queryset(Item, "change", scoper=my_change_queryset, router=ItemRouter)
+   djcrud.add_queryset(Item, "change", scoper=my_change_queryset)
 
 Model routers delegate to the registry:
 

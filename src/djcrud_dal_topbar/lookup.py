@@ -3,7 +3,20 @@ from functools import reduce
 
 import djcrud
 from django.db.models import Q
+from djcrud.permissions import is_search_enabled
 from djcrud.router import Router
+from queryset_sequence import QuerySetSequence
+
+
+def find_model_router(router, model):
+    for route in router.routes:
+        if isinstance(route, Router):
+            found = find_model_router(route, model)
+            if found is not None:
+                return found
+    if getattr(type(router), "model", None) is model:
+        return router
+    return None
 
 
 def find_detail_url(model, pk):
@@ -11,7 +24,7 @@ def find_detail_url(model, pk):
     site = djcrud.site
     if not getattr(site, "registry", None):
         return None
-    router = _find_model_router(site, model)
+    router = find_model_router(site, model)
     if router is None:
         return None
     detail = router.find_route("detail")
@@ -31,7 +44,7 @@ def iter_model_routers(router):
 
 
 def iter_searchable_list_views(request):
-    """Yield list views the user may search (permission + site_search + search_fields)."""
+    """Yield list views opted into site search with permission and search_fields."""
     site = djcrud.site
     if not getattr(site, "registry", None):
         return
@@ -40,17 +53,17 @@ def iter_searchable_list_views(request):
         if list_route is None:
             continue
         list_view = type(list_route)(request=request)
-        if not list_view.has_permission():
-            continue
-        if not list_view.site_search:
+        if not is_search_enabled(list_view.model):
             continue
         if not list_view.search_fields:
+            continue
+        if not list_view.has_permission():
             continue
         yield list_view
 
 
 def get_list_queryset(list_view):
-    """Scoped queryset for site search (detail ``view`` permission, not list)."""
+    """Scoped queryset for site search (same view permission as list/detail)."""
     mc = list_view.router.model_router
     model = list_view.model
     perm = f"{model._meta.app_label}.view_{model._meta.model_name}"
@@ -78,12 +91,27 @@ def apply_search(qs, search_fields, term):
     ).distinct()
 
 
-def _find_model_router(router, model):
-    for route in router.routes:
-        if isinstance(route, Router):
-            found = _find_model_router(route, model)
-            if found is not None:
-                return found
-    if getattr(type(router), "model", None) is model:
-        return router
-    return None
+def mixup_querysets(qs, paginate_by):
+    """Return a queryset with a few results from each sub-queryset."""
+    querysets = list(qs.get_querysets())
+    if not querysets:
+        return qs
+    limit = max(int(paginate_by / len(querysets)), 1)
+    return QuerySetSequence(*[q[:limit] for q in querysets])
+
+
+def build_site_search_queryset(request, q, *, mixup=False, paginate_by=10):
+    """Build a :class:`~queryset_sequence.QuerySetSequence` for site search."""
+    if not q:
+        return QuerySetSequence()
+    querysets = []
+    for list_view in iter_searchable_list_views(request):
+        qs = get_list_queryset(list_view)
+        qs = apply_search(qs, list_view.search_fields, q)
+        querysets.append(qs)
+    if not querysets:
+        return QuerySetSequence()
+    qs = QuerySetSequence(*querysets)
+    if mixup:
+        qs = mixup_querysets(qs, paginate_by)
+    return qs

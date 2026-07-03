@@ -261,7 +261,6 @@ class GroupRouter(
         + [
             djcrud.generic.ListView.clone(
                 table_fields=["id", "name"],
-                site_search=True,
             ),
         ],
     )
@@ -284,32 +283,37 @@ class UserUpdateView(djcrud.generic.UpdateView):
         return get_custom_user_change_form()
 
 
+class UserRouter(
+    djcrud.ModelRouter.clone(
+        model=User,
+        icon="people",
+        routes=djcrud.ModelRouter.routes
+        + [
+            djcrud.generic.ListView.clone(
+                table_fields=[
+                    "id",
+                    "username",
+                    "email",
+                    "is_active",
+                    "actions",
+                ],
+                filter_fields=["groups"],
+            ),
+            UserCreateView,
+            UserUpdateView,
+            PasswordView,
+            BecomeUser,
+        ],
+    )
+):
+    pass
+
+
 class AuthRouter(djcrud.Router):
     routes = [
         LoginView,
         LogoutView,
         Become,
         GroupRouter,
-        djcrud.ModelRouter.clone(
-            model=User,
-            icon="people",
-            routes=djcrud.ModelRouter.routes
-            + [
-                djcrud.generic.ListView.clone(
-                    table_fields=[
-                        "id",
-                        "username",
-                        "email",
-                        "is_active",
-                        "actions",
-                    ],
-                    filter_fields=["groups"],
-                    site_search=True,
-                ),
-                UserCreateView,
-                UserUpdateView,
-                PasswordView,
-                BecomeUser,
-            ],
-        ),
+        UserRouter,
     ]

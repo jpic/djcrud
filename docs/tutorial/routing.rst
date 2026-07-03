@@ -61,17 +61,16 @@ Override a default view
 your entries afterward. Routes with the same codename replace the default — here
 the cloned :py:class:`~djcrud.views.list.ListView` overrides ``list``:
 
+With ``djcrud_dal_topbar`` installed (see :ref:`install-site-search`), the navbar
+includes a site-wide search autocomplete and results page. Models are **not**
+included by default — register them in ``djcrud.py`` with
+:func:`~djcrud.add_search`. Search uses each list's
+:attr:`~djcrud.views.search.SearchMixin.search_fields` (CharField and
+TextField columns by default).
+
 .. code-block:: python
 
-    routes = djcrud.ModelRouter.routes + [
-        djcrud.generic.ListView.clone(site_search=True),
-    ]
-
-With ``djcrud_dal_topbar`` installed (see :ref:`install-site-search`), the navbar
-includes a site-wide search autocomplete. List views are **not** included by
-default — ``site_search=True`` opts the list into the top bar. Search uses each
-list's :attr:`~djcrud.views.search.SearchMixin.search_fields` (CharField and
-TextField columns by default).
+    djcrud.add_search(Item)
 
 Inspect routes
 --------------

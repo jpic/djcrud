@@ -120,8 +120,7 @@ List display
 
     :py:class:`~djcrud.views.search.SearchMixin` —
     :attr:`~djcrud.views.search.SearchMixin.search_param`,
-    :attr:`~djcrud.views.search.SearchMixin.search_fields`,
-    :attr:`~djcrud.views.search.SearchMixin.site_search`
+    :attr:`~djcrud.views.search.SearchMixin.search_fields`
 
     :py:class:`~djcrud.views.filter.FilterMixin` —
     :attr:`~djcrud.views.filter.FilterMixin.filter_fields`,

@@ -10,6 +10,7 @@ from django.utils.module_loading import autodiscover_modules
 from .permissions import (
     add_perm,
     add_queryset,
+    add_search,
     all_of,
     any_of,
     authenticated,
@@ -21,6 +22,7 @@ from .permissions import (
     perm_code,
     remove_perm,
     remove_queryset,
+    remove_search,
     superuser,
 )
 from .router import Router
@@ -55,9 +57,7 @@ class ModelRouter(ModelMixin, Router):
         """URL segment from :attr:`model` name (lowercase)."""
         return self.model.__name__.lower()
 
-    def has_permission(
-        self, *, user, model, action, perm, obj=None, router=None, router_codename=None
-    ):
+    def has_permission(self, *, user, model, action, perm, obj=None):
         """Return whether *user* may perform *action* via the permission registry."""
         return has_permission(
             user=user,
@@ -65,13 +65,9 @@ class ModelRouter(ModelMixin, Router):
             action=action,
             perm=perm,
             obj=obj,
-            router=router,
-            router_codename=router_codename,
         )
 
-    def get_queryset(
-        self, *, user, model, action, perm, obj=None, router=None, router_codename=None
-    ):
+    def get_queryset(self, *, user, model, action, perm, obj=None):
         """Return rows visible to *user* via the permission registry, then all rows."""
         return get_queryset(
             user=user,
@@ -79,8 +75,6 @@ class ModelRouter(ModelMixin, Router):
             action=action,
             perm=perm,
             obj=obj,
-            router=router,
-            router_codename=router_codename,
         )
 
 

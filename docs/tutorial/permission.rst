@@ -49,14 +49,12 @@ Bind one *check* to several actions with comma-separated shortcodes:
 .. code-block:: python
 
    djcrud.add_perm(ItemRouter, "view,add,change,delete", check=djcrud.authenticated)
-   djcrud.add_perm(Article, "publish", check=can_publish, router=ArticleRouter)
+   djcrud.add_perm(Article, "publish", check=can_publish)
 
 Full secured-document example:
 
 .. literalinclude:: ../../src/djcrud_example/security_example/djcrud.py
 
-* ``add_perm(..., router="secured-document")`` applies rules only to views under
-  that router codename.
 * Anonymous users may list and view every row (``view`` check always returns
   ``True``).
 * Authenticated users may create rows; change and delete require ownership (or
