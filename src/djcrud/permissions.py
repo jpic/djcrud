@@ -70,7 +70,9 @@ def add_perm(target, action=None, *, check, router=None):
     *check* receives ``(user, *, model, action, perm, obj, router)`` and returns
     a boolean.  A ``True`` result grants access in addition to Django perms.
     """
-    if isinstance(target, str) and "." in target:
+    if isinstance(target, str):
+        if action is not None:
+            raise TypeError("add_perm(string, action, ...) is not supported")
         for perm_name in _split_names(target):
             _PERM_STRING_CHECKS[perm_name] = check
         return
