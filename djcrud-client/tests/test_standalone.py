@@ -1,4 +1,4 @@
-"""Tests for djcrud-mcp without Django."""
+"""Tests for djcrud-client without Django."""
 
 from __future__ import annotations
 
@@ -42,15 +42,15 @@ import sys
 for name in list(sys.modules):
     if name.startswith("django"):
         del sys.modules[name]
-import djcrud_mcp.server
+import djcrud_client.server
 assert not [name for name in sys.modules if name.startswith("django")]
 """
     subprocess.run([sys.executable, "-c", script], check=True)
 
 
 def test_build_tools_from_api_prefixes():
-    from djcrud_mcp import McpProfile
-    from djcrud_mcp.schema import build_tools_for_profile
+    from djcrud_client import McpProfile
+    from djcrud_client.schema import build_tools_for_profile
 
     profile = McpProfile.from_dict(
         {
@@ -68,8 +68,8 @@ def test_build_tools_from_api_prefixes():
 
 
 def test_create_mcp_server_with_api_prefixes():
-    from djcrud_mcp import McpProfile
-    from djcrud_mcp.server import create_mcp_server
+    from djcrud_client import McpProfile
+    from djcrud_client.server import create_mcp_server
 
     profile = McpProfile.from_dict(
         {
@@ -82,7 +82,7 @@ def test_create_mcp_server_with_api_prefixes():
         }
     )
 
-    with patch("djcrud_mcp.server.fetch_schema", return_value=SAMPLE_SCHEMA):
+    with patch("djcrud_client.server.fetch_schema", return_value=SAMPLE_SCHEMA):
         mcp = create_mcp_server(
             base_url="http://testserver",
             token="tok",
@@ -95,8 +95,8 @@ def test_create_mcp_server_with_api_prefixes():
 
 
 def test_profile_meta_uses_api_prefixes():
-    from djcrud_mcp import McpProfile
-    from djcrud_mcp.profiles import profile_meta
+    from djcrud_client import McpProfile
+    from djcrud_client.profile import profile_meta
 
     profile = McpProfile.from_dict(
         {
@@ -111,10 +111,3 @@ def test_profile_meta_uses_api_prefixes():
     meta = profile_meta(profile)
     assert meta["api_prefixes"] == ["/api/product/"]
     assert "viewsets" not in meta
-
-
-def test_discover_viewsets_requires_django_stack():
-    from djcrud_mcp.viewsets import discover_viewsets
-
-    with pytest.raises(ImportError, match="configured Django host"):
-        discover_viewsets()

@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 class McpSite:
-    """Registry of :class:`~djcrud_mcp.McpProfile` classes (like :data:`djcrud_drf.site`)."""
+    """Registry of :class:`~django_mcp.McpProfile` classes (like :data:`djcrud_drf.site`)."""
 
     def __init__(self) -> None:
         self._profile_classes: list[type[McpProfile]] = []
@@ -21,11 +21,11 @@ class McpSite:
     def register_profile(self, profile: McpProfile) -> None:
         """Attach a built profile (tests)."""
         if not profile._built:
-            profile.build(resolve_viewsets=False)
+            profile.build(do_resolve=False)
         self._local_profiles[profile.key] = profile
         self._built = None
 
-    def build(self, *, resolve_viewsets: bool = True) -> dict[str, McpProfile]:
+    def build(self, *, do_resolve: bool = True) -> dict[str, McpProfile]:
         from .profiles import DEFAULT_PROFILE_KEY, DefaultMcpProfile
 
         if self._built is not None:
@@ -33,24 +33,24 @@ class McpSite:
 
         profiles = dict(self._local_profiles)
         for profile_class in self._profile_classes:
-            profile = profile_class().build(resolve_viewsets=resolve_viewsets)
+            profile = profile_class().build(do_resolve=do_resolve)
             profiles[profile.key] = profile
 
         if not self._profile_classes and DEFAULT_PROFILE_KEY not in profiles:
             profiles[DEFAULT_PROFILE_KEY] = DefaultMcpProfile().build(
-                resolve_viewsets=resolve_viewsets
+                do_resolve=do_resolve
             )
 
         self._built = profiles
         return profiles
 
-    def list_keys(self, *, resolve_viewsets: bool = True) -> list[str]:
-        return sorted(self.build(resolve_viewsets=resolve_viewsets))
+    def list_keys(self, *, do_resolve: bool = True) -> list[str]:
+        return sorted(self.build(do_resolve=do_resolve))
 
-    def default_key(self, *, resolve_viewsets: bool = True) -> str | None:
+    def default_key(self, *, do_resolve: bool = True) -> str | None:
         from .profiles import DEFAULT_PROFILE_KEY
 
-        profiles = self.build(resolve_viewsets=resolve_viewsets)
+        profiles = self.build(do_resolve=do_resolve)
         if not profiles:
             return None
 
@@ -71,15 +71,15 @@ class McpSite:
         return None
 
     def get_profile(
-        self, key: str | None = None, *, resolve_viewsets: bool = True
+        self, key: str | None = None, *, do_resolve: bool = True
     ) -> McpProfile:
         if key is None or not str(key).strip():
-            registry_key = self.default_key(resolve_viewsets=resolve_viewsets)
+            registry_key = self.default_key(do_resolve=do_resolve)
             if registry_key is None:
                 raise ValueError("No MCP profile key given and host has no default profile")
         else:
             registry_key = str(key).strip().lower()
-        profiles = self.build(resolve_viewsets=resolve_viewsets)
+        profiles = self.build(do_resolve=do_resolve)
         try:
             return profiles[registry_key]
         except KeyError as exc:

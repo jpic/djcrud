@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "djcrud-mcp"
+name = "djcrud-client"
 dynamic = ["version"]
 description = "Stdio MCP bridge for djcrud JSON APIs (no Django required)"
 readme = "README.md"
@@ -14,13 +14,8 @@ dependencies = [
     "httpx>=0.27",
 ]
 
-[project.optional-dependencies]
-django = [
-    "djcrud[drf]",
-]
-
 [project.scripts]
-djcrud-mcp = "djcrud_mcp.__main__:main"
+djcrud-client = "djcrud_client.__main__:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

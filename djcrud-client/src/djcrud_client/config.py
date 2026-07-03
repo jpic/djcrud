@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from .profiles import get_profile
+from .api import resolve_registry_key
 
 
 def _first_env(*keys: str) -> str:
@@ -24,13 +24,11 @@ def get_token() -> str:
 
 def get_registry_key(*, base_url: str | None = None) -> str:
     """Host default profile key from ``GET /api/mcp/profiles/`` (not an env var)."""
-    from .api import resolve_registry_key
-
     return resolve_registry_key(base_url=(base_url or get_base_url()).rstrip("/"))
 
 
 def get_profile_from_env():
-    from .server import _load_profile
+    from .server import load_profile
 
     base_url = get_base_url()
-    return _load_profile(get_registry_key(base_url=base_url), base_url=base_url)
+    return load_profile(get_registry_key(base_url=base_url), base_url=base_url)

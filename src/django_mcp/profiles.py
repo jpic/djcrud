@@ -49,7 +49,7 @@ def _format_resource_list(labels: list[str]) -> str:
 
 
 class McpProfile:
-    """Declare an MCP stdio server surface; register the class on :data:`djcrud_mcp.site`."""
+    """Declare an MCP stdio server surface; register the class on :data:`django_mcp.site`."""
 
     key: str = DEFAULT_PROFILE_KEY
     default: bool = False
@@ -63,11 +63,10 @@ class McpProfile:
 
     def __init__(self) -> None:
         self._built = False
-        self._remote = False
         self._resolved_viewsets: list = []
         self._cached_api_prefixes: tuple[str, ...] = ()
 
-    def build(self, *, resolve_viewsets: bool = True) -> Self:
+    def build(self, *, do_resolve: bool = True) -> Self:
         if self._built:
             return self
 
@@ -75,9 +74,9 @@ class McpProfile:
         if declared_prefixes is not None:
             self._cached_api_prefixes = tuple(declared_prefixes)
             self._resolved_viewsets = list(self.viewsets)
-        elif resolve_viewsets and (self.viewsets or self.models):
+        elif do_resolve and (self.viewsets or self.models):
             try:
-                self._resolved_viewsets = resolve_viewsets(self)
+                self._resolved_viewsets = resolve_profile_viewsets(self)
                 from .viewsets import api_path_for
 
                 self._cached_api_prefixes = tuple(
@@ -87,7 +86,7 @@ class McpProfile:
                 self._resolved_viewsets = list(self.viewsets)
                 self._cached_api_prefixes = ()
         elif (
-            resolve_viewsets
+            do_resolve
             and self.key == DEFAULT_PROFILE_KEY
             and not self.viewsets
             and not self.models
@@ -124,8 +123,6 @@ class McpProfile:
 
     @property
     def server_name(self) -> str:
-        if self._remote:
-            return self._server_name_value
         override = self._class_override("server_name")
         if override is not None and str(override).strip():
             return str(override).strip()
@@ -139,8 +136,6 @@ class McpProfile:
 
     @property
     def instructions(self) -> str:
-        if self._remote:
-            return self._instructions_value
         override = self._class_override("instructions")
         if override is not None and str(override).strip():
             return str(override).strip()
@@ -156,8 +151,6 @@ class McpProfile:
 
     @property
     def info_tool_name(self) -> str:
-        if self._remote:
-            return self._info_tool_name_value
         override = self._class_override("info_tool_name")
         if override is not None and str(override).strip():
             return str(override).strip()
@@ -169,8 +162,6 @@ class McpProfile:
 
     @property
     def meta(self) -> dict[str, Any]:
-        if self._remote:
-            return dict(self._meta_value)
         declared = self._class_override("meta")
         result = dict(declared) if isinstance(declared, dict) else {}
         result.setdefault("name", self.server_name)
@@ -185,28 +176,6 @@ class McpProfile:
             "api_prefixes": list(self.api_prefixes),
             "meta": dict(self.meta),
         }
-
-    @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> McpProfile:
-        profile = object.__new__(cls)
-        profile._built = True
-        profile._remote = True
-        profile.key = str(payload["key"])
-        profile.default = False
-        profile.viewsets = ()
-        profile.models = ()
-        profile._resolved_viewsets = []
-        profile._server_name_value = str(payload["server_name"])
-        profile._instructions_value = str(payload["instructions"])
-        profile._info_tool_name_value = str(payload["info_tool_name"])
-        profile._cached_api_prefixes = tuple(payload.get("api_prefixes", ()))
-        profile._meta_value = dict(payload.get("meta", {}))
-        return profile
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, McpProfile):
-            return NotImplemented
-        return self.to_dict() == other.to_dict()
 
 
 def _primary_model_slug(profile: McpProfile) -> str | None:
@@ -237,27 +206,7 @@ def register_profile(profile: McpProfile) -> None:
     site.register_profile(profile)
 
 
-def get_profile(
-    key: str | None = None,
-    *,
-    base_url: str | None = None,
-    resolve_viewsets: bool = True,
-) -> McpProfile:
-    if base_url:
-        from .api import fetch_profile, resolve_registry_key
-
-        try:
-            registry_key = resolve_registry_key(base_url=base_url, explicit=key)
-            return fetch_profile(base_url=base_url, key=registry_key)
-        except Exception:
-            pass
-
-    from .site import site
-
-    return site.get_profile(key, resolve_viewsets=resolve_viewsets)
-
-
-def resolve_viewsets(profile: McpProfile, *, all_viewsets=None) -> list:
+def resolve_profile_viewsets(profile: McpProfile, *, all_viewsets=None) -> list:
     if profile._built and profile._resolved_viewsets:
         return list(profile._resolved_viewsets)
 

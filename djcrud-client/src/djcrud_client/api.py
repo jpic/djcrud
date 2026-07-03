@@ -4,6 +4,8 @@ from typing import Any, Callable
 
 import httpx
 
+from .profile import McpProfile
+
 
 def login(*, base_url: str, username: str, password: str, timeout: float = 30.0) -> str:
     url = f"{base_url.rstrip('/')}/api/login/"
@@ -111,8 +113,6 @@ def list_profiles(*, base_url: str) -> list[str]:
 
 
 def resolve_registry_key(*, base_url: str, explicit: str | None = None) -> str:
-    from .profiles import DEFAULT_PROFILE_KEY
-
     if explicit and explicit.strip():
         return explicit.strip().lower()
 
@@ -125,12 +125,10 @@ def resolve_registry_key(*, base_url: str, explicit: str | None = None) -> str:
     except Exception:
         pass
 
-    return DEFAULT_PROFILE_KEY
+    return "default"
 
 
-def fetch_profile(*, base_url: str, key: str):
-    from .profiles import McpProfile
-
+def fetch_profile(*, base_url: str, key: str) -> McpProfile:
     normalized = key.strip().lower()
     payload = CrudApi(base_url=base_url, token="").fetch_json(
         f"/api/mcp/profiles/{normalized}/"

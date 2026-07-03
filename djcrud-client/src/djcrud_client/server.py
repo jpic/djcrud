@@ -5,10 +5,10 @@ from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from .api import CrudApi
-from .config import get_base_url, get_profile_from_env, get_registry_key, get_token
-from .profiles import McpProfile, get_profile, profile_meta, resolve_viewsets
-from .schema import all_tools_for_profile, build_tools_for_profile
+from .api import CrudApi, fetch_profile
+from .config import get_base_url, get_registry_key, get_token
+from .profile import McpProfile, profile_meta
+from .schema import build_tools_for_profile
 from .tools import render_path, split_arguments
 
 
@@ -16,13 +16,8 @@ def fetch_schema(*, base_url: str) -> dict[str, Any]:
     return CrudApi(base_url=base_url, token="").fetch_schema()
 
 
-def _load_profile(key: str, *, base_url: str):
-    from .api import fetch_profile
-
-    try:
-        return fetch_profile(base_url=base_url, key=key)
-    except Exception:
-        return get_profile(key)
+def load_profile(key: str, *, base_url: str) -> McpProfile:
+    return fetch_profile(base_url=base_url, key=key)
 
 
 def create_mcp_server(
@@ -40,15 +35,14 @@ def create_mcp_server(
         else (registry or get_registry_key(base_url=base_url))
     )
     if isinstance(profile, str) or profile is None:
-        profile = _load_profile(registry_key, base_url=base_url)
+        profile = load_profile(str(registry_key), base_url=base_url)
     token = token if token is not None else get_token()
-    viewsets = resolve_viewsets(profile) if not profile.api_prefixes else []
     schema = fetch_schema(base_url=base_url)
     api = CrudApi(base_url=base_url, token=token, extra_headers=extra_headers)
     mcp = FastMCP(profile.server_name, instructions=profile.instructions)
 
     def registry_info() -> str:
-        return json.dumps(profile_meta(profile, viewsets=viewsets or None), indent=2)
+        return json.dumps(profile_meta(profile), indent=2)
 
     registry_info.__name__ = profile.info_tool_name
     mcp.add_tool(
@@ -57,7 +51,7 @@ def create_mcp_server(
         description=profile.instructions,
     )
 
-    for tool in build_tools_for_profile(schema, profile, viewsets=viewsets or None):
+    for tool in build_tools_for_profile(schema, profile):
         _register_tool(mcp, api, tool)
 
     return mcp

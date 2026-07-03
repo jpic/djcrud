@@ -5,11 +5,11 @@ import json
 import os
 import sys
 
-from djcrud_mcp.api import CrudApi, login
-from djcrud_mcp.config import get_base_url, get_registry_key, get_token
-from djcrud_mcp.schema import all_tools_for_profile
-from djcrud_mcp.server import create_mcp_server, fetch_schema
-from djcrud_mcp.tools import render_path, split_arguments
+from djcrud_client.api import CrudApi, login
+from djcrud_client.config import get_base_url, get_registry_key, get_token
+from djcrud_client.schema import all_tools_for_profile
+from djcrud_client.server import create_mcp_server, fetch_schema, load_profile
+from djcrud_client.tools import render_path, split_arguments
 
 
 def resolve_token(
@@ -31,10 +31,6 @@ def resolve_token(
     return login(base_url=base_url, username=user, password=pwd)
 
 
-def _tools_for_profile(*, schema: dict, profile) -> list[dict]:
-    return all_tools_for_profile(schema, profile)
-
-
 def call_tool(
     *,
     tool_name: str,
@@ -43,11 +39,9 @@ def call_tool(
     token: str,
     registry: str,
 ) -> None:
-    from djcrud_mcp.server import _load_profile
-
-    profile = _load_profile(registry, base_url=base_url)
+    profile = load_profile(registry, base_url=base_url)
     schema = fetch_schema(base_url=base_url)
-    tools = _tools_for_profile(schema=schema, profile=profile)
+    tools = all_tools_for_profile(schema, profile)
     tool = next((entry for entry in tools if entry["name"] == tool_name), None)
     if tool is None:
         raise SystemExit(f"Unknown tool: {tool_name}")
@@ -64,7 +58,7 @@ def call_tool(
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(prog="djcrud-mcp")
+    parser = argparse.ArgumentParser(prog="djcrud-client")
     parser.add_argument("-mcp", action="store_true", help="Run stdio MCP server")
     parser.add_argument(
         "--registry",

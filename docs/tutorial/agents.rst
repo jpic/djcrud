@@ -4,18 +4,21 @@ Agents (MCP bridge)
 Stdio MCP tools proxy Bearer HTTP to your DRF API. Enable DRF first
 (:doc:`drf`).
 
-The MCP **client** is the standalone ``djcrud-mcp`` package (``mcp`` +
-``httpx`` only — no Django). The Django **host** still needs
-:doc:`../reference/djcrud_drf/index` and :doc:`../reference/djcrud_api/index`.
+Two packages:
 
-Install client
---------------
+* **``django_mcp``** (Django host, inside ``djcrud``) — ``McpProfile`` registration,
+  ``GET /api/mcp/profiles/``
+* **``djcrud-client``** (agent subprocess) — FastMCP stdio server, OpenAPI tool
+  generation, HTTP proxy (``mcp`` + ``httpx`` only — no Django)
 
-**Remote subprocesses** (no Django on ``PYTHONPATH`` — sandboxes, CI, remote agents):
+Install
+-------
+
+**Remote subprocesses** (sandboxes, CI, remote agents):
 
 .. code-block:: bash
 
-   pip install --pre djcrud-mcp
+   pip install --pre djcrud-client
 
 **Django host** (declare profiles and serve ``GET /api/mcp/profiles/``):
 
@@ -23,7 +26,7 @@ Install client
 
    pip install --pre "djcrud[drf,mcp]"
 
-Remote agents install ``djcrud-mcp`` only and point at your API with
+Remote agents install ``djcrud-client`` only and point at your API with
 ``DJCRUD_BASE_URL`` / ``DJCRUD_TOKEN``. The client fetches the active profile
 from the host at startup.
 
@@ -38,57 +41,46 @@ and ``GET /api/schema/``.
 
 .. literalinclude:: ../../src/djcrud_example/drf_example/article_viewset.py
 
-MCP profiles
-------------
+MCP profiles (host)
+-------------------
 
-Declare a :class:`~djcrud_mcp.McpProfile` on the Django host and register it on
-:data:`djcrud_mcp.site` — same pattern as :meth:`djcrud_drf.site.register`.
+Declare a :class:`~django_mcp.McpProfile` on the Django host and register it on
+:data:`django_mcp.site` — same pattern as :meth:`djcrud_drf.site.register`.
 Every stdio MCP client uses a registered profile; remote clients fetch it from
 ``GET /api/mcp/profiles/{key}/`` at startup.
 
 .. code-block:: python
 
-   import djcrud_mcp
+   import django_mcp
    from myapp.drf import ArticleViewSet
 
-   class ArticlesMcp(djcrud_mcp.McpProfile):
+   class ArticlesMcp(django_mcp.McpProfile):
        key = "articles"
        viewsets = (ArticleViewSet,)
 
-   djcrud_mcp.site.register(ArticlesMcp)
-
-:data:`djcrud_mcp.site` instantiates each registered class on
-:meth:`~djcrud_mcp.site.McpSite.build` — same pattern as
-:meth:`djcrud_drf.site.build` and HTML :meth:`~djcrud.Router.build`.
-Computed ``server_name``, ``instructions``, and ``info_tool_name`` are
-``@property`` defaults from the profile ``key`` and ViewSets. Override those
-class attributes only for bespoke agent guidance.
+   django_mcp.site.register(ArticlesMcp)
 
 Wire host URLs (once per project):
 
 .. code-block:: python
 
-   from djcrud_mcp.django.urls import urlpatterns as mcp_urlpatterns
+   from django_mcp.urls import urlpatterns as mcp_urlpatterns
 
    urlpatterns = [
        # ...
    ] + djcrud_drf.site.build().urlpatterns + mcp_urlpatterns
 
-Remote client:
+Remote client
+-------------
 
 .. code-block:: bash
 
    export DJCRUD_TOKEN=<raw_key>
-   djcrud-mcp -mcp --registry articles
+   djcrud-client -mcp --registry articles
 
 The client calls ``GET /api/mcp/profiles/{key}/`` for instructions and API
 prefixes, then ``GET /api/schema/`` to build tools. Omit ``--registry`` to use
 the host default from ``GET /api/mcp/profiles/``.
-
-Use ``key = "default"`` and mark ``default = True`` for a single server that
-exposes every registered ``ModelViewSet``. Register additional profiles with
-distinct keys when you run several stdio MCP servers (tasks vs admin, public vs
-internal).
 
 Run
 ---
@@ -96,8 +88,8 @@ Run
 .. code-block:: bash
 
    export DJCRUD_TOKEN=<raw_key>
-   djcrud-mcp --call article_list --json '{}'
-   djcrud-mcp --call article_publish --json '{"pk": 1}'
-   djcrud-mcp -mcp
+   djcrud-client --call article_list --json '{}'
+   djcrud-client --call article_publish --json '{"pk": 1}'
+   djcrud-client -mcp
 
-Reference: :doc:`../reference/djcrud_mcp/index`.
+Reference: :doc:`../reference/django_mcp/index`.

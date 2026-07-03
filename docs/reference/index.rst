@@ -21,4 +21,4 @@ API reference
    djcrud_debug/index
    djcrud_api/index
    djcrud_drf/index
-   djcrud_mcp/index
+   django_mcp/index

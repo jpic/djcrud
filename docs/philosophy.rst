@@ -70,10 +70,10 @@ The same rules drive every CRUD surface you hang off the route tree:
   menus via :py:meth:`~djcrud.router.Router.get_tagged_views`
 - **API** — :doc:`reference/djcrud_drf/index` ViewSets call the same registry
   through :py:meth:`~djcrud.ModelRouter.has_permission`
-- **MCP and other agents** — :doc:`reference/djcrud_mcp/index` mirrors
+- **MCP and other agents** — :doc:`reference/django_mcp/index` mirrors
   registered :class:`~djcrud_drf.ModelViewSet` CRUD automatically; Bearer HTTP
   hits the same registry as HTML/API — no per-action decorators, no parallel
-  auth stack (see :doc:`design/djcrud_mcp`)
+  auth stack (see :doc:`design/django_mcp`)
 
 Your application code lives **inside** this framework: predicates such as
 :func:`~djcrud.superuser`, :func:`~djcrud.authenticated`, :func:`~djcrud.is_owner`,
@@ -197,7 +197,7 @@ The optional :doc:`reference/djcrud_drf/index` package adds a DRF layer on
 views — install with ``pip install djcrud[drf]`` when you need REST; widen API
 access with the same ``djcrud.py`` rules, not duplicate serializer guards.
 
-The optional :doc:`reference/djcrud_mcp/index` client (``pip install djcrud[mcp]``)
+The optional :doc:`reference/django_mcp/index` client (``pip install djcrud[mcp]``)
 exposes tagged schema operations as stdio MCP tools for agents — install on the
 subprocess host, not in ``INSTALLED_APPS``.
 
@@ -223,7 +223,7 @@ The :doc:`tutorial/index` mirrors how you would actually adopt djcrud:
    * - :doc:`tutorial/spa`
      - DRF API and SPA shell reusing the permissions you registered in step 2
    * - :doc:`tutorial/agents`
-     - stdio MCP bridge (``djcrud_mcp``) over the same API and permissions
+     - stdio MCP bridge (``django_mcp``) over the same API and permissions
 
 Each chapter is a working app in ``djcrud_example``, literal-included in the
 docs, validated by ``pytest -m tutorial``. The adoption path is deliberate:

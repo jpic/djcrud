@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import McpProfileDetailView, McpProfileListView, McpViewsetListView
+from django_mcp.views import McpProfileDetailView, McpProfileListView, McpViewsetListView
 
 urlpatterns = [
     path("api/mcp/profiles/", McpProfileListView.as_view(), name="mcp-profiles"),

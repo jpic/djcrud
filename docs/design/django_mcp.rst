@@ -1,7 +1,7 @@
-djcrud_mcp design
+django_mcp design
 =================
 
-This document is the implementation spec for :doc:`../reference/djcrud_mcp/index`.
+This document is the implementation spec for :doc:`../reference/django_mcp/index`.
 Read it before writing code or the :doc:`../tutorial/agents` walkthrough.
 
 Problem
@@ -9,14 +9,14 @@ Problem
 
 Agents need machine CRUD without a hand-written SDK. djcrud already exposes
 :class:`~djcrud_drf.ModelViewSet` on ``/api/<model>/`` with the same
-:mod:`djcrud.permissions` registry as HTML. ``djcrud_mcp`` turns those
+:mod:`djcrud.permissions` registry as HTML. ``django_mcp`` turns those
 **registered ViewSets** into stdio MCP tools — no per-action decorators.
 
 Goals
 -----
 
 * **Register once** — ``djcrud_drf.site.register(ItemViewSet)`` for HTML/DRF, plus
-  ``djcrud_mcp.site.register(ItemMcp)`` listing that ViewSet (or ``key =
+  ``django_mcp.site.register(ItemMcp)`` listing that ViewSet (or ``key =
   "default"`` with no filter) for MCP.
 * **Permissions on the server** — :class:`~djcrud_drf.ModelViewSet` already
   calls :func:`~djcrud.has_permission` and :func:`~djcrud.get_queryset`; the MCP
@@ -28,7 +28,7 @@ Goals
   registered ViewSets; MCP reads ``GET /api/schema/`` and filters by known API
   paths.
 * **Host-owned profiles** — ``McpProfile`` classes register on
-  :data:`djcrud_mcp.site`; remote clients fetch ``GET /api/mcp/profiles/{key}/``.
+  :data:`django_mcp.site`; remote clients fetch ``GET /api/mcp/profiles/{key}/``.
 
 Non-goals
 ---------
@@ -44,7 +44,7 @@ Architecture
 ::
 
    ┌──────────────────┐     stdio MCP      ┌─────────────────────┐
-   │ Agent            │ ◄────────────────► │ djcrud_mcp          │
+   │ Agent            │ ◄────────────────► │ djcrud_client       │
    └──────────────────┘                    └──────────┬──────────┘
                                                       │
               GET /api/mcp/profiles/{key}/  +  GET /api/schema/
@@ -119,20 +119,20 @@ as the permission shortcode (``publish`` → ``publish`` rule).
 MCP profiles
 ------------
 
-Declare a :class:`~djcrud_mcp.McpProfile` on the Django host and register it on
-:data:`djcrud_mcp.site`. Registration is required for every stdio MCP client —
+Declare a :class:`~django_mcp.McpProfile` on the Django host and register it on
+:data:`django_mcp.site`. Registration is required for every stdio MCP client —
 remote subprocesses fetch the built profile over HTTP and never synthesize one
 locally:
 
 .. code-block:: python
 
-   import djcrud_mcp
+   import django_mcp
 
-   class ItemsMcp(djcrud_mcp.McpProfile):
+   class ItemsMcp(django_mcp.McpProfile):
        key = "items"
        viewsets = (ItemViewSet,)   # or models=(Item,)
 
-   djcrud_mcp.site.register(ItemsMcp)
+   django_mcp.site.register(ItemsMcp)
 
 Profile build lifecycle
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -141,11 +141,11 @@ Same model as HTML routes and DRF ViewSets:
 
 1. **Declare** — class attributes on ``McpProfile`` (``key``, ``viewsets``, optional
    overrides).
-2. **Register** — ``djcrud_mcp.site.register(ItemsMcp)`` stores the class.
+2. **Register** — ``django_mcp.site.register(ItemsMcp)`` stores the class.
 3. **Build** — ``site.build()`` calls ``ItemsMcp().build()``, resolving ViewSet
    prefixes once and caching them on the instance.
 4. **Serve** — ``GET /api/mcp/profiles/{key}/`` returns ``profile.to_dict()`` for
-   remote ``djcrud-mcp`` subprocesses.
+   remote ``djcrud-client`` subprocesses.
 
 Computed fields (``@property`` unless overridden on the class):
 
@@ -202,7 +202,7 @@ Package layout
 
 ::
 
-   djcrud-mcp/src/djcrud_mcp/
+   djcrud-client/src/django_mcp/
      site.py        # McpSite — register(McpProfile), build profiles
      profiles.py    # McpProfile (instances built on site.build())
      django/        # GET /api/mcp/profiles/ (host only)
@@ -218,14 +218,14 @@ Application example (Tildette)
 
 Tildette declares two host profiles — ``tasks`` and ``mcp`` — in
 ``tildette_tasks/mcp_profile.py`` and ``tildette_mcp/mcp_profile.py``, each
-registered with ``djcrud_mcp.site.register(...)``. The sandbox
+registered with ``django_mcp.site.register(...)``. The sandbox
 ``tildette-client`` subprocess fetches them over HTTP; it does not ship profile
 definitions in the workspace package.
 
 Related docs
 ------------
 
-* :doc:`../reference/djcrud_mcp/index`
+* :doc:`../reference/django_mcp/index`
 * :doc:`../tutorial/agents`
 * :doc:`../reference/djcrud_drf/index`
 * :doc:`../philosophy`
