@@ -2,17 +2,20 @@ from __future__ import annotations
 
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.views import APIView
+
+from djcrud_drf.viewsets import RegistryViewSet
 
 from djcrud_mcp.site import site
 from djcrud_mcp.viewsets import api_path_for, discover_viewsets, model_name_for
 
 
-class McpProfileListView(APIView):
+class McpProfileViewSet(RegistryViewSet):
+    registry_prefix = "mcp/profiles"
+    registry_basename = "mcp-profile"
     permission_classes = [AllowAny]
     authentication_classes = []
 
-    def get(self, request):
+    def list(self, request):
         del request
         return Response(
             {
@@ -21,22 +24,18 @@ class McpProfileListView(APIView):
             }
         )
 
-
-class McpProfileDetailView(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = []
-
-    def get(self, request, key: str):
+    def retrieve(self, request, pk=None):
         del request
-        profile = site.get_profile(key)
-        return Response(profile.to_dict())
+        return Response(site.get_profile(pk).to_dict())
 
 
-class McpViewsetListView(APIView):
+class McpViewsetCatalogViewSet(RegistryViewSet):
+    registry_prefix = "mcp/viewsets"
+    registry_basename = "mcp-viewset"
     permission_classes = [AllowAny]
     authentication_classes = []
 
-    def get(self, request):
+    def list(self, request):
         del request
         viewsets = discover_viewsets()
         return Response(

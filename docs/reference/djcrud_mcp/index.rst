@@ -24,14 +24,21 @@ Server setup
 4. Register permissions in ``djcrud.py``
 5. Declare and register :class:`~djcrud_mcp.McpProfile` classes on
    :data:`djcrud_mcp.site` (required — see :doc:`../../tutorial/agents`)
-6. Include :data:`djcrud_drf.site` URLs — MCP routes mount at ``/api/mcp/``
-   automatically (no separate URLconf)
+6. Add ``djcrud_mcp`` to ``INSTALLED_APPS`` and include :data:`djcrud_drf.site`
+   URLs — profile API ViewSets register from :file:`djcrud_mcp/djcrud.py`` via
+   autodiscovery at ``/api/mcp/``
 
 .. code-block:: python
 
+   INSTALLED_APPS = [
+       # ...
+       "djcrud_drf",
+       "djcrud_mcp",
+   ]
+
    urlpatterns = [
        # ...
-   ] + djcrud_drf.site.build().urlpatterns
+   ] + djcrud.site.build().urlpatterns + djcrud_drf.site.build().urlpatterns
 
 MCP profiles
 ============

@@ -26,6 +26,13 @@ def action_shortcode(action):
     return ACTION_SHORTCODES.get(action, action)
 
 
+class RegistryViewSet(viewsets.ViewSet):
+    """Non-model API registered on :data:`djcrud_drf.site` with a router prefix."""
+
+    registry_prefix: str = ""
+    registry_basename: str = ""
+
+
 class ModelViewSet(PermissionMixin, LogMixin, viewsets.ModelViewSet):
     """Default CRUD ViewSet wired to the :mod:`djcrud.permissions` registry."""
 

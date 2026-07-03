@@ -60,14 +60,21 @@ Every stdio MCP client uses a registered profile; remote clients fetch it from
 
    djcrud_mcp.site.register(ArticlesMcp)
 
-MCP profile routes are mounted automatically under ``/api/mcp/`` when you include
-:data:`djcrud_drf.site` URLs (same as schema and login):
+Add ``djcrud_mcp`` to ``INSTALLED_APPS``. Its :file:`djcrud.py` registers MCP
+profile ViewSets on :data:`djcrud_drf.site` (autodiscovered when
+:meth:`djcrud.Site.build` runs):
 
 .. code-block:: python
 
+   INSTALLED_APPS = [
+       # ...
+       "djcrud_drf",
+       "djcrud_mcp",
+   ]
+
    urlpatterns = [
        # ...
-   ] + djcrud_drf.site.build().urlpatterns
+   ] + djcrud.site.build().urlpatterns + djcrud_drf.site.build().urlpatterns
 
 Remote client
 -------------
