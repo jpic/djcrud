@@ -16,6 +16,7 @@ from .permissions import (
     get_queryset,
     has_permission,
     has_site_permission,
+    is_owner,
     owner,
     perm_code,
     remove_perm,

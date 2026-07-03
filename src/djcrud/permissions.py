@@ -48,6 +48,13 @@ def _store_queryset(model, action, router_codename, scoper):
     _QUERYSET_SCOPERS[_perm_key(model, action, router_codename)] = scoper
 
 
+def _split_names(value):
+    """Split comma-separated registry keys (actions or full permission codes)."""
+    if not isinstance(value, str) or "," not in value:
+        return [value]
+    return [part.strip() for part in value.split(",") if part.strip()]
+
+
 def add_perm(target, action=None, *, check, router=None):
     """Register a permission grant for *target*.
 
@@ -56,46 +63,60 @@ def add_perm(target, action=None, *, check, router=None):
     required).  When *router* is set, the check applies only to views under that
     router codename.
 
+    *action* may be a comma-separated list (``\"view,add,publish\"``) to bind the
+    same *check* to several shortcodes at once.  A string *target* with ``.`` may
+    also list several full codes: ``\"app.view_item,app.add_item\"``.
+
     *check* receives ``(user, *, model, action, perm, obj, router)`` and returns
     a boolean.  A ``True`` result grants access in addition to Django perms.
     """
     if isinstance(target, str) and "." in target:
-        _PERM_STRING_CHECKS[target] = check
+        for perm_name in _split_names(target):
+            _PERM_STRING_CHECKS[perm_name] = check
         return
     if _is_model(target):
         router_codename = _resolve_router_codename(router)
-        _store_perm(target, action, router_codename, check)
+        for act in _split_names(action):
+            _store_perm(target, act, router_codename, check)
         return
     if action is None:
         raise TypeError("add_perm(router, action, check=...) requires action")
     model = _model_from_router(target)
     router_codename = _resolve_router_codename(target)
-    _store_perm(model, action, router_codename, check)
+    for act in _split_names(action):
+        _store_perm(model, act, router_codename, check)
 
 
 def add_queryset(model, action=None, *, scoper, router=None):
     """Register row visibility for *model* (optionally per *action* / *router*).
 
+    *action* may be comma-separated to register the same *scoper* for several
+    shortcodes.
+
     *scoper* receives ``(user, *, model, action, perm, obj, router)`` and
     returns a :class:`~django.db.models.QuerySet`.
     """
     router_codename = _resolve_router_codename(router)
-    _store_queryset(model, action, router_codename, scoper)
+    for act in _split_names(action):
+        _store_queryset(model, act, router_codename, scoper)
 
 
 def remove_perm(target, action=None, *, router=None):
     """Remove a registered permission check."""
     if isinstance(target, str) and "." in target:
-        _PERM_STRING_CHECKS.pop(target, None)
+        for perm_name in _split_names(target):
+            _PERM_STRING_CHECKS.pop(perm_name, None)
         return
     router_codename = _resolve_router_codename(router)
-    _PERM_CHECKS.pop(_perm_key(target, action, router_codename), None)
+    for act in _split_names(action):
+        _PERM_CHECKS.pop(_perm_key(target, act, router_codename), None)
 
 
 def remove_queryset(model, action=None, *, router=None):
     """Remove a registered queryset scoper."""
     router_codename = _resolve_router_codename(router)
-    _QUERYSET_SCOPERS.pop(_perm_key(model, action, router_codename), None)
+    for act in _split_names(action):
+        _QUERYSET_SCOPERS.pop(_perm_key(model, act, router_codename), None)
 
 
 def clear():
@@ -258,12 +279,15 @@ def superuser(user, **ctx):
     return user.is_superuser
 
 
-def owner(user, *, obj, owner_field="owner_id", **ctx):
+def is_owner(user, *, obj, owner_field="owner_id", **ctx):
     """Predicate: user owns *obj* (compare *owner_field* to ``user.pk``)."""
     if obj is None:
         return False
     value = obj if owner_field == "pk" else getattr(obj, owner_field, None)
     return value == user.pk
+
+
+owner = is_owner
 
 
 def any_of(*checks):
