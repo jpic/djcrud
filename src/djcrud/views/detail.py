@@ -1,6 +1,7 @@
 from django.views import generic
 from django.utils.html import mark_safe
 
+from .. import tags
 from ..model import ModelMixin
 from .object import ObjectMixin
 from .template import TemplateViewMixin
@@ -24,7 +25,7 @@ class DetailView(
         exclude (list[str]): Field names omitted when ``fields`` is ``'__all__'``.
     """
 
-    tags = ["object"]
+    tags = [tags.OBJECT]
     default_template_name = "detail.html"
     icon = "eye"
     color = "primary"

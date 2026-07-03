@@ -126,7 +126,7 @@ MyView.clone(
 )
 ```
 
-Opt models into site search with ``djcrud.permissions.add_search(Item)`` in ``djcrud.py``.
+Opt models into site search with ``djcrud.search.add_search(Item)`` in ``djcrud.py``.
 
 **Key file:** `src/djcrud/clonable.py`
 

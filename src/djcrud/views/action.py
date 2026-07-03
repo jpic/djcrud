@@ -1,86 +1,93 @@
-class ActionMixin:
-    """Per-object permission checks after the view-level permission passes.
+from ..permission import call_with_context
 
-    Override :meth:`has_permission_object` to deny access to individual rows
-    (for example when the row is outside a scoped queryset).
+
+class ObjectPermissionMixin:
+    """Target provider for actions that operate on a single object (``self.object``).
+
+    Use together with :class:`~djcrud.views.object.ObjectMixin` (or a *View that
+    includes it) + :class:`ActionMixin`.
+    """
+
+    def get_permission_targets(self):
+        obj = getattr(self, "object", None)
+        return [obj] if obj is not None else []
+
+
+class ObjectListPermissionMixin:
+    """Target provider for bulk/list actions that operate on ``self.object_list``.
+
+    Use together with :class:`~djcrud.views.list_action.ListActionMixin` +
+    :class:`ActionMixin`.
+    """
+
+    def get_permission_targets(self):
+        try:
+            ol = getattr(self, "object_list", None)
+            return list(ol) if ol is not None else []
+        except Exception:
+            return []
+
+
+class ActionMixin:
+    """Per-target permission checks for actions (works for both single object
+    and bulk/list actions).
+
+    The general view-level permission (based on ``permission_shortcode``) is
+    checked first via ``super()``. Then, for each target returned by
+    ``get_permission_targets()``, ``has_permission_for_target(target)`` is called.
+
+    Target resolution is provided by companion mixins (compose as needed):
+
+    - :class:`ObjectPermissionMixin` — for views with ``self.object``
+    - :class:`ObjectListPermissionMixin` — for views with ``self.object_list``
+
+    This gives a uniform, straightforward path without special-casing "no object",
+    private registry lookups, or obj=None in normal permission checks.
+
+    Most users do nothing. Register rules with ``djcrud.permissions.add_perm``
+    (or rely on Django permissions). Override :meth:`has_permission_object` only
+    for view-specific extra logic on a concrete target.
+
+    The old ``_has_permission_without_object`` branching and private access have
+    been removed.
     """
 
     def has_permission(self):
-        """Check view permission, then :meth:`has_permission_object` when bound."""
-        obj = getattr(self, "object", None)
-        if obj is None:
-            without_object = self._has_permission_without_object()
-            if without_object is not None:
-                return without_object
-        if super().has_permission():
-            if obj is not None:
-                return self.has_permission_object()
-            return True
-        return False
-
-    def _has_permission_without_object(self):
-        """List-action bar and bulk dispatch without a single bound object."""
-        if "list_action" not in getattr(type(self), "tags", []):
-            return None
-
-        from ..permissions import _invoke, _lookup_perm
-
-        ctx = self.permission_context()
-        model = ctx["model"]
-        if model is None:
-            return None
-
-        check = _lookup_perm(model, ctx["action"], ctx["perm"])
-        object_list = self._permission_object_list()
-        if object_list is not None:
-            if not object_list.exists():
+        """General permission + per-target checks for the action's targets."""
+        if not super().has_permission():
+            return False
+        for target in self.get_permission_targets():
+            if not self.has_permission_for_target(target):
                 return False
-            if check is None:
-                return None
-            for row in object_list:
-                if not _invoke(
-                    check,
-                    ctx["user"],
-                    model=model,
-                    action=ctx["action"],
-                    perm=ctx["perm"],
-                    obj=row,
-                ):
-                    return False
-            return True
+        return True
 
-        if check is None:
-            return None
+    def has_permission_for_target(self, target):
+        """Whether the action is permitted on this specific *target*.
 
-        qs = (
-            self.get_queryset()
-            if hasattr(self, "get_queryset")
-            else model._default_manager.all()
-        )
-        for row in qs.iterator(chunk_size=50):
-            if _invoke(
-                check,
-                ctx["user"],
-                model=model,
-                action=ctx["action"],
-                perm=ctx["perm"],
-                obj=row,
-            ):
-                return True
-        return False
+        Forces the registry check with a real obj=target (so add_perm checks,
+        is_owner, etc. receive proper instances) then the hook.
+        """
+        ctx = self.permission_context(obj=target)
+        router = getattr(self, "router", None)
+        if router is not None:
+            if not call_with_context(router.has_permission, ctx):
+                return False
+        return self.has_permission_object(target)
 
-    def _permission_object_list(self):
-        """Selected rows for a bulk list action, when PKs are in the request."""
-        if not hasattr(self, "pks"):
-            return None
-        try:
-            pks = self.pks
-        except Exception:
-            return None
-        if not pks:
-            return None
-        return self.object_list
+    def has_permission_object(self, obj=None):
+        """Hook for additional per-object denial after registry checks pass.
 
-    def has_permission_object(self):
-        """Return whether the current user may act on :attr:`~djcrud.views.object.ObjectMixin.object`."""
+        If *obj* is None, falls back to self.object (keeps simple overrides
+        that only reference self.object working).
+
+        Return False to deny the action for this target.
+
+        Example:
+            def has_permission_object(self, obj=None):
+                if obj is None:
+                    obj = getattr(self, "object", None)
+                return obj and obj.name == "mine"
+        """
+        if obj is None:
+            obj = getattr(self, "object", None)
         return True

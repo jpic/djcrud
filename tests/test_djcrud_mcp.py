@@ -225,7 +225,9 @@ def test_auto_generates_server_name():
 
 
 @pytest.mark.django_db
-def test_create_mcp_server_from_live_schema(api_client, drf_settings, django_user_model):
+def test_create_mcp_server_from_live_schema(
+    api_client, drf_settings, django_user_model
+):
     from djcrud_api.models import Token
     from djcrud_client.server import create_mcp_server
 
@@ -238,7 +240,9 @@ def test_create_mcp_server_from_live_schema(api_client, drf_settings, django_use
     with patch("djcrud_client.server.fetch_schema", return_value=schema):
         with patch(
             "djcrud_client.server.load_profile",
-            return_value=__import__("djcrud_client", fromlist=["McpProfile"]).McpProfile.from_dict(
+            return_value=__import__(
+                "djcrud_client", fromlist=["McpProfile"]
+            ).McpProfile.from_dict(
                 {
                     "key": "default",
                     "server_name": "djcrud",

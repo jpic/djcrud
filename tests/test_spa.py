@@ -49,9 +49,7 @@ def test_spa_view_mount_element_and_module_media():
         mount_element = '<div id="app"><p>Loading…</p></div>'
 
         class Media(SPAView.Media):
-            js = SPAView.Media.js + (
-                Script("myapp/js/dashboard.js", type="module"),
-            )
+            js = SPAView.Media.js + (Script("myapp/js/dashboard.js", type="module"),)
 
     view = DashboardView()
 
@@ -259,6 +257,5 @@ def test_unpoly_link_attributes_from_spa_shell_always_plain_link(rf):
     target.request = request
 
     assert (
-        source.unpoly_link_attributes(target, "navigation")
-        == FULL_PAGE_LINK_ATTRIBUTES
+        source.unpoly_link_attributes(target, "navigation") == FULL_PAGE_LINK_ATTRIBUTES
     )

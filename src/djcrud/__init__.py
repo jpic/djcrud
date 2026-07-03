@@ -8,6 +8,8 @@ those modules via autodiscovery (like Django admin's ``admin.py``).
 from django.utils.module_loading import autodiscover_modules
 
 from . import permissions
+from . import search
+from . import tags
 from .router import Router, model_router_codename
 from .view import View
 from .model import ModelMixin
@@ -85,9 +87,22 @@ class Site(Router):
         return self
 
     def build(self):
-        """Autodiscover app routes, then build the route registry."""
+        """Autodiscover app routes, then build the route registry.
+
+        Idempotent: if already built, returns self without re-running.
+        """
+        if getattr(self, "registry", None) is not None:
+            return self
         self.autodiscover()
         return super().build()
+
+    def ensure_built(self):
+        """Ensure discovery and registry are populated (idempotent).
+
+        Use this in error handlers, site search, debug tools, agents, etc.
+        where you need the routes outside normal URLconf evaluation.
+        """
+        return self.build()
 
 
 site = Site()

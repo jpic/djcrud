@@ -6,18 +6,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('action_example', '0001_initial'),
+        ("action_example", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Memo',
+            name="Memo",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=200)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("title", models.CharField(max_length=200)),
             ],
         ),
         migrations.DeleteModel(
-            name='Story',
+            name="Story",
         ),
     ]

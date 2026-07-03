@@ -44,4 +44,3 @@ class StandardShellMedia:
         Script("djcrud_bulma/js/list-action-bar.js", type="module"),
         Script("djcrud_bulma/js/toast.js", type="module"),
     )
-

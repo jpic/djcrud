@@ -2,6 +2,7 @@ from django.utils.text import capfirst
 from django.utils.translation import gettext as _
 from django.views import generic
 
+from .. import tags
 from .log import ADDITION
 from .modelform import ModelFormMixin
 from .template import TemplateViewMixin
@@ -25,7 +26,7 @@ class CreateView(
     """
 
     permission_shortcode = "add"
-    tags = ["model"]
+    tags = [tags.MODEL]
     default_template_name = "djcrud/form.html"
     icon = "plus-circle"
     color = "success"

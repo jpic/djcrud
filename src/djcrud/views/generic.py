@@ -1,4 +1,4 @@
-from .action import ActionMixin
+from .action import ActionMixin, ObjectListPermissionMixin, ObjectPermissionMixin
 from .filter import FilterMixin
 from .search import SearchMixin
 from .form import FormMixin, FormView

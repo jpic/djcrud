@@ -100,6 +100,7 @@ def api_client(client, drf_settings, db):
     client.force_login(user)
     return client
 
+
 User = get_user_model()
 
 

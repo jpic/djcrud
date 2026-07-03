@@ -15,14 +15,18 @@ if uses_drf_login():
 for route in djcrud_drf.router.routes:
     _api_patterns += route.urlpatterns
 
-urlpatterns = [
-    path("admin/", admin.site.urls),
-] + djcrud.site.build().urlpatterns + [
-    path(
-        "api/",
-        include((_api_patterns, "api"), namespace="api"),
-    ),
-]
+urlpatterns = (
+    [
+        path("admin/", admin.site.urls),
+    ]
+    + djcrud.site.build().urlpatterns
+    + [
+        path(
+            "api/",
+            include((_api_patterns, "api"), namespace="api"),
+        ),
+    ]
+)
 
 handler400 = "djcrud.handlers.handler400"
 handler403 = "djcrud.handlers.handler403"

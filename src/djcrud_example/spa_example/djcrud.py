@@ -10,9 +10,7 @@ class SpaView(SPAView):
     mount_element = '<div id="app"></div>'
 
     class Media(SPAView.Media):
-        js = SPAView.Media.js + (
-            Script("spa_example/js/app.js", type="module"),
-        )
+        js = SPAView.Media.js + (Script("spa_example/js/app.js", type="module"),)
 
 
 djcrud.site.routes.append(SpaView)

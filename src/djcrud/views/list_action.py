@@ -3,14 +3,22 @@ import functools
 from django.forms import Form
 
 from ..model import ModelMixin
+from .. import tags
+from .action import ActionMixin, ObjectListPermissionMixin
 from .form import FormMixin, FormView
 
 
-class ListActionMixin(ModelMixin, FormMixin):
+class ListActionMixin(ModelMixin, FormMixin, ObjectListPermissionMixin):
     """Bulk actions from the list action bar (selected row PKs in ``pks``).
 
+    Brings in :class:`~djcrud.views.action.ObjectListPermissionMixin` so that
+    when combined with :class:`~djcrud.views.action.ActionMixin` (as
+    :class:`ListActionView` does), per-target permission checks (general
+    shortcode + :meth:`~djcrud.views.action.ActionMixin.has_permission_object`
+    per row) are performed against each row in ``self.object_list``.
+
     Attributes:
-        tags (list[str]): Must include ``'list_action'`` for discovery.
+        tags (list[str]): Must include ``djcrud.tags.LIST_ACTION`` for discovery.
         title (str): Action label in the list action bar.
         icon (str): Bootstrap Icons name.
         color (str): Bulma button colour modifier.
@@ -18,7 +26,7 @@ class ListActionMixin(ModelMixin, FormMixin):
         form_class (type): Form class for the action. Default empty ``Form``.
     """
 
-    tags = ["list_action"]
+    tags = [tags.LIST_ACTION]  # see djcrud.tags.LIST_ACTION
 
     def get_queryset(self):
         """Scoped queryset from the enclosing router."""
@@ -65,7 +73,13 @@ class ListActionMixin(ModelMixin, FormMixin):
         return attrs
 
 
-class ListActionView(ListActionMixin, FormView):
-    """Bulk action form opened from the list action bar."""
+class ListActionView(ListActionMixin, ActionMixin, FormView):
+    """Bulk action form opened from the list action bar.
+
+    Includes :class:`~djcrud.views.action.ActionMixin` + :class:`~djcrud.views.action.ObjectListPermissionMixin`
+    (via the mixin) so per-target permission checks are performed uniformly.
+    Override :meth:`~djcrud.views.action.ActionMixin.has_permission_object` for
+    extra per-row rules after the registry check.
+    """
 
     pass

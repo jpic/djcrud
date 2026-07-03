@@ -28,7 +28,7 @@ User = get_user_model()
 
 class LoginView(djcrud.views.FormView):
     form_class = AuthenticationForm
-    tags = ["topbar", "navigation"]
+    tags = [djcrud.tags.TOPBAR, djcrud.tags.NAVIGATION]
     icon = "box-arrow-in-right"
 
     @property
@@ -56,7 +56,7 @@ class LoginView(djcrud.views.FormView):
 
 
 class LogoutView(djcrud.views.FormView):
-    tags = ["topbar", "navigation"]
+    tags = [djcrud.tags.TOPBAR, djcrud.tags.NAVIGATION]
     icon = "box-arrow-right"
     form_attributes = {
         "up-submit": False,
@@ -91,7 +91,7 @@ class PasswordView(
     TemplateViewMixin,
     generic.FormView,
 ):
-    tags = ["object"]
+    tags = [djcrud.tags.OBJECT]
     icon = "key"
     color = "link"
     action = "click->modal#open"
@@ -141,7 +141,7 @@ class PasswordView(
 
 
 class BecomeUser(ObjectMixin, ModelMixin, djcrud.View):
-    tags = ["object"]
+    tags = [djcrud.tags.OBJECT]
     icon = "person-badge"
     color = "danger"
 
@@ -187,7 +187,7 @@ class BecomeUser(ObjectMixin, ModelMixin, djcrud.View):
 
 
 class Become(djcrud.View):
-    tags = ["topbar", "navigation"]
+    tags = [djcrud.tags.TOPBAR, djcrud.tags.NAVIGATION]
     icon = "arrow-return-left"
 
     @property
@@ -268,9 +268,11 @@ class GroupRouter(
     """CRUD for auth groups; autocomplete endpoint used by User form filters."""
 
     def get_queryset(self, *, user, model, action, perm, obj=None):
-        return super().get_queryset(
-            user=user, model=model, action=action, perm=perm, obj=obj
-        ).order_by("name")
+        return (
+            super()
+            .get_queryset(user=user, model=model, action=action, perm=perm, obj=obj)
+            .order_by("name")
+        )
 
 
 class UserCreateView(djcrud.views.CreateView):

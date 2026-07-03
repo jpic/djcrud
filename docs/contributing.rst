@@ -318,7 +318,22 @@ selection.
   ``data-list-action="urlupdate"`` and ``up-on-accepted`` calling
   ``djcrudClearListActionSelections()``.
 - ``form_attributes`` sets ``up-on-finished='djcrudClearListActionSelections()'``.
-- Views with ``tags = ['list_action']`` are discovered for the action bar.
+- Views with ``tags = [djcrud.tags.LIST_ACTION]`` (or ``['list_action']`` in templates) are discovered for the action bar.
+
+**Tags (menu contracts)** — :file:`src/djcrud/tags.py` defines the explicit
+constants (``NAVIGATION``, ``MODEL``, ``OBJECT``, ``LIST_ACTION``, ``TOPBAR``)
+used with ``router.get_tagged_views(...)`` and ``.tags = [...]`` on views.
+All Python code uses the constants (templates may use the literal strings).
+See also ``get_tagged_views`` in :file:`src/djcrud/router.py`.
+
+**Action permission targets** — Per-target checks for actions (single object
+or bulk) are provided by composing ``ActionMixin`` with
+``ObjectPermissionMixin`` (for ``self.object``) or ``ObjectListPermissionMixin``
+(for ``self.object_list`` via ``ListActionMixin``). ``has_permission`` loops
+over ``get_permission_targets()`` and calls ``has_permission_for_target(target)``
+which forces context with a real ``obj=`` then the hook
+``has_permission_object(obj=None)``. This replaced the old branching on
+``obj is None`` / private registry calls.
 
 **Templatetags** — :file:`src/djcrud/templatetags/djcrud.py` provides
 ``unpoly_attributes`` and ``html_attributes`` for wiring Unpoly from Python.

@@ -158,9 +158,7 @@ def test_drf_schema_includes_login_and_bearer_auth(api_client):
     schema = response.json()
     paths = schema.get("paths", {})
     assert any(path.rstrip("/").endswith("/login") for path in paths)
-    login_path = next(
-        path for path in paths if path.rstrip("/").endswith("/login")
-    )
+    login_path = next(path for path in paths if path.rstrip("/").endswith("/login"))
     assert "post" in paths[login_path]
 
     security_schemes = schema.get("components", {}).get("securitySchemes", {})

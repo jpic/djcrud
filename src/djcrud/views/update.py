@@ -2,13 +2,15 @@ from django.utils.text import capfirst
 from django.utils.translation import gettext as _
 from django.views import generic
 
-from .action import ActionMixin
+from .. import tags
+from .action import ActionMixin, ObjectPermissionMixin
 from .objectform import ObjectModelFormMixin
 from .template import TemplateViewMixin
 
 
 class UpdateView(
     ActionMixin,
+    ObjectPermissionMixin,
     ObjectModelFormMixin,
     TemplateViewMixin,
     generic.UpdateView,
@@ -26,7 +28,7 @@ class UpdateView(
     """
 
     permission_shortcode = "change"
-    tags = ["object"]
+    tags = [tags.OBJECT]
     default_template_name = "form.html"
     icon = "pencil"
     color = "warning"

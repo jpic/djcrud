@@ -3,6 +3,7 @@ from django.utils.functional import cached_property
 
 from djcrud.media import SpaShellMedia
 
+from .. import tags
 from .template import TemplateView
 
 
@@ -25,7 +26,7 @@ class SPAView(TemplateView):
 
     default_template_name = "base_spa.html"
     unpoly_target = "body"
-    tags = ["navigation"]
+    tags = [tags.NAVIGATION]
     mount_element = '<div id="app"></div>'
 
     class Media(SpaShellMedia):

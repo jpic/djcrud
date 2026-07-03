@@ -10,6 +10,7 @@ from django.utils.translation import gettext as _, gettext_lazy
 from django.views import generic
 from queryset_sequence import QuerySetSequence
 
+from djcrud import tags
 from djcrud.view import ViewMixin
 from djcrud.views.pagination import PaginationMixin
 from djcrud.views.template import TemplateViewMixin
@@ -32,7 +33,7 @@ class SearchActionsColumn(django_tables2.Column):
         if router is None:
             return ""
         actions = router.get_tagged_views(
-            "object",
+            tags.OBJECT,
             request=table.view.request,
             object=obj,
         )

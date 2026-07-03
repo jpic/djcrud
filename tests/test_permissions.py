@@ -5,6 +5,7 @@ from django.shortcuts import resolve_url
 from django.template.response import TemplateResponse
 
 import djcrud
+from djcrud import tags
 from djcrud.views.update import UpdateView
 from djcrud_example.routing_example.models import Item
 
@@ -92,8 +93,11 @@ def test_action_mixin_object_permission(rf, admin_user):
     other = Item.objects.create(name="other")
 
     class RestrictedUpdate(UpdateView):
-        def has_permission_object(self):
-            return self.object.name == "mine"
+        def has_permission_object(self, obj=None):
+            # obj is the target passed by the clean has_permission_for_target
+            if obj is None:
+                obj = self.object
+            return obj.name == "mine"
 
     router = djcrud.ModelRouter.clone(model=Item, routes=[RestrictedUpdate])()
     router.build()
@@ -104,10 +108,46 @@ def test_action_mixin_object_permission(rf, admin_user):
     view = type(update_route)(request=request)
     view.setup(request, pk=item.pk)
     assert view.has_permission() is True
+    assert view.get_permission_targets() == [item]
 
     view = type(update_route)(request=request)
     view.setup(request, pk=other.pk)
     assert view.has_permission() is False
+    assert view.get_permission_targets() == [other]
+
+
+@pytest.mark.django_db
+def test_object_list_permission_mixin_targets(rf, admin_user):
+    """List actions should resolve targets via ObjectListPermissionMixin."""
+    from djcrud_example.listaction_example.models import Post
+
+    post1 = Post.objects.create(title="one", category="a")
+    post2 = Post.objects.create(title="two", category="b")
+
+    # Use a real list action view from the example (it now mixes the list mixin + ActionMixin)
+    from djcrud_example.listaction_example.djcrud import SetCategoryView
+
+    router = djcrud.ModelRouter.clone(model=Post, routes=[SetCategoryView])()
+    router.build()
+
+    request = rf.get("/")
+    request.user = admin_user
+    request.GET = request.GET.copy()
+    request.GET.setlist("pks", [str(post1.pk), str(post2.pk)])
+
+    list_action_route = router.routes["setcategory"]
+    view = type(list_action_route)(request=request)
+    # Manually trigger the cached properties that ListActionMixin needs
+    view.setup(request)
+    _ = view.pks  # force
+    _ = view.object_list  # force
+
+    targets = view.get_permission_targets()
+    assert len(targets) == 2
+    assert {t.pk for t in targets} == {post1.pk, post2.pk}
+
+    # has_permission should succeed for superuser
+    assert view.has_permission() is True
 
 
 @pytest.mark.django_db
@@ -118,11 +158,11 @@ def test_get_tagged_views_respects_permissions(rf, admin_user):
     item_router = djcrud.site.routes["item"]
     request = rf.get("/item/")
     request.user = regular
-    views = item_router.get_tagged_views("navigation", request=request)
+    views = item_router.get_tagged_views(tags.NAVIGATION, request=request)
     assert views == []
 
     request.user = admin_user
-    views = item_router.get_tagged_views("navigation", request=request)
+    views = item_router.get_tagged_views(tags.NAVIGATION, request=request)
     assert len(views) == 1
     assert type(views[0]).__name__ == "ListView"
 
@@ -183,3 +223,71 @@ def test_list_with_view_permission_shortcode(rf):
     view = type(router.routes["list"])(request=request)
     assert view.permission_fullcode == "routing_example.view_item"
     assert view.has_permission() is True
+
+
+@pytest.mark.django_db
+def test_list_action_custom_has_permission_object_denies_some(rf, admin_user):
+    """List action with custom has_permission_object should respect per-target denial."""
+    from djcrud_example.listaction_example.models import Post
+
+    p1 = Post.objects.create(title="one", category="a")
+    p2 = Post.objects.create(title="two", category="b")
+
+    class RestrictedSetCategory(djcrud.views.ListActionView):
+        permission_shortcode = "change"
+        tags = [djcrud.tags.LIST_ACTION]
+
+        def has_permission_object(self, obj=None):
+            if obj is None:
+                obj = getattr(self, "object", None)
+            # Only allow on category=="a"
+            return getattr(obj, "category", None) == "a"
+
+    router = djcrud.ModelRouter.clone(model=Post, routes=[RestrictedSetCategory])()
+    router.build()
+
+    request = rf.get("/")
+    request.user = admin_user
+    request.GET = request.GET.copy()
+    # Select both
+    request.GET.setlist("pks", [str(p1.pk), str(p2.pk)])
+
+    route = router.routes["restrictedsetcategory"]
+    view = type(route)(request=request)
+    view.setup(request)
+    _ = view.pks
+    _ = view.object_list
+
+    # has_permission must be False because one target (p2) is denied
+    assert view.has_permission() is False
+
+    # get_permission_targets returns both
+    targets = view.get_permission_targets()
+    assert len(targets) == 2
+
+
+@pytest.mark.django_db
+def test_deleteobjectsview_get_permission_targets(rf, admin_user):
+    """DeleteObjectsView should resolve targets via ObjectListPermissionMixin."""
+    from djcrud_example.listaction_example.models import Post
+
+    p1 = Post.objects.create(title="d1", category="x")
+    p2 = Post.objects.create(title="d2", category="y")
+
+    router = djcrud.ModelRouter.clone(model=Post)()  # uses default DeleteObjectsView
+    router.build()
+
+    request = rf.post("/")
+    request.user = admin_user
+    request.POST = request.POST.copy()
+    request.POST.setlist("pks", [str(p1.pk), str(p2.pk)])
+
+    del_objects = router.routes["deleteobjects"]
+    view = type(del_objects)(request=request)
+    view.setup(request)
+    _ = view.pks
+    _ = view.object_list
+
+    targets = view.get_permission_targets()
+    assert len(targets) == 2
+    assert {t.pk for t in targets} == {p1.pk, p2.pk}

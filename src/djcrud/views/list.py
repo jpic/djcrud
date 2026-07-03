@@ -6,6 +6,7 @@ from django.utils.translation import gettext as _, ngettext
 from django.views import generic
 
 from ..model import ModelMixin
+from .. import tags
 from .filter import FilterMixin
 from .object import ObjectMixin
 from .pagination import PaginationMixin
@@ -31,7 +32,7 @@ class ListMixin:
     """
 
     default_template_name = "djcrud/list.html"
-    tags = ["navigation"]
+    tags = [tags.NAVIGATION]
     urlpath = ""
     permission_shortcode = "view"
 
@@ -61,7 +62,7 @@ class ListMixin:
         These are the actions shown in the bar (subject to client-side
         filtering based on ``data-list-actions`` of the selected rows).
         """
-        return self.router.get_tagged_views("list_action", request=self.request)
+        return self.router.get_tagged_views(tags.LIST_ACTION, request=self.request)
 
     @property
     def empty_list_message(self):
@@ -122,7 +123,6 @@ class ListView(
         if not field_names:
             return None
 
-        view = self
         form_fields = {}
 
         for name in field_names:
@@ -213,7 +213,7 @@ class DetailListView(DetailListMixin, ObjectMixin, ListView):
     """List of related rows shown on an object detail page."""
 
     default_template_name = "djcrud/detaillist.html"
-    tags = ["object"]
+    tags = [tags.OBJECT]
 
     @property
     def title(self):

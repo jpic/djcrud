@@ -8,6 +8,8 @@ from django.utils.translation import gettext_lazy as _
 
 from .log import ADDITION, CHANGE, DELETION, format_logentry_message
 
+from .. import tags
+
 
 class ActionsColumn(django_tables2.Column):
     empty_values = ()
@@ -28,7 +30,7 @@ class ActionsColumn(django_tables2.Column):
 
     def render(self, record, table):
         actions = table.view.router.get_tagged_views(
-            "object",
+            tags.OBJECT,
             request=table.view.request,
             object=record,
         )
@@ -44,13 +46,14 @@ class CheckboxColumn(django_tables2.Column):
     """Selection checkbox column for the list action bar.
 
     Only rendered for rows where the current user has at least one permitted
-    ``list_action`` (via ``router.get_tagged_views('list_action', object=record)``).
+    ``list_action`` (via ``router.get_tagged_views(tags.LIST_ACTION, object=record)``).
 
     Each checkbox receives ``data-pk`` plus ``data-list-actions="codename,..."``
     listing exactly which list actions are allowed for that row. The
     ``<list-action-bar>`` component uses these attributes to show only the
     actions permitted for the entire current selection.
     """
+
     empty_values = ()
     template_name = "djcrud/_checkbox_column.html"
     exclude_from_export = True
@@ -64,7 +67,7 @@ class CheckboxColumn(django_tables2.Column):
 
     def render(self, record, table):
         actions = table.view.router.get_tagged_views(
-            "list_action",
+            tags.LIST_ACTION,
             request=table.view.request,
             object=record,
         )
@@ -224,7 +227,7 @@ class Tables2Mixin:
     def add_actions(self):
         """Whether to add an per-row actions column."""
         for v in self.router.routes:
-            if "object" in getattr(v, "tags", []):
+            if tags.OBJECT in getattr(v, "tags", []):
                 return True
 
     @functools.cached_property

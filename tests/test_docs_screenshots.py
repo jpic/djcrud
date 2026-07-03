@@ -85,20 +85,22 @@ def test_capture_doc_screenshots(browser, live_server, browser_login, admin_user
     capture(browser, "article-detail")
 
     memo = Memo.objects.create(title="Draft memo")
-    browser.visit(
-        f"{live_server.url}{reverse('site:memo:detail', args=[memo.pk])}"
-    )
+    browser.visit(f"{live_server.url}{reverse('site:memo:detail', args=[memo.pk])}")
     assert browser.is_text_present("Duplicate", wait_time=5)
     capture(browser, "duplicate-action-menu")
 
     browser.find_by_css('a[href$="/duplicate/"]').first.click()
     assert browser.is_element_present_by_css('[up-main="modal"]', wait_time=5)
-    browser.find_by_css('[up-main="modal"] form[method="post"] button[type="submit"]').first.click()
+    browser.find_by_css(
+        '[up-main="modal"] form[method="post"] button[type="submit"]'
+    ).first.click()
     assert browser.is_text_present("was changed successfully", wait_time=5)
     time.sleep(0.3)
     capture(browser, "duplicate-action-success")
 
-    draft = Document.objects.create(title="Draft document", published=False, owner=admin_user)
+    draft = Document.objects.create(
+        title="Draft document", published=False, owner=admin_user
+    )
     browser.visit(
         f"{live_server.url}{reverse('site:secured-document:detail', args=[draft.pk])}"
     )
@@ -107,7 +109,9 @@ def test_capture_doc_screenshots(browser, live_server, browser_login, admin_user
 
     browser.find_by_css('a[href$="/publish/"]').first.click()
     assert browser.is_element_present_by_css('[up-main="modal"]', wait_time=5)
-    browser.find_by_css('[up-main="modal"] form[method="post"] button[type="submit"]').first.click()
+    browser.find_by_css(
+        '[up-main="modal"] form[method="post"] button[type="submit"]'
+    ).first.click()
     assert browser.is_text_present("was changed successfully", wait_time=5)
     time.sleep(0.3)
     capture(browser, "publish-action-success")

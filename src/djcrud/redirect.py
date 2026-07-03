@@ -23,7 +23,7 @@ def home_url(request):
     import djcrud
 
     if not hasattr(djcrud.site, "registry"):
-        djcrud.site.build()
+        djcrud.site.ensure_built()
     home_route = djcrud.site.find_route("home")
     if home_route is not None:
         return type(home_route)(request=request).url

@@ -3,7 +3,7 @@ from functools import reduce
 
 import djcrud
 from django.db.models import Q
-from djcrud.permissions import is_search_enabled
+from djcrud.search import is_search_enabled
 from djcrud.router import Router
 from queryset_sequence import QuerySetSequence
 

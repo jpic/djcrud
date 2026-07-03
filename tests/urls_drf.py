@@ -8,10 +8,7 @@ from djcrud import handlers
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-] + (
-    djcrud.site.build().urlpatterns
-    + djcrud_drf.site.build().urlpatterns
-)
+] + (djcrud.site.build().urlpatterns + djcrud_drf.site.build().urlpatterns)
 
 handler400 = handlers.handler400
 handler403 = handlers.handler403

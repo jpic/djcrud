@@ -8,5 +8,5 @@ class PageRouter(djcrud.ModelRouter):
     icon = "file-text"
 
 
-djcrud.permissions.add_search(Page)
+djcrud.search.add_search(Page)
 djcrud.site.routes.append(PageRouter)

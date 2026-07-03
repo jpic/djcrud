@@ -23,10 +23,7 @@ def test_bulk_set_category(client, admin_user):
     client.force_login(admin_user)
 
     posts = list(Post.objects.order_by("pk"))
-    url = (
-        reverse("site:post:setcategory")
-        + f"?pks={posts[0].pk}&pks={posts[1].pk}"
-    )
+    url = reverse("site:post:setcategory") + f"?pks={posts[0].pk}&pks={posts[1].pk}"
     response = client.get(url)
     assert response.status_code == 200
     client.post(url, {"category": "blog", "next": reverse("site:post:list")})

@@ -2,6 +2,7 @@ import pytest
 from django.urls import reverse
 
 import djcrud
+from djcrud import tags
 from djcrud.router import Router
 from djcrud.registry import Registry
 from djcrud.view import View
@@ -9,7 +10,7 @@ from djcrud.view import View
 
 def test_runtime_register():
     class Extra(View):
-        tags = ["navigation"]
+        tags = [tags.NAVIGATION]
 
     class MySite(Router):
         routes = []
@@ -22,7 +23,7 @@ def test_runtime_register():
 
 def test_register_is_idempotent_by_codename():
     class Extra(View):
-        tags = ["navigation"]
+        tags = [tags.NAVIGATION]
 
     class MySite(Router):
         routes = []

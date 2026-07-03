@@ -33,17 +33,13 @@ def test_permission_owner_can_update_own_secured_document(client):
     client.force_login(owner)
 
     assert (
-        client.get(
-            reverse("site:secured-document:update", args=[doc.pk])
-        ).status_code
+        client.get(reverse("site:secured-document:update", args=[doc.pk])).status_code
         == 200
     )
 
     client.force_login(other)
     assert (
-        client.get(
-            reverse("site:secured-document:update", args=[doc.pk])
-        ).status_code
+        client.get(reverse("site:secured-document:update", args=[doc.pk])).status_code
         == 404
     )
 

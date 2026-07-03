@@ -2,6 +2,7 @@ from django.http import Http404
 from django.utils.translation import gettext as _
 from django.views import generic
 
+from .. import tags
 from .template import TemplateViewMixin
 
 
@@ -75,4 +76,4 @@ class ObjectMixin:
 
 
 class ObjectTemplateView(ObjectMixin, TemplateViewMixin, generic.TemplateView):
-    tags = ["object"]
+    tags = [tags.OBJECT]

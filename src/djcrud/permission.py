@@ -21,3 +21,15 @@ class PermissionMixin:
             action=self.permission_shortcode,
             obj=obj or getattr(self, "object", None),
         )
+
+    def get_permission_targets(self):
+        """Return the object(s) this view acts upon for per-target permission checks.
+
+        Default returns []. Dedicated mixins provide better targets:
+
+        - :class:`~djcrud.views.action.ObjectPermissionMixin` for single ``self.object``
+        - :class:`~djcrud.views.action.ObjectListPermissionMixin` for ``self.object_list``
+
+        Empty list means only the general (view-level) permission applies.
+        """
+        return []

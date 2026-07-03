@@ -16,33 +16,28 @@ def _wait_for_url(browser, substring, timeout=10):
 
 
 def _is_standard_shell(browser):
-    return browser.execute_script(
-        """
+    return browser.execute_script("""
         return document.querySelector('body > nav.navbar') !== null
             && !document.body.classList.contains('djcrud-spa-body');
-        """
-    )
+        """)
 
 
 def _is_spa_shell(browser):
-    return browser.execute_script(
-        """
+    return browser.execute_script("""
         return document.body.classList.contains('djcrud-spa-body')
             && document.querySelector('body > nav.navbar') === null;
-        """
-    )
+        """)
 
 
 def _wait_for_spa_ready(browser, timeout=15):
     """Wait for the Svelte bundle to mount with the burger toolbar."""
     deadline = time.time() + timeout
     while time.time() < deadline:
-        if (
-            browser.is_text_present("SPA demo", wait_time=0)
-            and browser.is_element_present_by_css(
-                "#app hamburger-menu .navbar-burger",
-                wait_time=0,
-            )
+        if browser.is_text_present(
+            "SPA demo", wait_time=0
+        ) and browser.is_element_present_by_css(
+            "#app hamburger-menu .navbar-burger",
+            wait_time=0,
         ):
             return
         time.sleep(0.1)
@@ -74,9 +69,7 @@ def test_normal_to_spa_full_page_navigation(
     assert _is_standard_shell(browser)
     assert browser.is_element_present_by_css("#sidebar .menu-list", wait_time=5)
 
-    browser.find_by_css(
-        f'#sidebar .menu-list a[href="{spa_url}"]'
-    ).first.click()
+    browser.find_by_css(f'#sidebar .menu-list a[href="{spa_url}"]').first.click()
     _wait_for_url(browser, spa_url)
 
     assert _is_spa_shell(browser)
@@ -85,7 +78,9 @@ def test_normal_to_spa_full_page_navigation(
 
 @pytest.mark.splinter(screenshot_dir="./screenshots")
 @pytest.mark.django_db
-def test_spa_burger_reveals_server_sidebar(browser, live_server, browser_login, admin_user):
+def test_spa_burger_reveals_server_sidebar(
+    browser, live_server, browser_login, admin_user
+):
     browser_login()
     browser.visit(f"{live_server.url}{reverse('site:spa')}")
 
@@ -112,9 +107,7 @@ def test_spa_to_normal_full_page_navigation(
     _wait_for_spa_ready(browser)
     _open_spa_sidebar(browser)
 
-    browser.find_by_css(
-        f'#sidebar .menu-list a[href="{item_list_url}"]'
-    ).first.click()
+    browser.find_by_css(f'#sidebar .menu-list a[href="{item_list_url}"]').first.click()
     _wait_for_url(browser, item_list_url)
 
     assert _is_standard_shell(browser)

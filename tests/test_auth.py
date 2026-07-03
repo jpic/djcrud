@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 
 import djcrud
+from djcrud import tags
 from djcrud.redirect import full_page_redirect
 from djcrud.templatetags.djcrud import unpoly_attributes
 
@@ -121,13 +122,13 @@ def test_become_shows_in_menus_while_impersonating(rf, admin_user, su_user):
     def has_become(views):
         return any(type(view).__name__ == "Become" for view in views)
 
-    assert not has_become(site.get_tagged_views("topbar", request=request))
-    assert not has_become(site.get_tagged_views("navigation", request=request))
+    assert not has_become(site.get_tagged_views(tags.TOPBAR, request=request))
+    assert not has_become(site.get_tagged_views(tags.NAVIGATION, request=request))
 
     request.session["become_user"] = admin_user.pk
     request.session["become_user_realname"] = str(admin_user)
-    assert has_become(site.get_tagged_views("topbar", request=request))
-    assert has_become(site.get_tagged_views("navigation", request=request))
+    assert has_become(site.get_tagged_views(tags.TOPBAR, request=request))
+    assert has_become(site.get_tagged_views(tags.NAVIGATION, request=request))
 
 
 @pytest.mark.django_db
@@ -150,7 +151,7 @@ def test_become_views_use_full_page_navigation(rf, admin_user, target_user):
 
     from djcrud.redirect import FULL_PAGE_LINK_ATTRIBUTES
 
-    assert unpoly_attributes(become, "topbar") == FULL_PAGE_LINK_ATTRIBUTES
+    assert unpoly_attributes(become, tags.TOPBAR) == FULL_PAGE_LINK_ATTRIBUTES
     assert unpoly_attributes(become_user, "object_menu") == FULL_PAGE_LINK_ATTRIBUTES
 
 

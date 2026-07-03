@@ -64,13 +64,13 @@ the cloned :py:class:`~djcrud.views.list.ListView` overrides ``list``:
 With ``djcrud_dal_topbar`` installed (see :ref:`install-site-search`), the navbar
 includes a site-wide search autocomplete and results page. Models are **not**
 included by default — register them in ``djcrud.py`` with
-:func:`~djcrud.permissions.add_search`. Search uses each list's
+:func:`~djcrud.search.add_search`. Search uses each list's
 :attr:`~djcrud.views.search.SearchMixin.search_fields` (CharField and
 TextField columns by default).
 
 .. code-block:: python
 
-    djcrud.permissions.add_search(Item)
+    djcrud.search.add_search(Item)
 
 See ``search_example`` in the example project for a runnable opt-in on the
 ``Page`` model (``docs/tutorial/views.rst``).

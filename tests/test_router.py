@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AnonymousUser
 
 import djcrud
+from djcrud import tags
 from djcrud.router import Router, model_router_codename
 from djcrud_example.security_example.models import Document
 from djcrud.view import View
@@ -9,13 +10,13 @@ from djcrud_example.routing_example.models import Item
 
 def test_get_tagged_views(rf, admin_user):
     class LoginView(View):
-        tags = ["topbar"]
+        tags = [tags.TOPBAR]
 
         def has_permission(self):
             return not self.request.user.is_authenticated
 
     class LogoutView(View):
-        tags = ["topbar"]
+        tags = [tags.TOPBAR]
 
         def has_permission(self):
             return self.request.user.is_authenticated
@@ -30,13 +31,13 @@ def test_get_tagged_views(rf, admin_user):
     site.build()
     request = rf.get("/")
     request.user = AnonymousUser()
-    result = site.get_tagged_views("topbar", request=request)
+    result = site.get_tagged_views(tags.TOPBAR, request=request)
     assert len(result) == 1
     assert type(result[0]).__name__ == "LoginView"
     assert result[0].request is request
 
     request.user = admin_user
-    result = site.get_tagged_views("topbar", request=request)
+    result = site.get_tagged_views(tags.TOPBAR, request=request)
     assert len(result) == 1
     assert type(result[0]).__name__ == "LogoutView"
 

@@ -30,7 +30,7 @@ def layout_view_for_request(request):
     from .views.template import TemplateView
 
     if not hasattr(djcrud.site, "registry"):
-        djcrud.site.build()
+        djcrud.site.ensure_built()
 
     class LayoutView(TemplateView):
         def has_permission(self):

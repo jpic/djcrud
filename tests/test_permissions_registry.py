@@ -125,12 +125,12 @@ def test_secured_document_rules_registered_from_djcrud_autodiscover():
 
 
 def test_add_search_opt_in():
-    from djcrud.permissions import is_search_enabled
+    from djcrud.search import is_search_enabled
 
-    djcrud.permissions.remove_search(Item)
+    djcrud.search.remove_search(Item)
     try:
         assert is_search_enabled(Item) is False
-        djcrud.permissions.add_search(Item)
+        djcrud.search.add_search(Item)
         assert is_search_enabled(Item) is True
     finally:
-        djcrud.permissions.add_search(Item)
+        djcrud.search.add_search(Item)

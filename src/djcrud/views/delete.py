@@ -8,7 +8,8 @@ from django.utils.text import capfirst
 from django.utils.translation import gettext as _, gettext_lazy
 from django.views import generic
 
-from .action import ActionMixin
+from .. import tags
+from .action import ActionMixin, ObjectPermissionMixin
 from .form import FormView
 from .list_action import ListActionMixin
 from .log import DELETION, LogMixin
@@ -72,6 +73,12 @@ def get_deleted_objects(view, objs):
 
 class DeleteMixin(ActionMixin, LogMixin):
     """Single-object and bulk delete confirmation.
+
+    Compose concrete subclasses with :class:`~djcrud.views.action.ObjectPermissionMixin`
+    (DeleteView) or rely on :class:`~djcrud.views.list_action.ListActionMixin`
+    (which brings in :class:`~djcrud.views.action.ObjectListPermissionMixin`)
+    for DeleteObjectsView. This ensures per-target permission checks via
+    ActionMixin.
 
     Attributes:
         permission_shortcode (str): Django permission prefix. Default
@@ -164,13 +171,14 @@ class DeleteMixin(ActionMixin, LogMixin):
 
 class DeleteView(
     DeleteMixin,
+    ObjectPermissionMixin,
     ObjectFormMixin,
     TemplateViewMixin,
     generic.DeleteView,
 ):
     """Confirm and delete a single object."""
 
-    tags = ["object"]
+    tags = [tags.OBJECT]
 
     @property
     def title(self):

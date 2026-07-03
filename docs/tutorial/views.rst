@@ -11,7 +11,7 @@ models into site-wide search. Four tutorial apps each ship a single ``djcrud.py`
 * ``views_example`` — cloned :py:class:`~djcrud.views.list.ListView` on ``Article``
 * ``action_example`` — object form action on ``Memo``
 * ``listaction_example`` — bulk action on ``Post``
-* ``search_example`` — :func:`~djcrud.permissions.add_search` opt-in on ``Page``
+* ``search_example`` — :func:`~djcrud.search.add_search` opt-in on ``Page``
 
 ListView customization
 ----------------------

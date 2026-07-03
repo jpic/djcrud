@@ -1,8 +1,9 @@
 from django.utils.html import format_html
 from django.utils.translation import gettext as _
 
+from .. import tags
 from ..model import ModelMixin
-from .action import ActionMixin
+from .action import ActionMixin, ObjectPermissionMixin
 from .log import CHANGE
 from .object import ObjectMixin
 from .form import FormMixin, FormView
@@ -28,10 +29,10 @@ class ObjectFormMixin(ObjectMixin, ModelMixin, FormMixin):
         )
 
 
-class ObjectFormView(ActionMixin, ObjectFormMixin, FormView):
+class ObjectFormView(ActionMixin, ObjectPermissionMixin, ObjectFormMixin, FormView):
     """Object-bound form action opened from the object menu."""
 
-    tags = ["object"]
+    tags = [tags.OBJECT]
 
 
 class ObjectModelFormMixin(ObjectMixin, ModelFormMixin):

@@ -3,6 +3,8 @@
 Register checks in each app's ``djcrud.py`` via :func:`add_perm` and
 :func:`add_queryset`; :meth:`~djcrud.Site.build` imports those modules
 automatically (same as ``site.routes.append``).
+
+Site search registration lives in :mod:`djcrud.search`.
 """
 
 from __future__ import annotations
@@ -13,7 +15,6 @@ from typing import Any
 _PERM_CHECKS: dict[tuple[str, str, str | None], Callable[..., bool]] = {}
 _QUERYSET_SCOPERS: dict[tuple[str, str, str | None], Callable[..., Any]] = {}
 _PERM_STRING_CHECKS: dict[str, Callable[..., bool]] = {}
-_SEARCH_ENABLED: set[tuple[str, str]] = set()
 
 
 def perm_code(model, action):
@@ -106,35 +107,11 @@ def remove_queryset(model, action=None):
         _QUERYSET_SCOPERS.pop(_perm_key(model, act), None)
 
 
-def add_search(model):
-    """Opt a model into site-wide search.
-
-    Row visibility uses the same ``view`` queryset scoping already
-    registered via :func:`add_queryset`.
-    """
-    if not _is_model(model):
-        raise TypeError("add_search() expects a model class")
-    _SEARCH_ENABLED.add(_model_key(model))
-
-
-def remove_search(model):
-    """Remove a model from site-wide search."""
-    if not _is_model(model):
-        raise TypeError("remove_search() expects a model class")
-    _SEARCH_ENABLED.discard(_model_key(model))
-
-
-def is_search_enabled(model):
-    """Return whether *model* is opted into site search."""
-    return _model_key(model) in _SEARCH_ENABLED
-
-
 def clear():
     """Remove all registered permission and queryset handlers (tests)."""
     _PERM_CHECKS.clear()
     _QUERYSET_SCOPERS.clear()
     _PERM_STRING_CHECKS.clear()
-    _SEARCH_ENABLED.clear()
 
 
 def _is_model(target):
