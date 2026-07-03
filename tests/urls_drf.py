@@ -7,7 +7,7 @@ import djcrud_drf
 from djcrud import handlers
 
 try:
-    from django_mcp.urls import urlpatterns as mcp_urlpatterns
+    from djcrud_mcp.urls import urlpatterns as mcp_urlpatterns
 except ImportError:
     mcp_urlpatterns = []
 

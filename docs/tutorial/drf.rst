@@ -148,7 +148,7 @@ Reference
 * :doc:`../reference/djcrud_drf/index` — ViewSet API surface and ``spectacular_settings()``
 * :doc:`../reference/djcrud_api/index` — Bearer tokens and ``POST /api/login/``
 * :doc:`agents` — stdio MCP tools from the same OpenAPI schema
-* :doc:`../reference/django_mcp/index` — MCP bridge reference
+* :doc:`../reference/djcrud_mcp/index` — MCP bridge reference
 * :doc:`spa` — SPA shell and OpenAPI client codegen
 
 Tests

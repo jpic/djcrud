@@ -49,7 +49,7 @@ def _format_resource_list(labels: list[str]) -> str:
 
 
 class McpProfile:
-    """Declare an MCP stdio server surface; register the class on :data:`django_mcp.site`."""
+    """Declare an MCP stdio server surface; register the class on :data:`djcrud_mcp.site`."""
 
     key: str = DEFAULT_PROFILE_KEY
     default: bool = False

@@ -322,7 +322,7 @@ The **REST API** uses a separate prefix per registered ViewSet:
 MCP tool names change from path-derived heuristics to
 ``{model}_{drf_action}`` (e.g. ``task_list``, ``task_create``). Environment
 variables rename to ``DJCRUD_BASE_URL`` and ``DJCRUD_TOKEN``; ``DJMVC_*`` and
-``TILDETTE_*`` remain accepted aliases (:doc:`reference/django_mcp/index`).
+``TILDETTE_*`` remain accepted aliases (:doc:`reference/djcrud_mcp/index`).
 
 .. _api-token-upgrade:
 
@@ -373,7 +373,7 @@ After the port, delete or stop relying on:
 * ``djmvc-cli`` entry point — renamed to ``djcrud-cli``; standalone MCP uses ``djcrud-client``
   extra
 * ``TILDETTE_CONTROLLER_PREFIX`` / path-prefix OpenAPI filtering — replace with
-  ViewSet registration (:doc:`design/django_mcp`)
+  ViewSet registration (:doc:`design/djcrud_mcp`)
 
 Large-app porting notes (Tildette)
 ----------------------------------
@@ -390,7 +390,7 @@ Tildette is the reference large port. Suggested order:
      - Small; swap ``djmvc_triggers`` imports first
    * - ``tildette_mcp``
      - Registry section; non-CRUD secret endpoints become DRF ``@action`` or
-       APIView routes in ``/api/schema/`` (see :doc:`design/django_mcp`)
+       APIView routes in ``/api/schema/`` (see :doc:`design/djcrud_mcp`)
    * - ``tildette_tasks``
      - Heavy JSON on views; add ``TaskViewSet``; MCP tool names change
    * - ``tildette_workspace``
@@ -435,4 +435,4 @@ Further reading
 * :doc:`tutorial/permission` — ``add_perm`` / ``add_queryset`` in depth
 * :doc:`tutorial/drf` — DRF setup
 * :doc:`tutorial/agents` — MCP after DRF
-* :doc:`design/django_mcp` — tool discovery design
+* :doc:`design/djcrud_mcp` — tool discovery design

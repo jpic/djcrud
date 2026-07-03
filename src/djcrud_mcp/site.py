@@ -7,7 +7,7 @@ if TYPE_CHECKING:
 
 
 class McpSite:
-    """Registry of :class:`~django_mcp.McpProfile` classes (like :data:`djcrud_drf.site`)."""
+    """Registry of :class:`~djcrud_mcp.McpProfile` classes (like :data:`djcrud_drf.site`)."""
 
     def __init__(self) -> None:
         self._profile_classes: list[type[McpProfile]] = []

@@ -82,7 +82,7 @@ djcrud_dal_topbar = ["templates/**/*.html", "static/**/*"]
 djcrud_history = ["locale/**/*.po", "locale/**/*.mo"]
 djcrud_api = ["templates/**/*.html", "static/**/*"]
 djcrud_drf = []
-django_mcp = []
+djcrud_mcp = []
 
 [tool.setuptools_scm]
 # Git-based versioning configuration
@@ -112,7 +112,7 @@ markers = [
     "tutorial: validates tutorial example apps (docs literalinclude sources)",
     "docs_screenshot: captures browser screenshots for Sphinx docs (run with -n0)",
     "drf: tests requiring djcrud_drf and djangorestframework",
-    "mcp: tests requiring djcrud_client, django_mcp, and mcp",
+    "mcp: tests requiring djcrud_client, djcrud_mcp, and mcp",
 ]
 
 [tool.black]

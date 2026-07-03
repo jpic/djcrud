@@ -1,4 +1,4 @@
-django_mcp
+djcrud_mcp
 ~~~~~~~~~~
 
 Django **host** package for MCP profile registration. Ships inside the ``djcrud``
@@ -12,7 +12,7 @@ separate ``djcrud-client`` package — not here.
 ``djcrud[mcp]`` also pulls ``djcrud-client`` for agent subprocesses. See
 :doc:`../../tutorial/agents`.
 
-Design spec: :doc:`../../design/django_mcp`.
+Design spec: :doc:`../../design/djcrud_mcp`.
 
 Server setup
 ============
@@ -22,13 +22,13 @@ Server setup
    (:doc:`../../tutorial/drf`)
 3. Register ``ModelViewSet`` subclasses on :data:`djcrud_drf.site`
 4. Register permissions in ``djcrud.py``
-5. Declare and register :class:`~django_mcp.McpProfile` classes on
-   :data:`django_mcp.site` (required — see :doc:`../../tutorial/agents`)
-6. Include :mod:`django_mcp.urls` in project ``urlpatterns``
+5. Declare and register :class:`~djcrud_mcp.McpProfile` classes on
+   :data:`djcrud_mcp.site` (required — see :doc:`../../tutorial/agents`)
+6. Include :mod:`djcrud_mcp.urls` in project ``urlpatterns``
 
 .. code-block:: python
 
-   from django_mcp.urls import urlpatterns as mcp_urlpatterns
+   from djcrud_mcp.urls import urlpatterns as mcp_urlpatterns
 
    urlpatterns = [
        # ...
@@ -39,15 +39,15 @@ MCP profiles
 
 .. code-block:: python
 
-   import django_mcp
+   import djcrud_mcp
 
-   class ItemsMcp(django_mcp.McpProfile):
+   class ItemsMcp(djcrud_mcp.McpProfile):
        key = "items"
        viewsets = (ItemViewSet,)
 
-   django_mcp.site.register(ItemsMcp)
+   djcrud_mcp.site.register(ItemsMcp)
 
-:meth:`~django_mcp.site.McpSite.build` instantiates each registered class and
+:meth:`~djcrud_mcp.site.McpSite.build` instantiates each registered class and
 resolves ``api_prefixes``. ``server_name``, ``instructions``, and
 ``info_tool_name`` are ``@property`` defaults from the profile ``key`` and
 ViewSet models unless you override class attributes.
@@ -71,8 +71,8 @@ Host profile API
 Public API
 ==========
 
-* :data:`django_mcp.site` — ``register(McpProfile)``, ``build()``, ``get_profile(key)``
-* :class:`~django_mcp.McpProfile` — declare on the host; built on ``site.build()``
+* :data:`djcrud_mcp.site` — ``register(McpProfile)``, ``build()``, ``get_profile(key)``
+* :class:`~djcrud_mcp.McpProfile` — declare on the host; built on ``site.build()``
 * ``discover_viewsets()``, ``api_path_for()``, ``model_name_for()``
 
 Client (``djcrud-client``)
@@ -94,5 +94,5 @@ Further reading
 ===============
 
 * :doc:`../../tutorial/agents`
-* :doc:`../../design/django_mcp`
+* :doc:`../../design/djcrud_mcp`
 * :doc:`../djcrud_drf/index`

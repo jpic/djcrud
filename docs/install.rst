@@ -65,7 +65,7 @@ Import the djcrud apps and add Django's contrib apps:
 
 :mod:`djcrud.settings.INSTALLED_APPS` includes djcrud core, Bulma UI, authentication,
 autocomplete (DAL), site search, and audit logging. It does **not** include
-``djcrud_api`` (Bearer tokens), ``djcrud_drf`` (REST API), or ``django_mcp``
+``djcrud_api`` (Bearer tokens), ``djcrud_drf`` (REST API), or ``djcrud_mcp``
 (agent MCP bridge) — enable API packages in :doc:`tutorial/drf` and the
 MCP client in :doc:`tutorial/agents` when you need them. The order ensures
 ``dal`` and ``dal_alight`` load before ``django.contrib.admin``.
@@ -148,7 +148,7 @@ Next steps
 * :doc:`tutorial/drf` — optional DRF REST API and OpenAPI
 * :doc:`tutorial/spa` — SPA shell and client codegen
 * :doc:`tutorial/agents` — stdio MCP tools from the OpenAPI schema
-* :doc:`reference/django_mcp/index` — MCP bridge reference
+* :doc:`reference/djcrud_mcp/index` — MCP bridge reference
 * :doc:`reference/djcrud_dal/index` — Autocomplete for relation fields
 * :doc:`reference/djcrud_dal_topbar/index` — Site-wide search in the navbar
 * :doc:`reference/djcrud_history/index` — Audit logging and history views

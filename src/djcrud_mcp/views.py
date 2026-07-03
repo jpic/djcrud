@@ -4,8 +4,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from django_mcp.site import site
-from django_mcp.viewsets import api_path_for, discover_viewsets, model_name_for
+from djcrud_mcp.site import site
+from djcrud_mcp.viewsets import api_path_for, discover_viewsets, model_name_for
 
 
 class McpProfileListView(APIView):

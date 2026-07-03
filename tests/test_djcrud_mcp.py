@@ -1,4 +1,4 @@
-"""Tests for django_mcp — host MCP profiles and ViewSet discovery."""
+"""Tests for djcrud_mcp — host MCP profiles and ViewSet discovery."""
 
 from __future__ import annotations
 
@@ -85,14 +85,14 @@ def test_tool_name():
 
 def test_api_path_for_viewset():
     from djcrud_example.drf_example.djcrud import ProductViewSet
-    from django_mcp.viewsets import api_path_for
+    from djcrud_mcp.viewsets import api_path_for
 
     assert api_path_for(ProductViewSet) == "/api/product/"
 
 
 def test_discover_viewsets_includes_product(drf_settings):
     from djcrud_example.drf_example.djcrud import ProductViewSet
-    from django_mcp.viewsets import discover_viewsets
+    from djcrud_mcp.viewsets import discover_viewsets
 
     viewsets = discover_viewsets()
     assert ProductViewSet in viewsets
@@ -145,8 +145,8 @@ def test_build_tools_from_schema_prefix_map():
 def test_registry_profile_filters_viewsets():
     from djcrud_example.drf_example.djcrud import ProductViewSet
     from djcrud_example.drf_example.article_viewset import ArticleViewSet
-    from django_mcp import McpProfile
-    from django_mcp.profiles import resolve_profile_viewsets
+    from djcrud_mcp import McpProfile
+    from djcrud_mcp.profiles import resolve_profile_viewsets
 
     class ProductsOnlyMcp(McpProfile):
         key = "products"
@@ -174,7 +174,7 @@ def test_split_arguments_openapi3():
 
 
 def test_site_register_builds_profile():
-    from django_mcp import McpProfile, site
+    from djcrud_mcp import McpProfile, site
 
     class ArticlesMcp(McpProfile):
         key = "articles"
@@ -193,14 +193,14 @@ def test_site_register_builds_profile():
 
 
 def test_profile_to_dict_wire_format():
-    from django_mcp import McpProfile
+    from djcrud_mcp import McpProfile
     from djcrud_client import McpProfile as RemoteProfile
 
     class ArticlesMcp(McpProfile):
         key = "articles"
         api_prefixes = ("/api/article/",)
 
-    with patch("django_mcp.profiles._host_slug", return_value=None):
+    with patch("djcrud_mcp.profiles._host_slug", return_value=None):
         profile = ArticlesMcp().build(do_resolve=False)
         wire = profile.to_dict()
         restored = RemoteProfile.from_dict(wire)
@@ -208,19 +208,19 @@ def test_profile_to_dict_wire_format():
 
 
 def test_auto_generates_server_name():
-    from django_mcp import McpProfile
+    from djcrud_mcp import McpProfile
 
     class ProductOnlyMcp(McpProfile):
         key = "products"
         api_prefixes = ("/api/product/",)
 
-    with patch("django_mcp.profiles._host_slug", return_value=None):
+    with patch("djcrud_mcp.profiles._host_slug", return_value=None):
         profile = ProductOnlyMcp().build(do_resolve=False)
         assert profile.server_name == "products"
     assert profile.info_tool_name == "product_registry_info"
     assert profile.instructions == "CRUD for product via the JSON API."
 
-    with patch("django_mcp.profiles._host_slug", return_value="myapp"):
+    with patch("djcrud_mcp.profiles._host_slug", return_value="myapp"):
         profile = ProductOnlyMcp().build(do_resolve=False)
         assert profile.server_name == "myapp-products"
 
@@ -299,7 +299,7 @@ def test_mcp_tool_calls_api(api_client, drf_settings, django_user_model):
 
 @pytest.mark.django_db
 def test_mcp_profiles_endpoint(api_client, drf_settings):
-    from django_mcp import McpProfile, site
+    from djcrud_mcp import McpProfile, site
 
     class ArticlesMcp(McpProfile):
         key = "articles"

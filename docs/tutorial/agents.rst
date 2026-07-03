@@ -6,7 +6,7 @@ Stdio MCP tools proxy Bearer HTTP to your DRF API. Enable DRF first
 
 Two packages:
 
-* **``django_mcp``** (Django host, inside ``djcrud``) — ``McpProfile`` registration,
+* **``djcrud_mcp``** (Django host, inside ``djcrud``) — ``McpProfile`` registration,
   ``GET /api/mcp/profiles/``
 * **``djcrud-client``** (agent subprocess) — FastMCP stdio server, OpenAPI tool
   generation, HTTP proxy (``mcp`` + ``httpx`` only — no Django)
@@ -44,27 +44,27 @@ and ``GET /api/schema/``.
 MCP profiles (host)
 -------------------
 
-Declare a :class:`~django_mcp.McpProfile` on the Django host and register it on
-:data:`django_mcp.site` — same pattern as :meth:`djcrud_drf.site.register`.
+Declare a :class:`~djcrud_mcp.McpProfile` on the Django host and register it on
+:data:`djcrud_mcp.site` — same pattern as :meth:`djcrud_drf.site.register`.
 Every stdio MCP client uses a registered profile; remote clients fetch it from
 ``GET /api/mcp/profiles/{key}/`` at startup.
 
 .. code-block:: python
 
-   import django_mcp
+   import djcrud_mcp
    from myapp.drf import ArticleViewSet
 
-   class ArticlesMcp(django_mcp.McpProfile):
+   class ArticlesMcp(djcrud_mcp.McpProfile):
        key = "articles"
        viewsets = (ArticleViewSet,)
 
-   django_mcp.site.register(ArticlesMcp)
+   djcrud_mcp.site.register(ArticlesMcp)
 
 Wire host URLs (once per project):
 
 .. code-block:: python
 
-   from django_mcp.urls import urlpatterns as mcp_urlpatterns
+   from djcrud_mcp.urls import urlpatterns as mcp_urlpatterns
 
    urlpatterns = [
        # ...
@@ -92,4 +92,4 @@ Run
    djcrud-client --call article_publish --json '{"pk": 1}'
    djcrud-client -mcp
 
-Reference: :doc:`../reference/django_mcp/index`.
+Reference: :doc:`../reference/djcrud_mcp/index`.
