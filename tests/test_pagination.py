@@ -172,11 +172,11 @@ def test_paginate_by_selector(
     assert selector.value == "25"
 
     selector.select("10")
+    _wait_for_url(browser, "per_page=10")
     assert browser.is_element_present_by_css("form.djcrud-per-page-form", wait_time=5)
 
     selector = browser.find_by_css("form.djcrud-per-page-form select").first
     assert selector.value == "10"
-    _wait_for_url(browser, "per_page=10")
 
 
 @pytest.mark.splinter(screenshot_dir="./screenshots")
