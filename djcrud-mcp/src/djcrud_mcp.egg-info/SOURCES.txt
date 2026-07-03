@@ -1,0 +1,17 @@
+README.md
+pyproject.toml
+src/djcrud_client/__init__.py
+src/djcrud_client/__main__.py
+src/djcrud_client/api.py
+src/djcrud_client/config.py
+src/djcrud_client/profile.py
+src/djcrud_client/schema.py
+src/djcrud_client/server.py
+src/djcrud_client/tools.py
+src/djcrud_mcp.egg-info/PKG-INFO
+src/djcrud_mcp.egg-info/SOURCES.txt
+src/djcrud_mcp.egg-info/dependency_links.txt
+src/djcrud_mcp.egg-info/entry_points.txt
+src/djcrud_mcp.egg-info/requires.txt
+src/djcrud_mcp.egg-info/scm_version.json
+src/djcrud_mcp.egg-info/top_level.txt

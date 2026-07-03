@@ -1,11 +1,9 @@
 # djcrud-mcp (compatibility shim)
 
-The MCP stdio client moved to **`djcrud-client`**. The Django host package is
-**`djcrud_mcp`** inside the main `djcrud` wheel.
-
-This directory exists so older install paths (`pip install -e ./djcrud-mcp`) keep
-working in CI and docs until workflows are updated.
+The MCP stdio client lives in **`djcrud-client`**; this package keeps the legacy
+``pip install -e ./djcrud-mcp`` path working in older CI workflows.
 
 ```bash
-pip install djcrud-client
+pip install djcrud-client   # preferred
+djcrud-client -mcp
 ```

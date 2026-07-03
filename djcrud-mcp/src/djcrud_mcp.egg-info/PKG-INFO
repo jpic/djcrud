@@ -1,0 +1,19 @@
+Metadata-Version: 2.4
+Name: djcrud-mcp
+Version: 0.1.dev59+g21c41c95f
+Summary: Compatibility shim for djcrud-client (stdio MCP bridge)
+License: MIT
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: mcp>=1.0
+Requires-Dist: httpx>=0.27
+
+# djcrud-mcp (compatibility shim)
+
+The MCP stdio client lives in **`djcrud-client`**; this package keeps the legacy
+``pip install -e ./djcrud-mcp`` path working in older CI workflows.
+
+```bash
+pip install djcrud-client   # preferred
+djcrud-client -mcp
+```
