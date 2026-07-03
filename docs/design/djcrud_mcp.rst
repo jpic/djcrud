@@ -193,17 +193,26 @@ Passwords are never sent per tool call.
 Package layout
 --------------
 
+Host package (``djcrud`` wheel, ``src/djcrud_mcp/``):
+
 ::
 
-   djcrud-client/src/djcrud_mcp/
-     site.py        # McpSite — register(McpProfile), build profiles
-     profiles.py    # McpProfile (instances built on site.build())
-     django/        # GET /api/mcp/profiles/ (host only)
-     viewsets.py    # discover registered ModelViewSets, api_path_for(model)
-     schema.py      # filter schema paths by profile prefixes
-     tools.py       # tool_name(model, action), render_path, split_arguments
-     server.py      # create_mcp_server()
-     api.py         # CrudApi, fetch_profile()
+   src/djcrud_mcp/
+     site.py          # McpSite — register(McpProfile), build profiles
+     profiles.py      # McpProfile (instances built on site.build())
+     api_viewsets.py  # GET /api/mcp/profiles/ (host only)
+     viewsets.py      # discover registered ModelViewSets, api_path_for(model)
+
+Client package (``djcrud-client``, no Django):
+
+::
+
+   djcrud-client/src/djcrud_client/
+     profile.py       # fetch profile JSON from host
+     schema.py        # filter schema paths by profile prefixes
+     tools.py         # tool_name(model, action), render_path, split_arguments
+     server.py        # create_mcp_server()
+     api.py           # CrudApi, fetch_profile()
      config.py
 
 Related docs

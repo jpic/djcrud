@@ -46,7 +46,7 @@ MCP profile
 
 Tutorial: ``djcrud_example.mcp_example`` (see :doc:`../../tutorial/agents`).
 
-.. literalinclude:: ../../src/djcrud_example/mcp_example/djcrud.py
+.. literalinclude:: ../../../src/djcrud_example/mcp_example/djcrud.py
 
 :meth:`~djcrud_mcp.site.McpSite.build` instantiates the registered class and
 resolves ``api_prefixes``. ``server_name``, ``instructions``, and

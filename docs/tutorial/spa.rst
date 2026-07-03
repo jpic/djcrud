@@ -38,7 +38,7 @@ There is no ``index.html`` in the frontend package. Django renders
 bootstrap HTML and client bundle fill in the rest.
 
 Put the mount node on your view — same pattern as ``icon`` or ``tags`` (see
-:doc:`philosophy`):
+:doc:`../philosophy`):
 
 .. code-block:: python
 

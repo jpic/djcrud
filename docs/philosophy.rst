@@ -56,7 +56,7 @@ Django templates get Jinja-like freedom via ``{% eval %}`` (see
 without bespoke tags for every case.
 
 One permissions framework, every surface
-======================================
+========================================
 
 Permissions **always** go through djcrud's registry — not ad hoc checks in
 templates, views, serializers, or future tool handlers. Register rules once in
