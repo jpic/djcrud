@@ -97,3 +97,38 @@ def test_drf_schema_includes_login_and_bearer_auth(api_client):
     security_schemes = schema.get("components", {}).get("securitySchemes", {})
     assert "BearerAuth" in security_schemes
     assert security_schemes["BearerAuth"]["scheme"] == "bearer"
+
+
+@pytest.mark.django_db
+def test_drf_custom_action_uses_method_name_as_permission_shortcode(
+    client, drf_settings, django_user_model
+):
+    from djcrud_api.models import Token
+    from djcrud_drf.viewsets import action_shortcode
+    from djcrud_example.views_example.models import Article
+
+    assert action_shortcode("publish") == "publish"
+
+    owner = django_user_model.objects.create_user(username="owner", password="x")
+    stranger = django_user_model.objects.create_user(username="stranger", password="x")
+    article = Article.objects.create(
+        title="Draft",
+        published=False,
+        owner=owner,
+    )
+    _, stranger_token = Token.generate(user=stranger, name="api")
+    _, owner_token = Token.generate(user=owner, name="api")
+
+    denied = client.post(
+        f"/api/article/{article.pk}/publish/",
+        HTTP_AUTHORIZATION=f"Bearer {stranger_token}",
+    )
+    assert denied.status_code == 403
+
+    allowed = client.post(
+        f"/api/article/{article.pk}/publish/",
+        HTTP_AUTHORIZATION=f"Bearer {owner_token}",
+    )
+    assert allowed.status_code == 200
+    article.refresh_from_db()
+    assert article.published is True

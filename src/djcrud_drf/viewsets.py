@@ -21,7 +21,8 @@ OBJECT_ACTIONS = frozenset({"retrieve", "update", "partial_update", "destroy"})
 
 
 def action_shortcode(action):
-    return ACTION_SHORTCODES.get(action, "view")
+    """Map DRF action to permission shortcode; custom actions use the method name."""
+    return ACTION_SHORTCODES.get(action, action)
 
 
 class ModelViewSet(PermissionMixin, viewsets.ModelViewSet):
@@ -39,6 +40,10 @@ class ModelViewSet(PermissionMixin, viewsets.ModelViewSet):
         class BuiltRouter(Clonable, Route):
             urlpath = api_path
             model = router_model
+
+            @property
+            def codename(self):
+                return router_model.__name__.lower()
 
             def build(self):
                 return self
