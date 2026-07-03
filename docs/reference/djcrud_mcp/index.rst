@@ -112,7 +112,7 @@ definitions over HTTP (no Django import in the MCP subprocess):
    * - Endpoint
      - Purpose
    * - ``GET /api/mcp/profiles/``
-     - List registered profile keys
+     - ``{"profiles": [...], "default": "<key>"}``
    * - ``GET /api/mcp/profiles/{key}/``
      - Profile JSON (instructions, ``api_prefixes``, meta)
    * - ``GET /api/mcp/viewsets/``
@@ -134,9 +134,10 @@ Required on the Django host: declare a class and register it on
 
    djcrud_mcp.site.register(ItemsMcp)
 
-``server_name``, ``instructions``, and ``info_tool_name`` are derived from the
-profile ``key`` and ViewSet models unless you override them (e.g. custom agent
-guidance for non-CRUD workflows).
+:meth:`~djcrud_mcp.site.McpSite.build` instantiates each registered class and
+resolves ``api_prefixes`` once. ``server_name``, ``instructions``, and
+``info_tool_name`` are ``@property`` defaults from the profile ``key`` and
+ViewSet models unless you set class attributes to override them.
 
 Omit ``viewsets`` / ``models`` on a profile with ``key = "default"`` to expose
 every registered ``ModelViewSet``. Set ``viewsets`` / ``models`` to limit a

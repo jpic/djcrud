@@ -24,8 +24,8 @@ class ArticlesMcp(djcrud_mcp.McpProfile):
 djcrud_mcp.site.register(ArticlesMcp)
 ```
 
-Mount `djcrud_mcp.django.urls` so remote clients can fetch profiles at `GET /api/mcp/profiles/{key}/`.
+`site.build()` instantiates each registered class (like `djcrud_drf.site.build`). `server_name`, `instructions`, and `info_tool_name` are `@property` defaults from the profile key and ViewSets — override class attributes only when you need custom agent guidance.
 
-`server_name`, `instructions`, and `info_tool_name` default from the profile key and ViewSets. Mark one profile with `default = True` (or register only one); clients omit `--registry` to use that host default.
+Mount `djcrud_mcp.django.urls` so remote clients can fetch profiles at `GET /api/mcp/profiles/{key}/`. `GET /api/mcp/profiles/` also returns the host `default` key. Mark one profile with `default = True` (or register only one); clients omit `--registry` to use that default.
 
 CRUD tools come from `GET /api/schema/` filtered by the profile's ViewSets. Non-CRUD endpoints must be DRF routes documented with `@extend_schema`.

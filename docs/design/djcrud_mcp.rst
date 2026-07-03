@@ -134,10 +134,41 @@ locally:
 
    djcrud_mcp.site.register(ItemsMcp)
 
-``server_name``, ``instructions``, and ``info_tool_name`` default from the profile
-``key`` and registered ViewSets — same sane-defaults philosophy as CRUD tool
-names. Override ``instructions`` (and related fields) only for bespoke agent
-workflows.
+Profile build lifecycle
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Same model as HTML routes and DRF ViewSets:
+
+1. **Declare** — class attributes on ``McpProfile`` (``key``, ``viewsets``, optional
+   overrides).
+2. **Register** — ``djcrud_mcp.site.register(ItemsMcp)`` stores the class.
+3. **Build** — ``site.build()`` calls ``ItemsMcp().build()``, resolving ViewSet
+   prefixes once and caching them on the instance.
+4. **Serve** — ``GET /api/mcp/profiles/{key}/`` returns ``profile.to_dict()`` for
+   remote ``djcrud-mcp`` subprocesses.
+
+Computed fields (``@property`` unless overridden on the class):
+
+.. list-table::
+   :header-rows: 1
+   :widths: 30 70
+
+   * - Field
+     - Default rule
+   * - ``server_name``
+     - ``{host-slug}-{key}`` from ``ROOT_URLCONF`` (e.g. ``myapp-items``)
+   * - ``info_tool_name``
+     - ``{primary_model}_registry_info``
+   * - ``instructions``
+     - ``CRUD for {models} via the JSON API.``
+   * - ``api_prefixes``
+     - Derived from registered ViewSets at build time
+   * - ``meta["name"]``
+     - Same as ``server_name``
+
+Mark one profile ``default = True`` (or register only one). ``GET
+/api/mcp/profiles/`` includes a ``default`` key; clients pass ``--registry KEY``
+or omit it to use that default.
 
 Set ``viewsets`` / ``models`` to limit one profile to a subset (e.g. tasks vs
 admin). Omit them on a profile with ``key = "default"`` to expose every

@@ -55,11 +55,14 @@ Every stdio MCP client uses a registered profile; remote clients fetch it from
        key = "articles"
        viewsets = (ArticleViewSet,)
 
-   ``server_name``, ``instructions``, and ``info_tool_name`` default from the
-   profile ``key`` and registered ViewSets (override only when you need custom
-   agent guidance).
-
    djcrud_mcp.site.register(ArticlesMcp)
+
+:data:`djcrud_mcp.site` instantiates each registered class on
+:meth:`~djcrud_mcp.site.McpSite.build` — same pattern as
+:meth:`djcrud_drf.site.build` and HTML :meth:`~djcrud.Router.build`.
+Computed ``server_name``, ``instructions``, and ``info_tool_name`` are
+``@property`` defaults from the profile ``key`` and ViewSets. Override those
+class attributes only for bespoke agent guidance.
 
 Wire host URLs (once per project):
 
