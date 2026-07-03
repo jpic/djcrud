@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>API</title>
+    <link rel="stylesheet" href="{% static 'djcrud_api/swagger-ui.css' %}">
+</head>
+<body>
+    <div id="swagger-ui"
+         data-schema-url="{{ schema_url }}"
+         data-login-url="{{ login_url }}"></div>
+    <script src="{% static 'djcrud_api/swagger-ui-bundle.js' %}"></script>
+    <script src="{% static 'djcrud_api/swagger-ui-standalone-preset.js' %}"></script>
+    <script>
+        const el = document.getElementById('swagger-ui');
+        const loginUrl = el.dataset.loginUrl;
+
+        function authorizeBearer(token) {
+            if (!window.ui || !token) {
+                return;
+            }
+            window.ui.preauthorizeApiKey('BearerAuth', 'Bearer ' + token);
+        }
+
+        window.ui = SwaggerUIBundle({
+            url: el.dataset.schemaUrl,
+            dom_id: '#swagger-ui',
+            deepLinking: true,
+            persistAuthorization: true,
+            presets: [
+                SwaggerUIBundle.presets.apis,
+                SwaggerUIStandalonePreset,
+            ],
+            plugins: [
+                SwaggerUIBundle.plugins.DownloadUrl,
+            ],
+            layout: 'StandaloneLayout',
+            responseInterceptor: (response) => {
+                if (!response.ok || !response.url || !response.url.includes(loginUrl)) {
+                    return response;
+                }
+                try {
+                    const data = JSON.parse(response.text);
+                    authorizeBearer(data.token);
+                } catch (e) {
+                    /* ignore */
+                }
+                return response;
+            },
+        });
+    </script>
+</body>
+</html>

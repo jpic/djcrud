@@ -1,0 +1,1 @@
+"""API login and token routes are registered on :data:`djcrud_drf.router`."""
