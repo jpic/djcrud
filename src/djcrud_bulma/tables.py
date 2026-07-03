@@ -6,5 +6,3 @@ djcrud/_actions_column.html template provided here.
 """
 
 from djcrud.views.tables2 import ActionsColumn
-
-__all__ = ["ActionsColumn"]
