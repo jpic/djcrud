@@ -9,7 +9,6 @@ from django.utils.translation import gettext_lazy as _
 from .log import ADDITION, CHANGE, DELETION, format_logentry_message
 
 from .. import tags
-from ..router import Router as DjcrudRouter
 
 
 class ActionsColumn(django_tables2.Column):
@@ -227,19 +226,7 @@ class Tables2Mixin:
     @functools.cached_property
     def add_actions(self):
         """Whether to add an per-row actions column."""
-        return self._has_tagged_route(tags.OBJECT)
-
-    def _has_tagged_route(self, tag):
-        def walk(r):
-            for v in r.routes:
-                if isinstance(v, DjcrudRouter):
-                    if walk(v):
-                        return True
-                elif tag in getattr(v, "tags", []):
-                    return True
-            return False
-
-        return walk(self.router)
+        return any(self.router._iter_tagged_routes(tags.OBJECT))
 
     @functools.cached_property
     def add_checkbox(self):
@@ -250,7 +237,7 @@ class Tables2Mixin:
         per-row via ``get_tagged_views(..., object=record)``), and carry
         ``data-list-actions`` so the bar can filter actions client-side.
         """
-        return self._has_tagged_route(tags.LIST_ACTION)
+        return any(self.router._iter_tagged_routes(tags.LIST_ACTION))
 
     def sort_url(self, column):
         """URL toggling sort order for *column*."""

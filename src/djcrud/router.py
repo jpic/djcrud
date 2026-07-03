@@ -145,23 +145,21 @@ class Router(Clonable, Route, metaclass=RouterMeta):
 
     def get_tagged_views(self, tag, **kwargs):
         """Return permitted child views whose ``tags`` contain *tag*."""
+        views = []
+        for route in self._iter_tagged_routes(tag):
+            view = type(route)(**kwargs)
+            if view.has_permission():
+                views.append(view)
+        return views
 
-        def process(router):
-            views = []
-            for route in router.routes:
-                if isinstance(route, Router):
-                    views += process(route)
-                    continue
-
-                if tag not in getattr(route, "tags", []):
-                    continue
-
-                view = type(route)(**kwargs)
-                if view.has_permission():
-                    views.append(view)
-            return views
-
-        return process(self)
+    def _iter_tagged_routes(self, tag):
+        """Yield routes tagged with *tag* (recurses into subrouters)."""
+        for route in self.routes:
+            if isinstance(route, Router):
+                yield from route._iter_tagged_routes(tag)
+                continue
+            if tag in getattr(route, "tags", []):
+                yield route
 
     @property
     def root(self):

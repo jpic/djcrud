@@ -7,7 +7,6 @@ from django.views import generic
 
 from ..model import ModelMixin
 from .. import tags
-from ..router import Router as DjcrudRouter
 from .filter import FilterMixin
 from .object import ObjectMixin
 from .pagination import PaginationMixin
@@ -68,17 +67,9 @@ class ListMixin:
         enabled for the current selection. Execution time checks still apply.
         """
         actions = []
-
-        def collect(router):
-            for route in router.routes:
-                if isinstance(route, DjcrudRouter):
-                    collect(route)
-                    continue
-                if tags.LIST_ACTION in getattr(route, "tags", []):
-                    view = type(route)(request=self.request)
-                    actions.append(view)
-
-        collect(self.router)
+        for route in self.router._iter_tagged_routes(tags.LIST_ACTION):
+            view = type(route)(request=self.request)
+            actions.append(view)
         return actions
 
     @property
