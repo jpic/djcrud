@@ -164,7 +164,7 @@ def browser_login(browser, live_server):
         browser.visit(f"{live_server.url}/auth/login/")
         browser.fill("username", username)
         browser.fill("password", password)
-        browser.find_by_css('button[type="submit"]').first.click()
+        browser.find_by_css('form[method="post"] button[type="submit"]').first.click()
         assert browser.is_text_present("Log out", wait_time=5), "Login failed"
 
     return login
