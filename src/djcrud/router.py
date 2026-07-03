@@ -2,6 +2,8 @@ from django.urls import include, path
 
 from .clonable import Clonable
 from .permission import call_with_context
+from .permissions import get_queryset as registry_get_queryset
+from .permissions import has_permission as registry_has_permission
 from .registry import Registry
 from .route import Route
 
@@ -68,47 +70,70 @@ class Router(Clonable, Route, metaclass=RouterMeta):
 
     @property
     def model_router(self):
-        """Nearest ancestor :class:`~djcrud.ModelRouter`, or ``self``."""
+        """Nearest ancestor :class:`~djcrud.ModelRouter`, or ``None``."""
         current = self
         while current is not None:
             if getattr(type(current), "model", None) is not None:
                 return current
             current = getattr(current, "router", None)
-        return self
+        return None
+
+    def _permission_context(
+        self,
+        *,
+        user,
+        model,
+        action,
+        perm,
+        obj=None,
+        router=None,
+        router_codename=None,
+    ):
+        return dict(
+            user=user,
+            model=model,
+            action=action,
+            perm=perm,
+            obj=obj,
+            router=router,
+            router_codename=router_codename,
+        )
 
     def has_permission(
         self, *, user, model, action, perm, obj=None, router=None, router_codename=None
     ):
         """Delegate permission checks to the nearest :class:`~djcrud.ModelRouter`."""
-        return call_with_context(
-            self.model_router.has_permission,
-            dict(
-                user=user,
-                model=model,
-                action=action,
-                perm=perm,
-                obj=obj,
-                router=router,
-                router_codename=router_codename,
-            ),
+        ctx = self._permission_context(
+            user=user,
+            model=model,
+            action=action,
+            perm=perm,
+            obj=obj,
+            router=router,
+            router_codename=router_codename,
         )
+        model_router = self.model_router
+        if model_router is None:
+            return registry_has_permission(**ctx)
+        return call_with_context(model_router.has_permission, ctx)
 
     def get_queryset(
         self, *, user, model, action, perm, obj=None, router=None, router_codename=None
     ):
         """Delegate queryset scoping to the nearest :class:`~djcrud.ModelRouter`."""
-        return call_with_context(
-            self.model_router.get_queryset,
-            dict(
-                user=user,
-                model=model,
-                action=action,
-                perm=perm,
-                obj=obj,
-                router=router,
-                router_codename=router_codename,
-            ),
+        ctx = self._permission_context(
+            user=user,
+            model=model,
+            action=action,
+            perm=perm,
+            obj=obj,
+            router=router,
+            router_codename=router_codename,
         )
+        model_router = self.model_router
+        if model_router is None:
+            return registry_get_queryset(**ctx)
+        return call_with_context(model_router.get_queryset, ctx)
 
     def get_tagged_views(self, tag, **kwargs):
         """Return permitted child views whose ``tags`` contain *tag*."""
