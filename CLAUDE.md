@@ -140,7 +140,7 @@ Views are built from composable mixins providing focused features:
 - **PaginationMixin** - Pagination with django-tables2
 - **ObjectMixin** - Single object views (Detail, Update, Delete)
 - **FormMixin** - Form handling with crispy-forms
-- **ListActionMixin** - Bulk actions on list views
+- **ListActionMixin** - Bulk actions on list views (per-object via data attrs on checkboxes; bar collects configured tags without bare perm checks)
 
 **Key directory:** `src/djcrud/views/`
 

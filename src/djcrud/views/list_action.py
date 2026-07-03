@@ -17,6 +17,12 @@ class ListActionMixin(ModelMixin, FormMixin, ObjectListPermissionMixin):
     shortcode + :meth:`~djcrud.views.action.ActionMixin.has_permission_object`
     per row) are performed against each row in ``self.object_list``.
 
+    The bar itself lists *configured* LIST_ACTION routes (see
+    :attr:`~djcrud.views.list.ListMixin.list_actions`, which walks tagged
+    routes directly with no permission check). Per-object allowance (always
+    checked with a concrete object) is propagated via ``data-list-actions``
+    on checkboxes and filtered client-side.
+
     Attributes:
         tags (list[str]): Must include ``djcrud.tags.LIST_ACTION`` for discovery.
         title (str): Action label in the list action bar.

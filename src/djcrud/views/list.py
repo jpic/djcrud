@@ -7,6 +7,7 @@ from django.views import generic
 
 from ..model import ModelMixin
 from .. import tags
+from ..router import Router as DjcrudRouter
 from .filter import FilterMixin
 from .object import ObjectMixin
 from .pagination import PaginationMixin
@@ -57,12 +58,28 @@ class ListMixin:
 
     @functools.cached_property
     def list_actions(self):
-        """Permitted bulk-action views for the list action bar.
+        """Bulk-action views for the list action bar.
 
-        These are the actions shown in the bar (subject to client-side
-        filtering based on ``data-list-actions`` of the selected rows).
+        These are collected by walking LIST_ACTION-tagged routes (no
+        permission check at all; the bar offers the configured actions).
+        Per-object allowed actions are propagated via ``data-list-actions``
+        attributes on row checkboxes (always with ``object=``); the
+        ``<list-action-bar>`` JS uses those to filter which buttons are
+        enabled for the current selection. Execution time checks still apply.
         """
-        return self.router.get_tagged_views(tags.LIST_ACTION, request=self.request)
+        actions = []
+
+        def collect(router):
+            for route in router.routes:
+                if isinstance(route, DjcrudRouter):
+                    collect(route)
+                    continue
+                if tags.LIST_ACTION in getattr(route, "tags", []):
+                    view = type(route)(request=self.request)
+                    actions.append(view)
+
+        collect(self.router)
+        return actions
 
     @property
     def empty_list_message(self):

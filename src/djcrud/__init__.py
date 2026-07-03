@@ -14,6 +14,7 @@ from .router import Router, model_router_codename
 from .view import View
 from .model import ModelMixin
 from . import views
+from .static import vite_asset
 
 
 class ModelRouter(ModelMixin, Router):

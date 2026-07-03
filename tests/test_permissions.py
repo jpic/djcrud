@@ -93,10 +93,8 @@ def test_action_mixin_object_permission(rf, admin_user):
     other = Item.objects.create(name="other")
 
     class RestrictedUpdate(UpdateView):
-        def has_permission_object(self, obj=None):
-            # obj is the target passed by the clean has_permission_for_target
-            if obj is None:
-                obj = self.object
+        def has_permission_object(self, obj):
+            # obj is the target passed by has_permission_for_target
             return obj.name == "mine"
 
     router = djcrud.ModelRouter.clone(model=Item, routes=[RestrictedUpdate])()
@@ -237,9 +235,7 @@ def test_list_action_custom_has_permission_object_denies_some(rf, admin_user):
         permission_shortcode = "change"
         tags = [djcrud.tags.LIST_ACTION]
 
-        def has_permission_object(self, obj=None):
-            if obj is None:
-                obj = getattr(self, "object", None)
+        def has_permission_object(self, obj):
             # Only allow on category=="a"
             return getattr(obj, "category", None) == "a"
 

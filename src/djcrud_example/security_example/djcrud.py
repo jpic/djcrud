@@ -11,8 +11,6 @@ djcrud.permissions.add_perm(Document, "add", check=authenticated)
 
 # change/delete only your own
 def secured_document_change(user, *, obj, **ctx):
-    if obj is None:
-        return False
     return user.is_superuser or obj.owner_id == user.pk
 
 
@@ -20,8 +18,6 @@ djcrud.permissions.add_perm(Document, "change,delete", check=secured_document_ch
 
 
 def can_publish(user, *, obj, **ctx):
-    if obj is None:
-        return False
     return obj.owner_id == user.pk and not obj.published
 
 

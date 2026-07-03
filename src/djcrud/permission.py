@@ -14,12 +14,25 @@ class PermissionMixin:
     """Shared permission context and checks for views and ViewSets."""
 
     def permission_context(self, obj=None):
+        if obj is None:
+            obj = getattr(self, "object", None)
+        if obj is None:
+            # For list-action views (which use object_list for targets), provide
+            # a representative object for context if available. This ensures
+            # object-dependent permission checks always receive an obj when
+            # the view has a populated selection.
+            try:
+                ol = getattr(self, "object_list", None)
+                if ol:
+                    obj = next(iter(ol))
+            except Exception:
+                pass
         return dict(
             user=self.request.user,
             perm=self.permission_fullcode,
             model=self._permission_model(),
             action=self.permission_shortcode,
-            obj=obj or getattr(self, "object", None),
+            obj=obj,
         )
 
     def get_permission_targets(self):

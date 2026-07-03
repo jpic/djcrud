@@ -42,7 +42,8 @@ class ActionMixin:
     - :class:`ObjectListPermissionMixin` — for views with ``self.object_list``
 
     This gives a uniform, straightforward path without special-casing "no object",
-    private registry lookups, or obj=None in normal permission checks.
+    private registry lookups, or bare (no-object) permission checks for
+    object-scoped actions. Targets are always provided when relevant.
 
     Most users do nothing. Register rules with ``djcrud.permissions.add_perm``
     (or rely on Django permissions). Override :meth:`has_permission_object` only
@@ -74,20 +75,15 @@ class ActionMixin:
                 return False
         return self.has_permission_object(target)
 
-    def has_permission_object(self, obj=None):
+    def has_permission_object(self, obj):
         """Hook for additional per-object denial after registry checks pass.
 
-        If *obj* is None, falls back to self.object (keeps simple overrides
-        that only reference self.object working).
-
-        Return False to deny the action for this target.
+        *obj* is always a concrete target (from get_permission_targets via
+        has_permission_for_target). Return False to deny the action for this
+        target.
 
         Example:
-            def has_permission_object(self, obj=None):
-                if obj is None:
-                    obj = getattr(self, "object", None)
-                return obj and obj.name == "mine"
+            def has_permission_object(self, obj):
+                return obj.name == "mine"
         """
-        if obj is None:
-            obj = getattr(self, "object", None)
         return True

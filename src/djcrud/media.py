@@ -7,7 +7,6 @@ JavaScript in the reference templates. ES modules use
 :class:`~django.forms.widgets.Script` with ``type="module"`` (Django 6+).
 """
 
-from django.forms import Media
 from django.forms.widgets import Script
 
 BULMA_CSS = (

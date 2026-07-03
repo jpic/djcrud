@@ -1,5 +1,3 @@
-from django.apps import apps
-from django.utils.translation import gettext as _
 from django.views import generic
 from django.urls import path
 

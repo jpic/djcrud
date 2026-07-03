@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 import pytest
 from django.urls import reverse
@@ -19,11 +20,17 @@ def test_spa_renders_server_navigation(client, admin_user):
     assert 'href="/item/"' in content
     assert 'up-follow="false"' in content
     assert "hamburger-menu" not in content
-    assert "spa_example/js/app.js" in content
-    app_js = (
+    # The script src uses a content hash produced by Vite + resolved via vite_asset()
+    # Vite hash is not pure hex (e.g. app.BDdKb6Vl.js); accept any chars in the hash segment
+    assert re.search(r"spa_example/js/app\.[^/\"' >]+\.js", content)
+
+    js_dir = (
         Path(__file__).resolve().parents[1]
-        / "src/djcrud_example/spa_example/static/spa_example/js/app.js"
-    ).read_text()
+        / "src/djcrud_example/spa_example/static/spa_example/js"
+    )
+    candidates = sorted(js_dir.glob("app*.js"))
+    assert candidates, "SPA bundle (hashed) not found"
+    app_js = candidates[0].read_text()
     assert "hamburger-menu" in app_js
     assert "navbar-brand" in app_js
 

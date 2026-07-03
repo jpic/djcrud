@@ -50,9 +50,50 @@ and attach your framework:
 
 .. literalinclude:: ../../src/djcrud_example/spa_example/frontend/src/main.js
 
-After ``npm run build``, Vite writes the bundle to
-``spa_example/static/spa_example/js/app.js``. Django serves it via the
-``Script("spa_example/js/app.js", type="module")`` entry in :file:`djcrud.py`.
+After ``npm run build``, Vite writes a content-hashed bundle (e.g.
+``app.9f3c2a1b.js``) together with ``.vite/manifest.json`` under
+``spa_example/static/spa_example/js/``. The ``djcrud.py`` entry uses
+:func:`~djcrud.static.vite_asset` so the logical name stays stable while the
+actual served file name contains the hash for cache busting::
+
+   from djcrud.static import vite_asset
+   ...
+   Script(vite_asset("spa_example/js/app.js"), type="module")
+
+``vite_asset`` falls back to the original path when no manifest is present.
+
+Frontend build configuration
+----------------------------
+
+Configure Vite to emit content-hashed filenames (for cache busting) and the
+manifest consumed by :func:`~djcrud.static.vite_asset`:
+
+.. literalinclude:: ../../src/djcrud_example/spa_example/frontend/vite.config.js
+   :language: js
+
+Key settings:
+
+- ``manifest: true``
+  Emits ``.vite/manifest.json`` (next to the built files) that maps your
+  original entry point to the final hashed filename(s).
+
+- ``entryFileNames`` / ``assetFileNames`` containing ``[hash]``
+  Ensures the output files include a content hash (e.g. ``app.BDdKb6Vl.js``).
+  This is the main mechanism that prevents stale browser caches after
+  redeploys.
+
+- ``outDir``
+  Points the build output directly into a Django static directory (relative
+  to the frontend package). The example uses ``../static/spa_example/js`` so
+  the files are served automatically by ``django.contrib.staticfiles``.
+
+- ``emptyOutDir: true``
+  Cleans the output directory on each build so old hashed files do not
+  accumulate.
+
+The built files (including the manifest) are committed in the tutorial
+repository so ``/spa/`` works without running the frontend build. Re-run
+``npm run build`` only when you change the client-side code.
 
 Authentication
 --------------

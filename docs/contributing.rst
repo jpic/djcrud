@@ -301,10 +301,18 @@ bulk actions in ``<list-action-bar>`` and passes i18n labels via
 ``data-count-label-*`` attributes.
 
 Row checkboxes (``data-pk``) are rendered by ``CheckboxColumn`` only for rows
-where at least one ``list_action`` is permitted. Each checkbox carries
-``data-list-actions="codename1,codename2,..."`` listing the allowed actions for
-that specific row (computed via ``router.get_tagged_views('list_action',
-object=record)``).
+where at least one ``list_action`` is permitted for that row. Each checkbox
+carries ``data-list-actions="codename1,codename2,..."`` listing the allowed
+actions for that specific row (computed via
+``router.get_tagged_views('list_action', object=record)`` — always with an
+object, never bare).
+
+The list action bar buttons are collected from all LIST_ACTION-tagged routes
+(``view.list_actions`` walks tags directly, without any permission check).
+Visibility/enabled state for a selection is driven entirely by the per-object
+``data-list-actions`` (client-side intersection in the JS component). This
+ensures object-scoped permissions are always evaluated against concrete
+objects.
 
 Action links inside the bar receive ``data-codename="..."`` (matching the view
 codename, e.g. ``deleteobjects``). The ``ListActionBar`` JS component
@@ -332,8 +340,8 @@ or bulk) are provided by composing ``ActionMixin`` with
 (for ``self.object_list`` via ``ListActionMixin``). ``has_permission`` loops
 over ``get_permission_targets()`` and calls ``has_permission_for_target(target)``
 which forces context with a real ``obj=`` then the hook
-``has_permission_object(obj=None)``. This replaced the old branching on
-``obj is None`` / private registry calls.
+``has_permission_object(obj)`` (always passed a concrete target). This
+replaced the old branching on ``obj is None`` / private registry calls.
 
 **Templatetags** — :file:`src/djcrud/templatetags/djcrud.py` provides
 ``unpoly_attributes`` and ``html_attributes`` for wiring Unpoly from Python.

@@ -11,7 +11,7 @@ Usage:
     from djcrud.views.generic import ListView, CreateView
 """
 
-from .generic import *
+from .generic import *  # noqa: F403
 from .form import FormView
 from .tables2 import Tables2Mixin
 from .spa import SPAView

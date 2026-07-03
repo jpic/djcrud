@@ -1,5 +1,3 @@
-import djcrud
-
 from .router import Router
 
 

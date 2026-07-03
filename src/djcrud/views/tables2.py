@@ -235,10 +235,14 @@ class Tables2Mixin:
         """Whether to add list-action selection checkboxes.
 
         When true, a ``CheckboxColumn`` is inserted. Checkboxes are only
-        emitted for rows that have at least one allowed list action, and carry
+        emitted for rows that have at least one allowed list action (computed
+        per-row via ``get_tagged_views(..., object=record)``), and carry
         ``data-list-actions`` so the bar can filter actions client-side.
         """
-        return bool(getattr(self, "list_actions", []))
+        for v in self.router.routes:
+            if tags.LIST_ACTION in getattr(v, "tags", []):
+                return True
+        return False
 
     def sort_url(self, column):
         """URL toggling sort order for *column*."""

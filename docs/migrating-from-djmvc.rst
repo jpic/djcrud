@@ -225,10 +225,10 @@ Example — custom object action
    class PublishView(ObjectMixin, ActionMixin, ModelMixin, djmvc.View):
        permission_shortcode = "publish"
 
-       def has_permission_object(self):
+       def has_permission_object(self, obj):
            return (
-               self.object.owner_id == self.request.user.pk
-               and not self.object.published
+               obj.owner_id == self.request.user.pk
+               and not obj.published
            )
 
 **djcrud** — same view class (HTML unchanged), rule in the registry:
