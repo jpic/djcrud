@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from djcrud_mcp import McpProfile, site
-from djcrud_mcp.profiles import RegistryProfile
 
 
 class ArticlesMcp(McpProfile):
@@ -34,16 +33,9 @@ def test_auto_generated_fields_from_api_prefixes():
     assert profile.meta["name"] == profile.server_name
 
 
-def test_registry_profile_round_trip():
-    profile = RegistryProfile(
-        key="demo",
-        server_name="demo",
-        instructions="demo",
-        info_tool_name="demo_info",
-        api_prefixes=("/api/demo/",),
-        meta={"role": "demo"},
-    )
-    restored = RegistryProfile.from_dict(profile.to_dict())
+def test_profile_to_dict_round_trip():
+    profile = ArticlesMcp().build(resolve_viewsets=False)
+    restored = McpProfile.from_dict(profile.to_dict())
     assert restored == profile
 
 

@@ -137,15 +137,18 @@ def test_build_tools_from_schema():
 
 
 def test_build_tools_from_api_prefixes():
-    from djcrud_mcp.profiles import RegistryProfile
+    from djcrud_mcp import McpProfile
     from djcrud_mcp.schema import build_tools_for_profile
 
-    profile = RegistryProfile(
-        key="items",
-        server_name="test",
-        instructions="test",
-        info_tool_name="info",
-        api_prefixes=("/api/product/",),
+    profile = McpProfile.from_dict(
+        {
+            "key": "items",
+            "server_name": "test",
+            "instructions": "test",
+            "info_tool_name": "info",
+            "api_prefixes": ["/api/product/"],
+            "meta": {},
+        }
     )
     tools = build_tools_for_profile(SAMPLE_SCHEMA, profile)
     names = {tool["name"] for tool in tools}
@@ -156,15 +159,14 @@ def test_build_tools_from_api_prefixes():
 def test_registry_profile_filters_viewsets():
     from djcrud_example.drf_example.djcrud import ProductViewSet
     from djcrud_example.drf_example.article_viewset import ArticleViewSet
-    from djcrud_mcp.profiles import RegistryProfile, resolve_viewsets
+    from djcrud_mcp import McpProfile
+    from djcrud_mcp.profiles import resolve_viewsets
 
-    profile = RegistryProfile(
-        key="products",
-        server_name="test-products",
-        viewsets=(ProductViewSet,),
-        instructions="Products only.",
-        info_tool_name="product_registry_info",
-    )
+    class ProductsOnlyMcp(McpProfile):
+        key = "products"
+        viewsets = (ProductViewSet,)
+
+    profile = ProductsOnlyMcp()
     resolved = resolve_viewsets(profile, all_viewsets=[ProductViewSet, ArticleViewSet])
     assert resolved == [ProductViewSet]
 
@@ -228,15 +230,18 @@ def test_mcp_tool_calls_api(api_client, drf_settings, django_user_model):
 
 
 def test_custom_action_from_schema():
-    from djcrud_mcp.profiles import RegistryProfile
+    from djcrud_mcp import McpProfile
     from djcrud_mcp.server import create_mcp_server
 
-    profile = RegistryProfile(
-        key="custom",
-        server_name="test-custom",
-        instructions="Custom tools.",
-        info_tool_name="custom_registry_info",
-        api_prefixes=("/api/product/", "/api/article/"),
+    profile = McpProfile.from_dict(
+        {
+            "key": "custom",
+            "server_name": "test-custom",
+            "instructions": "Custom tools.",
+            "info_tool_name": "custom_registry_info",
+            "api_prefixes": ["/api/product/", "/api/article/"],
+            "meta": {},
+        }
     )
 
     with patch("djcrud_mcp.server.fetch_schema", return_value=SAMPLE_SCHEMA):

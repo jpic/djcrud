@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .profiles import McpProfile, RegistryProfile
+    from .profiles import McpProfile
 
 
 class McpSite:
@@ -11,33 +11,33 @@ class McpSite:
 
     def __init__(self) -> None:
         self._profile_classes: list[type[McpProfile]] = []
-        self._local_profiles: dict[str, RegistryProfile] = {}
-        self._built: dict[str, RegistryProfile] | None = None
+        self._local_profiles: dict[str, McpProfile] = {}
+        self._built: dict[str, McpProfile] | None = None
 
     def register(self, profile_class: type[McpProfile]) -> None:
         if profile_class not in self._profile_classes:
             self._profile_classes.append(profile_class)
 
-    def register_profile(self, profile: RegistryProfile) -> None:
-        """Attach a built profile (tests or legacy client-side registration)."""
+    def register_profile(self, profile: McpProfile) -> None:
+        """Attach a built profile (tests)."""
+        if not profile._built:
+            profile.build(resolve_viewsets=False)
         self._local_profiles[profile.key] = profile
         self._built = None
 
-    def build(self, *, resolve_viewsets: bool = True) -> dict[str, RegistryProfile]:
-        from .profiles import DefaultMcpProfile
+    def build(self, *, resolve_viewsets: bool = True) -> dict[str, McpProfile]:
+        from .profiles import DEFAULT_PROFILE_KEY, DefaultMcpProfile
 
         if self._built is not None:
             return self._built
 
         profiles = dict(self._local_profiles)
         for profile_class in self._profile_classes:
-            profile = profile_class.build_registry_profile(
-                resolve_viewsets=resolve_viewsets
-            )
+            profile = profile_class().build(resolve_viewsets=resolve_viewsets)
             profiles[profile.key] = profile
 
-        if not self._profile_classes and DefaultMcpProfile.key not in profiles:
-            profiles[DefaultMcpProfile.key] = DefaultMcpProfile.build_registry_profile(
+        if not self._profile_classes and DEFAULT_PROFILE_KEY not in profiles:
+            profiles[DEFAULT_PROFILE_KEY] = DefaultMcpProfile().build(
                 resolve_viewsets=resolve_viewsets
             )
 
@@ -54,15 +54,10 @@ class McpSite:
         if not profiles:
             return None
 
-        flagged = [
-            profile_class.key.strip().lower()
-            for profile_class in self._profile_classes
-            if getattr(profile_class, "default", False)
-        ]
+        flagged = [profile.key.strip().lower() for profile in profiles.values() if profile.default]
         if len(flagged) > 1:
             raise ValueError(
-                "Multiple MCP profiles marked default: "
-                + ", ".join(sorted(flagged))
+                "Multiple MCP profiles marked default: " + ", ".join(sorted(flagged))
             )
         if len(flagged) == 1:
             return flagged[0]
@@ -77,7 +72,7 @@ class McpSite:
 
     def get_profile(
         self, key: str | None = None, *, resolve_viewsets: bool = True
-    ) -> RegistryProfile:
+    ) -> McpProfile:
         if key is None or not str(key).strip():
             registry_key = self.default_key(resolve_viewsets=resolve_viewsets)
             if registry_key is None:

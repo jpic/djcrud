@@ -166,9 +166,9 @@ for local dev. See :doc:`../djcrud_api/index`.
 Public API
 ==========
 
-* :data:`djcrud_mcp.site` — ``register(McpProfile)``, ``get_profile(key)``
-* :class:`~djcrud_mcp.McpProfile` — declarative profile on the Django host
-* :class:`~djcrud_mcp.RegistryProfile` — built profile (serialization / fetch)
+* :data:`djcrud_mcp.site` — ``register(McpProfile)``, ``build()``, ``get_profile(key)``
+* :class:`~djcrud_mcp.McpProfile` — declare on the host; built on ``site.build()``;
+  ``from_dict()`` for remote fetch
 * ``create_mcp_server(...)``, ``fetch_schema(...)``, ``run_stdio()``
 * ``discover_viewsets()`` — host-only ViewSet introspection
 * ``CrudApi``, ``login()``

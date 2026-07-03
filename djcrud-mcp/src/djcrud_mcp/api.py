@@ -129,13 +129,13 @@ def resolve_registry_key(*, base_url: str, explicit: str | None = None) -> str:
 
 
 def fetch_profile(*, base_url: str, key: str):
-    from .profiles import RegistryProfile
+    from .profiles import McpProfile
 
     normalized = key.strip().lower()
     payload = CrudApi(base_url=base_url, token="").fetch_json(
         f"/api/mcp/profiles/{normalized}/"
     )
-    return RegistryProfile.from_dict(payload)
+    return McpProfile.from_dict(payload)
 
 
 def fetch_viewsets(*, base_url: str) -> list[dict[str, str]]:

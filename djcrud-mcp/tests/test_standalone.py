@@ -49,15 +49,18 @@ assert not [name for name in sys.modules if name.startswith("django")]
 
 
 def test_build_tools_from_api_prefixes():
-    from djcrud_mcp.profiles import RegistryProfile
+    from djcrud_mcp import McpProfile
     from djcrud_mcp.schema import build_tools_for_profile
 
-    profile = RegistryProfile(
-        key="items",
-        server_name="test",
-        instructions="test",
-        info_tool_name="info",
-        api_prefixes=("/api/product/",),
+    profile = McpProfile.from_dict(
+        {
+            "key": "items",
+            "server_name": "test",
+            "instructions": "test",
+            "info_tool_name": "info",
+            "api_prefixes": ["/api/product/"],
+            "meta": {},
+        }
     )
     tools = build_tools_for_profile(SAMPLE_SCHEMA, profile)
     names = {tool["name"] for tool in tools}
@@ -65,15 +68,18 @@ def test_build_tools_from_api_prefixes():
 
 
 def test_create_mcp_server_with_api_prefixes():
-    from djcrud_mcp.profiles import RegistryProfile
+    from djcrud_mcp import McpProfile
     from djcrud_mcp.server import create_mcp_server
 
-    profile = RegistryProfile(
-        key="custom",
-        server_name="test-custom",
-        instructions="Custom tools.",
-        info_tool_name="custom_registry_info",
-        api_prefixes=("/api/product/",),
+    profile = McpProfile.from_dict(
+        {
+            "key": "custom",
+            "server_name": "test-custom",
+            "instructions": "Custom tools.",
+            "info_tool_name": "custom_registry_info",
+            "api_prefixes": ["/api/product/"],
+            "meta": {},
+        }
     )
 
     with patch("djcrud_mcp.server.fetch_schema", return_value=SAMPLE_SCHEMA):
@@ -89,14 +95,18 @@ def test_create_mcp_server_with_api_prefixes():
 
 
 def test_profile_meta_uses_api_prefixes():
-    from djcrud_mcp.profiles import RegistryProfile, profile_meta
+    from djcrud_mcp import McpProfile
+    from djcrud_mcp.profiles import profile_meta
 
-    profile = RegistryProfile(
-        key="items",
-        server_name="test",
-        instructions="test",
-        info_tool_name="info",
-        api_prefixes=("/api/product/",),
+    profile = McpProfile.from_dict(
+        {
+            "key": "items",
+            "server_name": "test",
+            "instructions": "test",
+            "info_tool_name": "info",
+            "api_prefixes": ["/api/product/"],
+            "meta": {},
+        }
     )
     meta = profile_meta(profile)
     assert meta["api_prefixes"] == ["/api/product/"]

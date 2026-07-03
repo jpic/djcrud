@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .profiles import RegistryProfile
+from .profiles import McpProfile
 from .tools import build_tool_definition, infer_action
 from .viewsets import api_path_for, model_name_for
 
@@ -63,7 +63,7 @@ def build_tools_from_schema(
 
 def prefix_map_from_profile(profile) -> dict[str, str]:
     """Build ``{model_name: api_prefix}`` without importing Django ViewSets."""
-    if isinstance(profile, RegistryProfile) and profile.api_prefixes:
+    if isinstance(profile, McpProfile) and profile.api_prefixes:
         result = {}
         for prefix in profile.api_prefixes:
             model_name = prefix.rstrip("/").split("/")[-1]
@@ -73,7 +73,7 @@ def prefix_map_from_profile(profile) -> dict[str, str]:
 
     prefixes: dict[str, str] = {}
     viewsets = []
-    if isinstance(profile, RegistryProfile):
+    if isinstance(profile, McpProfile):
         from .profiles import resolve_viewsets
 
         try:
@@ -102,7 +102,7 @@ def build_tools_for_profile(
 
 def all_tools_for_profile(
     schema: dict[str, Any],
-    profile: RegistryProfile,
+    profile: McpProfile,
     *,
     viewsets=None,
 ) -> list[dict[str, Any]]:

@@ -173,7 +173,7 @@ Package layout
 
    djcrud-mcp/src/djcrud_mcp/
      site.py        # McpSite — register(McpProfile), build profiles
-     profiles.py    # McpProfile, RegistryProfile
+     profiles.py    # McpProfile (instances built on site.build())
      django/        # GET /api/mcp/profiles/ (host only)
      viewsets.py    # discover registered ModelViewSets, api_path_for(model)
      schema.py      # filter schema paths by profile prefixes

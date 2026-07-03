@@ -1,13 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Self
 
 DEFAULT_PROFILE_KEY = "default"
-
-
-def _is_auto(value: str) -> bool:
-    return not str(value).strip()
 
 
 def _host_slug() -> str | None:
@@ -53,60 +48,133 @@ def _format_resource_list(labels: list[str]) -> str:
     return ", ".join(labels[:-1]) + f", and {labels[-1]}"
 
 
-def _primary_model_slug(
-    profile_class: type[McpProfile], *, viewsets: list
-) -> str | None:
-    if profile_class.viewsets:
-        from .viewsets import model_name_for
+class McpProfile:
+    """Declare an MCP stdio server surface; register the class on :data:`djcrud_mcp.site`."""
 
-        return model_name_for(profile_class.viewsets[0])
-    if viewsets:
-        from .viewsets import model_name_for
-
-        return model_name_for(viewsets[0])
-    if profile_class.models:
-        return str(profile_class.models[0]._meta.model_name)
-    resource_names = _resource_names_from_api_prefixes(profile_class.api_prefixes)
-    return resource_names[0] if resource_names else None
-
-
-def _default_server_name(profile_class: type[McpProfile]) -> str:
-    key_slug = profile_class.key.replace("_", "-")
-    if profile_class.key == DEFAULT_PROFILE_KEY:
-        return _host_slug() or "djcrud"
-    host = _host_slug()
-    if host:
-        return f"{host}-{key_slug}"
-    return key_slug
-
-
-def _default_info_tool_name(
-    profile_class: type[McpProfile], *, primary_model: str | None
-) -> str:
-    if profile_class.key == DEFAULT_PROFILE_KEY and not primary_model:
-        return "registry_info"
-    slug = primary_model or profile_class.key
-    return f"{slug}_registry_info"
-
-
-def _default_instructions(
-    profile_class: type[McpProfile], *, model_labels: list[str]
-) -> str:
-    if profile_class.key == DEFAULT_PROFILE_KEY and not model_labels:
-        return "CRUD tools for registered djcrud API ViewSets."
-    return f"CRUD for {_format_resource_list(model_labels)} via the JSON API."
-
-
-@dataclass(frozen=True)
-class RegistryProfile:
-    key: str
-    server_name: str
-    instructions: str
-    info_tool_name: str
+    key: str = DEFAULT_PROFILE_KEY
+    default: bool = False
     viewsets: tuple = ()
     models: tuple = ()
-    api_prefixes: tuple[str, ...] = ()
-    meta: dict[str, Any] = field(default_factory=dict)
+    api_prefixes: tuple[str, ...] | None = None
+    server_name: str | None = None
+    instructions: str | None = None
+    info_tool_name: str | None = None
+    meta: dict[str, Any] | None = None
+
+    def __init__(self) -> None:
+        self._built = False
+        self._remote = False
+        self._resolved_viewsets: list = []
+        self._cached_api_prefixes: tuple[str, ...] = ()
+
+    def build(self, *, resolve_viewsets: bool = True) -> Self:
+        if self._built:
+            return self
+
+        declared_prefixes = type(self).__dict__.get("api_prefixes")
+        if declared_prefixes is not None:
+            self._cached_api_prefixes = tuple(declared_prefixes)
+            self._resolved_viewsets = list(self.viewsets)
+        elif resolve_viewsets and (self.viewsets or self.models):
+            try:
+                self._resolved_viewsets = resolve_viewsets(self)
+                from .viewsets import api_path_for
+
+                self._cached_api_prefixes = tuple(
+                    api_path_for(viewset) for viewset in self._resolved_viewsets
+                )
+            except Exception:
+                self._resolved_viewsets = list(self.viewsets)
+                self._cached_api_prefixes = ()
+        elif (
+            resolve_viewsets
+            and self.key == DEFAULT_PROFILE_KEY
+            and not self.viewsets
+            and not self.models
+        ):
+            try:
+                from .viewsets import api_path_for, discover_viewsets
+
+                self._resolved_viewsets = discover_viewsets()
+                self._cached_api_prefixes = tuple(
+                    api_path_for(viewset) for viewset in self._resolved_viewsets
+                )
+            except Exception:
+                self._resolved_viewsets = []
+                self._cached_api_prefixes = ()
+        else:
+            self._resolved_viewsets = list(self.viewsets)
+            self._cached_api_prefixes = ()
+
+        self._built = True
+        return self
+
+    def _class_override(self, name: str) -> Any:
+        if name in self.__dict__:
+            return self.__dict__[name]
+        return type(self).__dict__.get(name)
+
+    @property
+    def resolved_viewsets(self) -> list:
+        return list(self._resolved_viewsets)
+
+    @property
+    def api_prefixes(self) -> tuple[str, ...]:
+        return self._cached_api_prefixes
+
+    @property
+    def server_name(self) -> str:
+        if self._remote:
+            return self._server_name_value
+        override = self._class_override("server_name")
+        if override is not None and str(override).strip():
+            return str(override).strip()
+        key_slug = self.key.replace("_", "-")
+        if self.key == DEFAULT_PROFILE_KEY:
+            return _host_slug() or "djcrud"
+        host = _host_slug()
+        if host:
+            return f"{host}-{key_slug}"
+        return key_slug
+
+    @property
+    def instructions(self) -> str:
+        if self._remote:
+            return self._instructions_value
+        override = self._class_override("instructions")
+        if override is not None and str(override).strip():
+            return str(override).strip()
+        labels = _model_labels(
+            viewsets=self._resolved_viewsets,
+            models=tuple(self.models),
+        )
+        if not labels and self._cached_api_prefixes:
+            labels = _resource_names_from_api_prefixes(self._cached_api_prefixes)
+        if self.key == DEFAULT_PROFILE_KEY and not labels:
+            return "CRUD tools for registered djcrud API ViewSets."
+        return f"CRUD for {_format_resource_list(labels)} via the JSON API."
+
+    @property
+    def info_tool_name(self) -> str:
+        if self._remote:
+            return self._info_tool_name_value
+        override = self._class_override("info_tool_name")
+        if override is not None and str(override).strip():
+            return str(override).strip()
+        primary = _primary_model_slug(self)
+        if self.key == DEFAULT_PROFILE_KEY and not primary:
+            return "registry_info"
+        slug = primary or self.key
+        return f"{slug}_registry_info"
+
+    @property
+    def meta(self) -> dict[str, Any]:
+        if self._remote:
+            return dict(self._meta_value)
+        declared = self._class_override("meta")
+        result = dict(declared) if isinstance(declared, dict) else {}
+        result.setdefault("name", self.server_name)
+        return result
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -119,99 +187,41 @@ class RegistryProfile:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> RegistryProfile:
-        return cls(
-            key=str(payload["key"]),
-            server_name=str(payload["server_name"]),
-            instructions=str(payload["instructions"]),
-            info_tool_name=str(payload["info_tool_name"]),
-            api_prefixes=tuple(payload.get("api_prefixes", ())),
-            meta=dict(payload.get("meta", {})),
-        )
+    def from_dict(cls, payload: dict[str, Any]) -> McpProfile:
+        profile = object.__new__(cls)
+        profile._built = True
+        profile._remote = True
+        profile.key = str(payload["key"])
+        profile.default = False
+        profile.viewsets = ()
+        profile.models = ()
+        profile._resolved_viewsets = []
+        profile._server_name_value = str(payload["server_name"])
+        profile._instructions_value = str(payload["instructions"])
+        profile._info_tool_name_value = str(payload["info_tool_name"])
+        profile._cached_api_prefixes = tuple(payload.get("api_prefixes", ()))
+        profile._meta_value = dict(payload.get("meta", {}))
+        return profile
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, McpProfile):
+            return NotImplemented
+        return self.to_dict() == other.to_dict()
 
 
-class McpProfile:
-    """Declare an MCP stdio server surface (register on :data:`djcrud_mcp.site`)."""
+def _primary_model_slug(profile: McpProfile) -> str | None:
+    if profile.viewsets:
+        from .viewsets import model_name_for
 
-    key: str = DEFAULT_PROFILE_KEY
-    default: bool = False
-    server_name: str = ""
-    instructions: str = ""
-    info_tool_name: str = ""
-    viewsets: tuple = ()
-    models: tuple = ()
-    api_prefixes: tuple[str, ...] = ()
-    meta: dict[str, Any] = {}
+        return model_name_for(profile.viewsets[0])
+    if profile._resolved_viewsets:
+        from .viewsets import model_name_for
 
-    @classmethod
-    def build_registry_profile(
-        cls, *, resolve_viewsets: bool = True
-    ) -> RegistryProfile:
-        introspect = resolve_viewsets
-        api_prefixes = tuple(cls.api_prefixes)
-        if not api_prefixes and introspect and (cls.viewsets or cls.models):
-            api_prefixes = _api_prefixes_for_viewsets(cls)
-        elif (
-            not api_prefixes
-            and introspect
-            and cls.key == DEFAULT_PROFILE_KEY
-            and not cls.viewsets
-            and not cls.models
-        ):
-            api_prefixes = _api_prefixes_for_all_viewsets()
-
-        resolved_viewsets: list = []
-        if introspect and (cls.viewsets or cls.models):
-            try:
-                resolved_viewsets = resolve_viewsets(
-                    RegistryProfile(
-                        key=cls.key,
-                        server_name="",
-                        instructions="",
-                        info_tool_name="",
-                        viewsets=tuple(cls.viewsets),
-                        models=tuple(cls.models),
-                    )
-                )
-            except Exception:
-                resolved_viewsets = list(cls.viewsets)
-        elif cls.viewsets:
-            resolved_viewsets = list(cls.viewsets)
-
-        model_labels = _model_labels(viewsets=resolved_viewsets, models=tuple(cls.models))
-        if not model_labels and api_prefixes:
-            model_labels = _resource_names_from_api_prefixes(api_prefixes)
-
-        primary_model = _primary_model_slug(cls, viewsets=resolved_viewsets)
-        server_name = (
-            cls.server_name.strip()
-            if not _is_auto(cls.server_name)
-            else _default_server_name(cls)
-        )
-        instructions = (
-            cls.instructions.strip()
-            if not _is_auto(cls.instructions)
-            else _default_instructions(cls, model_labels=model_labels)
-        )
-        info_tool_name = (
-            cls.info_tool_name.strip()
-            if not _is_auto(cls.info_tool_name)
-            else _default_info_tool_name(cls, primary_model=primary_model)
-        )
-
-        meta = dict(cls.meta)
-        meta.setdefault("name", server_name)
-
-        return RegistryProfile(
-            key=cls.key,
-            server_name=server_name,
-            instructions=instructions,
-            info_tool_name=info_tool_name,
-            viewsets=tuple(cls.viewsets),
-            models=tuple(cls.models),
-            api_prefixes=api_prefixes,
-            meta=meta,
-        )
+        return model_name_for(profile._resolved_viewsets[0])
+    if profile.models:
+        return str(profile.models[0]._meta.model_name)
+    resource_names = _resource_names_from_api_prefixes(profile._cached_api_prefixes)
+    return resource_names[0] if resource_names else None
 
 
 class DefaultMcpProfile(McpProfile):
@@ -221,28 +231,7 @@ class DefaultMcpProfile(McpProfile):
     info_tool_name = "registry_info"
 
 
-def _api_prefixes_for_viewsets(profile_class: type[McpProfile]) -> tuple[str, ...]:
-    from .viewsets import api_path_for, discover_viewsets
-
-    probe = RegistryProfile(
-        key=profile_class.key,
-        server_name=profile_class.server_name,
-        instructions=profile_class.instructions,
-        info_tool_name=profile_class.info_tool_name,
-        viewsets=tuple(profile_class.viewsets),
-        models=tuple(profile_class.models),
-    )
-    viewsets = resolve_viewsets(probe, all_viewsets=discover_viewsets())
-    return tuple(api_path_for(viewset) for viewset in viewsets)
-
-
-def _api_prefixes_for_all_viewsets() -> tuple[str, ...]:
-    from .viewsets import api_path_for, discover_viewsets
-
-    return tuple(api_path_for(viewset) for viewset in discover_viewsets())
-
-
-def register_profile(profile: RegistryProfile) -> None:
+def register_profile(profile: McpProfile) -> None:
     from .site import site
 
     site.register_profile(profile)
@@ -253,7 +242,7 @@ def get_profile(
     *,
     base_url: str | None = None,
     resolve_viewsets: bool = True,
-) -> RegistryProfile:
+) -> McpProfile:
     if base_url:
         from .api import fetch_profile, resolve_registry_key
 
@@ -268,7 +257,10 @@ def get_profile(
     return site.get_profile(key, resolve_viewsets=resolve_viewsets)
 
 
-def resolve_viewsets(profile: RegistryProfile, *, all_viewsets=None) -> list:
+def resolve_viewsets(profile: McpProfile, *, all_viewsets=None) -> list:
+    if profile._built and profile._resolved_viewsets:
+        return list(profile._resolved_viewsets)
+
     from .viewsets import discover_viewsets
 
     all_viewsets = list(all_viewsets if all_viewsets is not None else discover_viewsets())
@@ -281,13 +273,12 @@ def resolve_viewsets(profile: RegistryProfile, *, all_viewsets=None) -> list:
     return all_viewsets
 
 
-def profile_meta(profile: RegistryProfile, *, viewsets: list | None = None) -> dict[str, Any]:
+def profile_meta(profile: McpProfile, *, viewsets: list | None = None) -> dict[str, Any]:
     meta = dict(profile.meta)
-    meta.setdefault("name", profile.server_name)
     if viewsets:
         from .viewsets import model_name_for
 
         meta["viewsets"] = [model_name_for(viewset) for viewset in viewsets]
-    elif profile.api_prefixes:
-        meta["api_prefixes"] = list(profile.api_prefixes)
+    elif profile._cached_api_prefixes:
+        meta["api_prefixes"] = list(profile._cached_api_prefixes)
     return meta

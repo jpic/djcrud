@@ -7,7 +7,7 @@ from mcp.server.fastmcp import FastMCP
 
 from .api import CrudApi
 from .config import get_base_url, get_profile_from_env, get_registry_key, get_token
-from .profiles import RegistryProfile, get_profile, profile_meta
+from .profiles import McpProfile, get_profile, profile_meta, resolve_viewsets
 from .schema import all_tools_for_profile, build_tools_for_profile
 from .tools import render_path, split_arguments
 
@@ -25,17 +25,11 @@ def _load_profile(key: str, *, base_url: str):
         return get_profile(key)
 
 
-def _resolve_viewsets(profile: RegistryProfile) -> list:
-    if profile.api_prefixes:
-        return []
-    return []
-
-
 def create_mcp_server(
     *,
     base_url: str | None = None,
     token: str | None = None,
-    profile: RegistryProfile | str | None = None,
+    profile: McpProfile | str | None = None,
     registry: str | None = None,
     extra_headers: dict[str, str] | None = None,
 ) -> FastMCP:
@@ -48,7 +42,7 @@ def create_mcp_server(
     if isinstance(profile, str) or profile is None:
         profile = _load_profile(registry_key, base_url=base_url)
     token = token if token is not None else get_token()
-    viewsets = _resolve_viewsets(profile)
+    viewsets = resolve_viewsets(profile) if not profile.api_prefixes else []
     schema = fetch_schema(base_url=base_url)
     api = CrudApi(base_url=base_url, token=token, extra_headers=extra_headers)
     mcp = FastMCP(profile.server_name, instructions=profile.instructions)
