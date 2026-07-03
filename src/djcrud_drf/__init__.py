@@ -113,8 +113,9 @@ class DrfSite:
         self.build()
         patterns = []
         patterns += self.login_urlpatterns()
-        router.build()
-        for route in router.routes:
+        login_router = get_router()
+        login_router.build()
+        for route in login_router.routes:
             patterns += route.urlpatterns
         patterns += api.urlpatterns
         patterns += self.schema_urlpatterns()
@@ -132,9 +133,25 @@ def _make_api_router():
     return LoginRouter()
 
 
+_router = None
+
+
+def get_router():
+    """Return the login API router, creating it after Django apps are ready."""
+    global _router
+    if _router is None:
+        _router = _make_api_router()
+    return _router
+
+
+class _LazyRouterProxy:
+    def __getattr__(self, name):
+        return getattr(get_router(), name)
+
+
 site = DrfSite()
 api = ApiRouter()
-router = _make_api_router()
+router = _LazyRouterProxy()
 
 __all__ = [
     "ApiRouter",
