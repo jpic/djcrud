@@ -14,3 +14,30 @@ def test_eval():
     context = Context(dict(foo=Foo(), var="2"))
     output = template.render(context)
     assert output.strip() == "test-2-some-kwarg-other-2"
+
+
+def test_eval_missing_path_returns_none():
+    template = Template(
+        """
+    {% load djcrud %}
+    {% eval view.missing_method as result %}
+    {{ result|default:"empty" }}
+    """
+    )
+    context = Context({"view": object()})
+    assert template.render(context).strip() == "empty"
+
+
+def test_eval_non_callable_returns_value():
+    template = Template(
+        """
+    {% load djcrud %}
+    {% eval view.label as result %}
+    {{ result }}
+    """
+    )
+
+    class View:
+        label = "heading"
+
+    assert template.render(Context({"view": View()})).strip() == "heading"

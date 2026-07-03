@@ -22,6 +22,7 @@ from django.utils.safestring import mark_safe
 register = template.Library()
 
 SAFE_ATTR_NAME = re.compile(r"^[a-zA-Z][\w-]*$")
+_MISSING = object()
 
 
 @register.filter
@@ -162,12 +163,17 @@ class EvalNode(template.Node):
             key: val.resolve(context) for key, val in self.kwargs.items()
         }
 
-        try:
-            result = callable_obj(*resolved_args, **resolved_kwargs)
-        except Exception:
-            if context.template.engine.debug:
-                raise
+        if callable_obj is _MISSING:
             result = None
+        elif callable(callable_obj):
+            try:
+                result = callable_obj(*resolved_args, **resolved_kwargs)
+            except Exception:
+                if context.template.engine.debug:
+                    raise
+                result = None
+        else:
+            result = callable_obj
 
         context[self.var_name] = result
 
@@ -188,7 +194,7 @@ class EvalNode(template.Node):
                     try:
                         current = current[int(part)]
                     except (ValueError, KeyError, TypeError, IndexError):
-                        return ""
+                        return _MISSING
 
             if callable(current) and i < len(parts) - 1:
                 try:

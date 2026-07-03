@@ -132,3 +132,4 @@ def test_pages_include_site_search_widget(admin_client, admin_user):
     assert reverse("site:autocomplete") in content
     assert "djcrud-site-search-wrap" in content
     assert 'slot="input"' in content
+    assert "UNDEFINED" not in content
