@@ -27,4 +27,6 @@ def get_registry_key() -> str:
 
 
 def get_profile_from_env():
-    return get_profile(get_registry_key())
+    from .server import _load_profile
+
+    return _load_profile(get_registry_key(), base_url=get_base_url())

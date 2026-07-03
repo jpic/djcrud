@@ -84,14 +84,14 @@ def test_tool_name():
 
 
 def test_api_path_for_viewset():
-    from djcrud_example.drf_example.djcrud_drf import ProductViewSet
+    from djcrud_example.drf_example.djcrud import ProductViewSet
     from djcrud_mcp.viewsets import api_path_for
 
     assert api_path_for(ProductViewSet) == "/api/product/"
 
 
 def test_discover_viewsets_includes_product(drf_settings):
-    from djcrud_example.drf_example.djcrud_drf import ProductViewSet
+    from djcrud_example.drf_example.djcrud import ProductViewSet
     from djcrud_mcp.viewsets import discover_viewsets
 
     viewsets = discover_viewsets()
@@ -99,8 +99,8 @@ def test_discover_viewsets_includes_product(drf_settings):
 
 
 def test_filter_paths_by_registered_viewsets():
-    from djcrud_example.drf_example.djcrud_drf import ProductViewSet
-    from djcrud_example.views_example.djcrud_drf import ArticleViewSet
+    from djcrud_example.drf_example.djcrud import ProductViewSet
+    from djcrud_example.drf_example.article_viewset import ArticleViewSet
     from djcrud_mcp.schema import filter_paths_by_viewsets
 
     paths = filter_paths_by_viewsets(
@@ -114,8 +114,8 @@ def test_filter_paths_by_registered_viewsets():
 
 
 def test_build_tools_from_schema():
-    from djcrud_example.drf_example.djcrud_drf import ProductViewSet
-    from djcrud_example.views_example.djcrud_drf import ArticleViewSet
+    from djcrud_example.drf_example.djcrud import ProductViewSet
+    from djcrud_example.drf_example.article_viewset import ArticleViewSet
     from djcrud_mcp.schema import build_tools_from_schema
 
     tools = build_tools_from_schema(
@@ -154,8 +154,8 @@ def test_build_tools_from_api_prefixes():
 
 
 def test_registry_profile_filters_viewsets():
-    from djcrud_example.drf_example.djcrud_drf import ProductViewSet
-    from djcrud_example.views_example.djcrud_drf import ArticleViewSet
+    from djcrud_example.drf_example.djcrud import ProductViewSet
+    from djcrud_example.drf_example.article_viewset import ArticleViewSet
     from djcrud_mcp.profiles import RegistryProfile, resolve_viewsets
 
     profile = RegistryProfile(
@@ -227,8 +227,7 @@ def test_mcp_tool_calls_api(api_client, drf_settings, django_user_model):
     assert payload["name"] == "widget"
 
 
-def test_extra_tool_registered():
-    from djcrud_mcp.extras import ExtraTool
+def test_custom_action_from_schema():
     from djcrud_mcp.profiles import RegistryProfile
     from djcrud_mcp.server import create_mcp_server
 
@@ -237,22 +236,15 @@ def test_extra_tool_registered():
         server_name="test-custom",
         instructions="Custom tools.",
         info_tool_name="custom_registry_info",
-        extra_tools=(
-            ExtraTool(
-                name="ping",
-                method="get",
-                path="/api/ping/",
-                description="Health ping",
-            ),
-        ),
+        api_prefixes=("/api/product/", "/api/article/"),
     )
 
-    with patch("djcrud_mcp.server.fetch_schema", return_value={"paths": {}}):
+    with patch("djcrud_mcp.server.fetch_schema", return_value=SAMPLE_SCHEMA):
         mcp = create_mcp_server(
             base_url="http://testserver",
             token="tok",
             profile=profile,
         )
 
-    assert "ping" in mcp._tool_manager._tools
+    assert "article_publish" in mcp._tool_manager._tools
     assert "custom_registry_info" in mcp._tool_manager._tools

@@ -77,3 +77,46 @@ class CrudApi:
             )
             response.raise_for_status()
             return response.json()
+
+    def fetch_json(self, path: str) -> Any:
+        with httpx.Client(timeout=self.timeout, follow_redirects=True) as client:
+            response = client.get(
+                f"{self.base_url}{path}",
+                headers={"Accept": "application/json"},
+            )
+            response.raise_for_status()
+            return response.json()
+
+
+def list_profiles(*, base_url: str) -> list[str]:
+    payload = CrudApi(base_url=base_url, token="").fetch_json("/api/mcp/profiles/")
+    if isinstance(payload, dict):
+        keys = payload.get("profiles", payload.get("keys", []))
+    else:
+        keys = payload
+    return [str(key) for key in keys]
+
+
+def fetch_profile(*, base_url: str, key: str):
+    from .profiles import RegistryProfile
+
+    normalized = key.strip().lower()
+    payload = CrudApi(base_url=base_url, token="").fetch_json(
+        f"/api/mcp/profiles/{normalized}/"
+    )
+    return RegistryProfile.from_dict(payload)
+
+
+def fetch_viewsets(*, base_url: str) -> list[dict[str, str]]:
+    payload = CrudApi(base_url=base_url, token="").fetch_json("/api/mcp/viewsets/")
+    if isinstance(payload, dict):
+        entries = payload.get("viewsets", [])
+    else:
+        entries = payload
+    return [
+        {
+            "model": str(entry["model"]),
+            "prefix": str(entry["prefix"]),
+        }
+        for entry in entries
+    ]

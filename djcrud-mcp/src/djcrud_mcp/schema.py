@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from .extras import ExtraTool
 from .profiles import RegistryProfile
 from .tools import build_tool_definition, infer_action
 from .viewsets import api_path_for, model_name_for
@@ -107,11 +106,7 @@ def all_tools_for_profile(
     *,
     viewsets=None,
 ) -> list[dict[str, Any]]:
-    tools = build_tools_for_profile(schema, profile, viewsets=viewsets)
-    for extra in profile.extra_tools:
-        if isinstance(extra, ExtraTool):
-            tools.append(extra.as_tool_definition())
-    return tools
+    return build_tools_for_profile(schema, profile, viewsets=viewsets)
 
 
 def _build_tools_from_prefix_map(

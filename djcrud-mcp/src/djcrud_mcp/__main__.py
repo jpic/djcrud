@@ -7,8 +7,7 @@ import sys
 
 from djcrud_mcp.api import CrudApi, login
 from djcrud_mcp.config import get_base_url, get_registry_key, get_token
-from djcrud_mcp.profiles import get_profile, resolve_viewsets
-from djcrud_mcp.schema import all_tools_for_profile, build_tools_from_schema
+from djcrud_mcp.schema import all_tools_for_profile
 from djcrud_mcp.server import create_mcp_server, fetch_schema
 from djcrud_mcp.tools import render_path, split_arguments
 
@@ -33,15 +32,7 @@ def resolve_token(
 
 
 def _tools_for_profile(*, schema: dict, profile) -> list[dict]:
-    if profile.api_prefixes:
-        return all_tools_for_profile(schema, profile)
-    from djcrud_mcp.viewsets import discover_viewsets
-
-    viewsets = resolve_viewsets(profile, all_viewsets=discover_viewsets())
-    tools = build_tools_from_schema(schema, viewsets=viewsets)
-    for extra in profile.extra_tools:
-        tools.append(extra.as_tool_definition())
-    return tools
+    return all_tools_for_profile(schema, profile)
 
 
 def call_tool(
@@ -52,7 +43,9 @@ def call_tool(
     token: str,
     registry: str,
 ) -> None:
-    profile = get_profile(registry)
+    from djcrud_mcp.server import _load_profile
+
+    profile = _load_profile(registry, base_url=base_url)
     schema = fetch_schema(base_url=base_url)
     tools = _tools_for_profile(schema=schema, profile=profile)
     tool = next((entry for entry in tools if entry["name"] == tool_name), None)

@@ -1,0 +1,71 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .profiles import McpProfile, RegistryProfile
+
+
+class McpSite:
+    """Registry of :class:`~djcrud_mcp.McpProfile` classes (like :data:`djcrud_drf.site`)."""
+
+    def __init__(self) -> None:
+        self._profile_classes: list[type[McpProfile]] = []
+        self._local_profiles: dict[str, RegistryProfile] = {}
+        self._built: dict[str, RegistryProfile] | None = None
+
+    def register(self, profile_class: type[McpProfile]) -> None:
+        if profile_class not in self._profile_classes:
+            self._profile_classes.append(profile_class)
+
+    def register_profile(self, profile: RegistryProfile) -> None:
+        """Attach a built profile (tests or legacy client-side registration)."""
+        self._local_profiles[profile.key] = profile
+        self._built = None
+
+    def build(self, *, resolve_viewsets: bool = True) -> dict[str, RegistryProfile]:
+        from .profiles import DefaultMcpProfile
+
+        if self._built is not None:
+            return self._built
+
+        profiles = dict(self._local_profiles)
+        for profile_class in self._profile_classes:
+            profile = profile_class.build_registry_profile(
+                resolve_viewsets=resolve_viewsets
+            )
+            profiles[profile.key] = profile
+
+        if DefaultMcpProfile.key not in profiles:
+            profiles[DefaultMcpProfile.key] = DefaultMcpProfile.build_registry_profile(
+                resolve_viewsets=resolve_viewsets
+            )
+
+        self._built = profiles
+        return profiles
+
+    def list_keys(self, *, resolve_viewsets: bool = True) -> list[str]:
+        return sorted(self.build(resolve_viewsets=resolve_viewsets))
+
+    def get_profile(
+        self, key: str | None = None, *, resolve_viewsets: bool = True
+    ) -> RegistryProfile:
+        from .profiles import DEFAULT_PROFILE_KEY
+
+        registry_key = (key or DEFAULT_PROFILE_KEY).strip().lower()
+        profiles = self.build(resolve_viewsets=resolve_viewsets)
+        try:
+            return profiles[registry_key]
+        except KeyError as exc:
+            known = ", ".join(sorted(profiles))
+            raise ValueError(
+                f"Unknown MCP registry {registry_key!r}; expected one of: {known}"
+            ) from exc
+
+    def clear(self) -> None:
+        self._profile_classes.clear()
+        self._local_profiles.clear()
+        self._built = None
+
+
+site = McpSite()

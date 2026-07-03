@@ -7,8 +7,7 @@ from mcp.server.fastmcp import FastMCP
 
 from .api import CrudApi
 from .config import get_base_url, get_profile_from_env, get_registry_key, get_token
-from .extras import ExtraTool
-from .profiles import RegistryProfile, get_profile, profile_meta, resolve_viewsets
+from .profiles import RegistryProfile, get_profile, profile_meta
 from .schema import all_tools_for_profile, build_tools_for_profile
 from .tools import render_path, split_arguments
 
@@ -17,15 +16,19 @@ def fetch_schema(*, base_url: str) -> dict[str, Any]:
     return CrudApi(base_url=base_url, token="").fetch_schema()
 
 
+def _load_profile(key: str, *, base_url: str):
+    from .api import fetch_profile
+
+    try:
+        return fetch_profile(base_url=base_url, key=key)
+    except Exception:
+        return get_profile(key)
+
+
 def _resolve_viewsets(profile: RegistryProfile) -> list:
     if profile.api_prefixes:
         return []
-    try:
-        from .viewsets import discover_viewsets
-
-        return resolve_viewsets(profile, all_viewsets=discover_viewsets())
-    except Exception:
-        return []
+    return []
 
 
 def create_mcp_server(
@@ -36,11 +39,10 @@ def create_mcp_server(
     registry: str | None = None,
     extra_headers: dict[str, str] | None = None,
 ) -> FastMCP:
-    if isinstance(profile, str):
-        profile = get_profile(profile)
-    elif profile is None:
-        profile = get_profile(registry or get_registry_key())
     base_url = (base_url or get_base_url()).rstrip("/")
+    registry_key = profile if isinstance(profile, str) else (registry or get_registry_key())
+    if isinstance(profile, str) or profile is None:
+        profile = _load_profile(registry_key, base_url=base_url)
     token = token if token is not None else get_token()
     viewsets = _resolve_viewsets(profile)
     schema = fetch_schema(base_url=base_url)
@@ -59,10 +61,6 @@ def create_mcp_server(
 
     for tool in build_tools_for_profile(schema, profile, viewsets=viewsets or None):
         _register_tool(mcp, api, tool)
-
-    for extra in profile.extra_tools:
-        if isinstance(extra, ExtraTool):
-            _register_tool(mcp, api, extra.as_tool_definition())
 
     return mcp
 

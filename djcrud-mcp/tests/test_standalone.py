@@ -65,7 +65,6 @@ def test_build_tools_from_api_prefixes():
 
 
 def test_create_mcp_server_with_api_prefixes():
-    from djcrud_mcp.extras import ExtraTool
     from djcrud_mcp.profiles import RegistryProfile
     from djcrud_mcp.server import create_mcp_server
 
@@ -75,14 +74,6 @@ def test_create_mcp_server_with_api_prefixes():
         instructions="Custom tools.",
         info_tool_name="custom_registry_info",
         api_prefixes=("/api/product/",),
-        extra_tools=(
-            ExtraTool(
-                name="ping",
-                method="get",
-                path="/api/ping/",
-                description="Health ping",
-            ),
-        ),
     )
 
     with patch("djcrud_mcp.server.fetch_schema", return_value=SAMPLE_SCHEMA):
@@ -94,7 +85,6 @@ def test_create_mcp_server_with_api_prefixes():
 
     tool_names = set(mcp._tool_manager._tools.keys())
     assert "product_list" in tool_names
-    assert "ping" in tool_names
     assert "custom_registry_info" in tool_names
 
 
@@ -116,5 +106,5 @@ def test_profile_meta_uses_api_prefixes():
 def test_discover_viewsets_requires_django_stack():
     from djcrud_mcp.viewsets import discover_viewsets
 
-    with pytest.raises(ImportError, match="djcrud\\[drf\\]"):
+    with pytest.raises(ImportError, match="configured Django host"):
         discover_viewsets()
