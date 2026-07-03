@@ -28,23 +28,37 @@ dependencies = [
     "django>=5.1",
     "django-tables2>=2.7",
     "django-crispy-forms>=2.0",
-    "crispy-bootstrap5>=1.0",  # for djcrud_bootstrap frontend
+    "django-filter",
+    "django-autocomplete-light>=5.1rc1",
+    "django-querysetsequence>=0.11",
+    "djhacker",
+    "crispy-bulma>=0.1",
 ]
 
 [project.optional-dependencies]
+api = []
+swagger = []  # deprecated alias for api
+drf = [
+    "djangorestframework>=3.15",
+    "drf-spectacular>=0.27",
+]
 bulma = [
     "django-crispy-forms>=2.0",
-    "crispy-bulma>=0.1",  # provides bulma template pack (uni_form.html, field.html, layout/ etc); CRISPY_TEMPLATE_PACK="bulma"
-]
-bootstrap = [
-    "crispy-bootstrap5>=1.0",
+    "crispy-bulma>=0.1",
 ]
 dev = [
     "pytest>=7.0",
     "pytest-django>=4.5",
+    "pytest-splinter>=3.3",
     "pytest-cov>=4.0",
+    "pytest-xdist",
+    "tox>=4",
     "black>=23.0",
     "ruff>=0.1",
+]
+docs = [
+    "sphinx>=7",
+    "furo",
 ]
 
 [tool.setuptools]
@@ -54,6 +68,16 @@ package-dir = {"" = "src"}
 where = ["src"]
 include = ["*"]
 namespaces = false
+
+[tool.setuptools.package-data]
+djcrud = ["locale/**/*.po", "locale/**/*.mo"]
+djcrud_bulma = ["locale/**/*.po", "locale/**/*.mo", "templates/**/*.html"]
+djcrud_auth = ["locale/**/*.po", "locale/**/*.mo"]
+djcrud_dal = ["templates/**/*.html"]
+djcrud_dal_topbar = ["templates/**/*.html", "static/**/*"]
+djcrud_history = ["locale/**/*.po", "locale/**/*.mo"]
+djcrud_api = ["templates/**/*.html", "static/**/*"]
+djcrud_drf = []
 
 [tool.setuptools_scm]
 # Git-based versioning configuration
@@ -67,16 +91,22 @@ python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 DJANGO_SETTINGS_MODULE = "djcrud_example.settings"
-pythonpath = ["src/djcrud_example"]
+pythonpath = ["src", "src/djcrud_example", "tests"]
 addopts = [
     "--reuse-db",
     "--strict-markers",
     "-ra",
+    "-n",
+    "auto",
+    "--splinter-headless",
 ]
 markers = [
     "bulma: marks tests specific to the Bulma frontend",
-    "bootstrap: marks tests specific to the Bootstrap frontend",
     "django_db: mark test that requires Django database",
+    "splinter: marks tests that use pytest-splinter browser fixtures",
+    "tutorial: validates tutorial example apps (docs literalinclude sources)",
+    "docs_screenshot: captures browser screenshots for Sphinx docs (run with -n0)",
+    "drf: tests requiring djcrud_drf and djangorestframework",
 ]
 
 [tool.black]
