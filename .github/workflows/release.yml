@@ -28,6 +28,7 @@ jobs:
         run: |
           pip install -U pip
           pip install -U django
+          pip install --pre -e ./djcrud-mcp
           pip install --pre -e ".[dev]"
 
       - name: Run unit and integration tests
@@ -61,10 +62,12 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Build package
+      - name: Build packages
         run: |
           pip install build
+          python -m build ./djcrud-mcp
           python -m build
+          cp djcrud-mcp/dist/* dist/
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

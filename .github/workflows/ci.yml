@@ -23,6 +23,7 @@ jobs:
         run: |
           pip install -U pip
           pip install -U django
+          pip install --pre -e ./djcrud-mcp
           pip install --pre -e ".[dev]"
 
       - name: Run unit and integration tests

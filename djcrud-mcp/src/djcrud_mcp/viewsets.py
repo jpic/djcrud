@@ -8,7 +8,13 @@ if TYPE_CHECKING:
 
 def discover_viewsets() -> list[type[ModelViewSet]]:
     """Return registered :class:`~djcrud_drf.ModelViewSet` classes."""
-    import djcrud_drf
+    try:
+        import djcrud_drf
+    except ImportError as exc:
+        raise ImportError(
+            "discover_viewsets() requires djcrud[drf] on a configured Django host; "
+            "use RegistryProfile.api_prefixes for standalone MCP clients."
+        ) from exc
 
     djcrud_drf.site.build()
     return list(djcrud_drf.site._registrations)

@@ -5,13 +5,12 @@ import json
 import os
 import sys
 
-from djcrud_mcp.api import login
+from djcrud_mcp.api import CrudApi, login
 from djcrud_mcp.config import get_base_url, get_registry_key, get_token
 from djcrud_mcp.profiles import get_profile, resolve_viewsets
+from djcrud_mcp.schema import all_tools_for_profile, build_tools_from_schema
 from djcrud_mcp.server import create_mcp_server, fetch_schema
-from djcrud_mcp.schema import build_tools_from_schema
 from djcrud_mcp.tools import render_path, split_arguments
-from djcrud_mcp.viewsets import discover_viewsets
 
 
 def resolve_token(
@@ -33,6 +32,18 @@ def resolve_token(
     return login(base_url=base_url, username=user, password=pwd)
 
 
+def _tools_for_profile(*, schema: dict, profile) -> list[dict]:
+    if profile.api_prefixes:
+        return all_tools_for_profile(schema, profile)
+    from djcrud_mcp.viewsets import discover_viewsets
+
+    viewsets = resolve_viewsets(profile, all_viewsets=discover_viewsets())
+    tools = build_tools_from_schema(schema, viewsets=viewsets)
+    for extra in profile.extra_tools:
+        tools.append(extra.as_tool_definition())
+    return tools
+
+
 def call_tool(
     *,
     tool_name: str,
@@ -43,15 +54,10 @@ def call_tool(
 ) -> None:
     profile = get_profile(registry)
     schema = fetch_schema(base_url=base_url)
-    viewsets = resolve_viewsets(profile, all_viewsets=discover_viewsets())
-    tools = build_tools_from_schema(schema, viewsets=viewsets)
-    for extra in profile.extra_tools:
-        tools.append(extra.as_tool_definition())
+    tools = _tools_for_profile(schema=schema, profile=profile)
     tool = next((entry for entry in tools if entry["name"] == tool_name), None)
     if tool is None:
         raise SystemExit(f"Unknown tool: {tool_name}")
-
-    from djcrud_mcp.api import CrudApi
 
     api = CrudApi(base_url=base_url, token=token)
     path_args, body = split_arguments(

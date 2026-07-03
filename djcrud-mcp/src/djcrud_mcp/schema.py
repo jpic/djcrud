@@ -2,7 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .tools import build_tool_definition, infer_action, tool_name
+from .extras import ExtraTool
+from .profiles import RegistryProfile
+from .tools import build_tool_definition, infer_action
 from .viewsets import api_path_for, model_name_for
 
 
@@ -62,9 +64,6 @@ def build_tools_from_schema(
 
 def prefix_map_from_profile(profile) -> dict[str, str]:
     """Build ``{model_name: api_prefix}`` without importing Django ViewSets."""
-    from .profiles import RegistryProfile
-    from .viewsets import api_path_for, model_name_for
-
     if isinstance(profile, RegistryProfile) and profile.api_prefixes:
         result = {}
         for prefix in profile.api_prefixes:
@@ -78,7 +77,10 @@ def prefix_map_from_profile(profile) -> dict[str, str]:
     if isinstance(profile, RegistryProfile):
         from .profiles import resolve_viewsets
 
-        viewsets = resolve_viewsets(profile)
+        try:
+            viewsets = resolve_viewsets(profile)
+        except ImportError:
+            viewsets = []
     elif profile:
         viewsets = list(profile)
 
@@ -97,6 +99,19 @@ def build_tools_for_profile(
     if not prefix_map and viewsets:
         prefix_map = {model_name_for(vs): api_path_for(vs) for vs in viewsets}
     return _build_tools_from_prefix_map(schema, prefix_map)
+
+
+def all_tools_for_profile(
+    schema: dict[str, Any],
+    profile: RegistryProfile,
+    *,
+    viewsets=None,
+) -> list[dict[str, Any]]:
+    tools = build_tools_for_profile(schema, profile, viewsets=viewsets)
+    for extra in profile.extra_tools:
+        if isinstance(extra, ExtraTool):
+            tools.append(extra.as_tool_definition())
+    return tools
 
 
 def _build_tools_from_prefix_map(

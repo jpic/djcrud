@@ -3,8 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from .viewsets import discover_viewsets, model_name_for
-
 
 @dataclass(frozen=True)
 class RegistryProfile:
@@ -45,7 +43,9 @@ def get_profile(key: str | None = None) -> RegistryProfile:
 
 
 def resolve_viewsets(profile: RegistryProfile, *, all_viewsets=None) -> list:
-    all_viewsets = list(all_viewsets or discover_viewsets())
+    from .viewsets import discover_viewsets
+
+    all_viewsets = list(all_viewsets if all_viewsets is not None else discover_viewsets())
     if profile.viewsets:
         allowed = set(profile.viewsets)
         return [viewset for viewset in all_viewsets if viewset in allowed]
@@ -55,8 +55,13 @@ def resolve_viewsets(profile: RegistryProfile, *, all_viewsets=None) -> list:
     return all_viewsets
 
 
-def profile_meta(profile: RegistryProfile, *, viewsets) -> dict[str, Any]:
+def profile_meta(profile: RegistryProfile, *, viewsets: list | None = None) -> dict[str, Any]:
     meta = dict(profile.meta)
     meta.setdefault("name", profile.server_name)
-    meta["viewsets"] = [model_name_for(viewset) for viewset in viewsets]
+    if viewsets:
+        from .viewsets import model_name_for
+
+        meta["viewsets"] = [model_name_for(viewset) for viewset in viewsets]
+    elif profile.api_prefixes:
+        meta["api_prefixes"] = list(profile.api_prefixes)
     return meta

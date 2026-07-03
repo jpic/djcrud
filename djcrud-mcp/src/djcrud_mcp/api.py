@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 import httpx
 
@@ -22,15 +22,31 @@ def login(*, base_url: str, username: str, password: str, timeout: float = 30.0)
 
 
 class CrudApi:
-    def __init__(self, *, base_url: str, token: str, timeout: float = 30.0):
+    def __init__(
+        self,
+        *,
+        base_url: str,
+        token: str,
+        timeout: float = 30.0,
+        extra_headers: dict[str, str] | Callable[[], dict[str, str]] | None = None,
+    ):
         self.base_url = base_url.rstrip("/")
         self.token = token
         self.timeout = timeout
+        self._extra_headers = extra_headers
+
+    def _resolved_extra_headers(self) -> dict[str, str]:
+        if self._extra_headers is None:
+            return {}
+        if callable(self._extra_headers):
+            return dict(self._extra_headers())
+        return dict(self._extra_headers)
 
     def _headers(self, accept_json: bool = True) -> dict[str, str]:
         headers = {"Authorization": f"Bearer {self.token}"}
         if accept_json:
             headers["Accept"] = "application/json"
+        headers.update(self._resolved_extra_headers())
         return headers
 
     def request(
