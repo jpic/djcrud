@@ -80,14 +80,6 @@ class ViewMixin(PermissionMixin, Clonable, Route):
         return self.title
 
     @property
-    def q(self):
-        """Current search query from GET (site search widget; empty on other views)."""
-        request = getattr(self, "request", None)
-        if request is None:
-            return ""
-        return request.GET.get("q", "")
-
-    @property
     def color(self):
         """Bulma button/icon color; override on model-backed views."""
         return None

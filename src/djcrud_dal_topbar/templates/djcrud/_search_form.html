@@ -5,7 +5,7 @@
             <autocomplete-light url="{% url 'site:autocomplete' %}" class="djcrud-site-search"
                                 minimum-characters="2">
                 <input type="text" name="q" class="input" slot="input" placeholder="{% trans 'Search…' %}"
-                       value="{{ view.q|default:'' }}"
+                       value="{{ request.GET.q|default:'' }}"
                        autocomplete="off" aria-label="{% trans 'Search' %}">
             </autocomplete-light>
         </div>
