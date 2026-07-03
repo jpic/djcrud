@@ -66,9 +66,14 @@ def test_views_category_update_single_field(client, admin_user):
 
 
 @pytest.mark.django_db
-def test_views_publish_action(client, admin_user):
-    article = Article.objects.create(title="Draft", published=False)
-    client.force_login(admin_user)
+def test_views_publish_action(client, django_user_model):
+    owner = django_user_model.objects.create_user(username="author", password="x")
+    article = Article.objects.create(
+        title="Draft",
+        published=False,
+        owner=owner,
+    )
+    client.force_login(owner)
 
     url = reverse("site:article:publish", args=[article.pk])
     assert client.get(url).status_code == 405
@@ -80,6 +85,33 @@ def test_views_publish_action(client, admin_user):
     response = client.get(reverse("site:article:detail", args=[article.pk]))
     assert response.status_code == 200
     assert b"/publish/" not in response.content
+
+
+@pytest.mark.django_db
+def test_views_publish_denied_for_non_owner(client, django_user_model):
+    owner = django_user_model.objects.create_user(username="owner", password="x")
+    stranger = django_user_model.objects.create_user(username="other", password="x")
+    article = Article.objects.create(
+        title="Draft",
+        published=False,
+        owner=owner,
+    )
+    client.force_login(stranger)
+    response = client.post(reverse("site:article:publish", args=[article.pk]))
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_views_publish_denied_when_already_published(client, django_user_model):
+    owner = django_user_model.objects.create_user(username="author", password="x")
+    article = Article.objects.create(
+        title="Live",
+        published=True,
+        owner=owner,
+    )
+    client.force_login(owner)
+    response = client.post(reverse("site:article:publish", args=[article.pk]))
+    assert response.status_code == 403
 
 
 @pytest.mark.django_db

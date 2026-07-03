@@ -9,21 +9,13 @@ from djcrud.views.object import ObjectMixin
 
 
 class PublishView(ActionMixin, ObjectMixin, ModelMixin, djcrud.View):
-    """Publish a draft article — visible only while unpublished."""
+    """Publish a draft article — gated by ``publish`` in the permission registry."""
 
-    permission_shortcode = "change"
+    permission_shortcode = "publish"
     tags = ["object"]
     title = _("Publish")
     icon = "send"
     color = "success"
-
-    def has_permission(self):
-        if not self.request.user.is_authenticated:
-            return False
-        return super().has_permission()
-
-    def has_permission_object(self):
-        return not self.object.published
 
     def unpoly_attributes(self, context=None):
         attrs = super().unpoly_attributes(context)
@@ -31,8 +23,7 @@ class PublishView(ActionMixin, ObjectMixin, ModelMixin, djcrud.View):
         return attrs
 
     def post(self, request, *args, **kwargs):
-        self.object.published = True
-        self.object.save(update_fields=["published"])
+        self.object.publish()
         messages.success(request, _("Article published."))
         detail_route = self.router.find_route("detail")
         detail_view = type(detail_route)(request=request, object=self.object)
