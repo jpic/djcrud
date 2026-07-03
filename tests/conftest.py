@@ -61,7 +61,13 @@ def _install_drf_apps(settings):
     _ensure_drf_schema_class(settings)
 
     installed = list(settings.INSTALLED_APPS)
-    for app in ("rest_framework", "drf_spectacular", "djcrud_drf", "djcrud_mcp"):
+    for app in (
+        "rest_framework",
+        "drf_spectacular",
+        "djcrud_drf",
+        "djcrud_mcp",
+        "djcrud_example.mcp_example",
+    ):
         if app not in installed:
             installed.append(app)
     settings.INSTALLED_APPS = installed

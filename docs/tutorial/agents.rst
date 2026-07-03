@@ -30,38 +30,32 @@ Remote agents install ``djcrud-client`` only and point at your API with
 ``DJCRUD_BASE_URL`` / ``DJCRUD_TOKEN``. The client fetches the active profile
 from the host at startup.
 
-Example
--------
+Example apps
+------------
 
-ViewSet registration lives in ``drf_example/djcrud.py`` (see :doc:`drf`). The
-``publish`` ``@action`` on ``ArticleViewSet`` becomes an MCP tool
-(``article_publish``) via ``GET /api/schema/``:
+* ``drf_example`` — ViewSets at ``/api/`` (see :doc:`drf`)
+* ``mcp_example`` — ``McpProfile`` classes for stdio MCP clients (this chapter)
+
+ViewSet registration lives in ``drf_example/djcrud.py``. The ``publish``
+``@action`` on ``ArticleViewSet`` becomes an MCP tool (``article_publish``) via
+``GET /api/schema/``:
 
 .. literalinclude:: ../../src/djcrud_example/drf_example/djcrud.py
    :lines: 27-39
 
-MCP profiles (host)
--------------------
+MCP profiles
+------------
 
-Declare a :class:`~djcrud_mcp.McpProfile` on the Django host and register it on
-:data:`djcrud_mcp.site` — same pattern as :meth:`djcrud_drf.site.register`.
-Every stdio MCP client uses a registered profile; remote clients fetch it from
-``GET /api/mcp/profiles/{key}/`` at startup.
+Declare :class:`~djcrud_mcp.McpProfile` classes in the app's ``djcrud.py`` and
+register them on :data:`djcrud_mcp.site` — same pattern as
+:meth:`djcrud_drf.site.register`. The tutorial app ``mcp_example`` wires
+``ArticleViewSet`` and ``ProductViewSet`` from ``drf_example``:
 
-.. code-block:: python
+.. literalinclude:: ../../src/djcrud_example/mcp_example/djcrud.py
 
-   import djcrud_mcp
-   from myapp.drf import ArticleViewSet
-
-   class ArticlesMcp(djcrud_mcp.McpProfile):
-       key = "articles"
-       viewsets = (ArticleViewSet,)
-
-   djcrud_mcp.site.register(ArticlesMcp)
-
-Add ``djcrud_mcp`` to ``INSTALLED_APPS``. Its :file:`djcrud.py` registers MCP
-profile ViewSets on :data:`djcrud_drf.site` (autodiscovered when
-:meth:`djcrud.Site.build` runs):
+Add ``djcrud_mcp`` and your MCP app to ``INSTALLED_APPS``. The ``djcrud_mcp``
+package registers profile API ViewSets on :data:`djcrud_drf.site`; your app's
+``djcrud.py`` registers the profiles agents actually use:
 
 .. code-block:: python
 
@@ -69,11 +63,13 @@ profile ViewSets on :data:`djcrud_drf.site` (autodiscovered when
        # ...
        "djcrud_drf",
        "djcrud_mcp",
+       "djcrud_example.mcp_example",
    ]
 
-   urlpatterns = [
-       # ...
-   ] + djcrud.site.build().urlpatterns + djcrud_drf.site.build().urlpatterns
+   urlpatterns = (
+       djcrud.site.build().urlpatterns
+       + djcrud_drf.site.build().urlpatterns
+   )
 
 Remote client
 -------------
@@ -85,7 +81,7 @@ Remote client
 
 The client calls ``GET /api/mcp/profiles/{key}/`` for instructions and API
 prefixes, then ``GET /api/schema/`` to build tools. Omit ``--registry`` to use
-the host default from ``GET /api/mcp/profiles/``.
+the host default from ``GET /api/mcp/profiles/`` (``articles`` in the example).
 
 Run
 ---

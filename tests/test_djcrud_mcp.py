@@ -298,23 +298,15 @@ def test_mcp_tool_calls_api(api_client, drf_settings, django_user_model):
 
 @pytest.mark.django_db
 def test_mcp_profiles_endpoint(api_client, drf_settings):
-    from djcrud_mcp import McpProfile, site
+    response = api_client.get("/api/mcp/profiles/")
+    assert response.status_code == 200
+    payload = response.json()
+    assert "articles" in payload["profiles"]
+    assert "products" in payload["profiles"]
+    assert payload["default"] == "articles"
 
-    class ArticlesMcp(McpProfile):
-        key = "articles"
-        api_prefixes = ("/api/article/",)
-
-    site.clear()
-    try:
-        site.register(ArticlesMcp)
-        response = api_client.get("/api/mcp/profiles/")
-        assert response.status_code == 200
-        payload = response.json()
-        assert "articles" in payload["profiles"]
-        assert payload["default"] == "articles"
-
-        detail = api_client.get("/api/mcp/profiles/articles/")
-        assert detail.status_code == 200
-        assert detail.json()["server_name"].endswith("-articles")
-    finally:
-        site.clear()
+    detail = api_client.get("/api/mcp/profiles/articles/")
+    assert detail.status_code == 200
+    body = detail.json()
+    assert body["server_name"].endswith("-articles")
+    assert "/api/article/" in body["api_prefixes"]

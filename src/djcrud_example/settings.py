@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "drf_spectacular",
     "djcrud_drf",
+    "djcrud_mcp",
     # template pack
     "djcrud_bulma",
     # used by djcrud_bulma:
@@ -70,6 +71,7 @@ INSTALLED_APPS = [
     "djcrud_example.security_example",
     "djcrud_example.views_example",
     "djcrud_example.drf_example",
+    "djcrud_example.mcp_example",
     "djcrud_example.spa_example",
     # load a custom user model
     "djcrud_example",

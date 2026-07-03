@@ -34,6 +34,7 @@ Server setup
        # ...
        "djcrud_drf",
        "djcrud_mcp",
+       "djcrud_example.mcp_example",
    ]
 
    urlpatterns = [
@@ -43,15 +44,9 @@ Server setup
 MCP profiles
 ============
 
-.. code-block:: python
+Tutorial: ``djcrud_example.mcp_example`` (see :doc:`../../tutorial/agents`).
 
-   import djcrud_mcp
-
-   class ItemsMcp(djcrud_mcp.McpProfile):
-       key = "items"
-       viewsets = (ItemViewSet,)
-
-   djcrud_mcp.site.register(ItemsMcp)
+.. literalinclude:: ../../src/djcrud_example/mcp_example/djcrud.py
 
 :meth:`~djcrud_mcp.site.McpSite.build` instantiates each registered class and
 resolves ``api_prefixes``. ``server_name``, ``instructions``, and

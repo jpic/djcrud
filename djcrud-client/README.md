@@ -11,16 +11,6 @@ djcrud-client -mcp
 
 ## Host setup
 
-Declare `McpProfile` classes on the Django host and register them on `djcrud_mcp.site` (like `djcrud_drf.site.register`):
-
-```python
-import djcrud_mcp
-
-class ArticlesMcp(djcrud_mcp.McpProfile):
-    key = "articles"
-    viewsets = (ArticleViewSet,)
-
-djcrud_mcp.site.register(ArticlesMcp)
-```
+Declare `McpProfile` classes in your app's `djcrud.py` and register them on `djcrud_mcp.site` (see `djcrud_example/mcp_example/djcrud.py` in the djcrud repo).
 
 Add `djcrud_mcp` to `INSTALLED_APPS` and include `djcrud_drf.site` URLs on the host. `djcrud_mcp/djcrud.py` registers profile ViewSets at `GET /api/mcp/profiles/{key}/`. `GET /api/mcp/profiles/` also returns the host `default` key. Mark one profile with `default = True` (or register only one); clients omit `--registry` to use that default.
