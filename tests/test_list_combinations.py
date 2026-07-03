@@ -29,6 +29,9 @@ class _MockRouter:
     def find_route(self, codename):
         return None
 
+    def _iter_tagged_routes(self, tag):
+        return []
+
 
 MISSING = object()
 

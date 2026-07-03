@@ -17,6 +17,9 @@ class _ItemRouter:
     def get_queryset(self, *, user, model, action, perm, obj=None):
         return model._default_manager.all()
 
+    def _iter_tagged_routes(self, tag):
+        return []
+
 
 class ItemNamesView(DetailListView):
     list_model = Item
