@@ -12,6 +12,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
 
+from django.core.exceptions import ImproperlyConfigured
+
 _PERM_CHECKS: dict[tuple[str, str, str | None], Callable[..., bool]] = {}
 _QUERYSET_SCOPERS: dict[tuple[str, str, str | None], Callable[..., Any]] = {}
 _PERM_STRING_CHECKS: dict[str, Callable[..., bool]] = {}
@@ -209,6 +211,13 @@ def has_permission(*, user, model, action, perm, obj=None):
 
 def get_queryset(*, user, model, action, perm, obj=None):
     """Return rows visible to *user* for *action* on *model*."""
+    if model is None:
+        raise ImproperlyConfigured(
+            "get_queryset called with model=None. "
+            "List views and similar must be under a ModelRouter, "
+            "declare model= explicitly on the view, or override get_queryset(). "
+            "See workspace/section sharing patterns and DetailListView."
+        )
     scoper = _lookup_scoper(model, action)
     if scoper is not None:
         return _invoke(

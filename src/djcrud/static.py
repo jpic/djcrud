@@ -83,18 +83,32 @@ def vite_asset(path: str) -> str:
     if not manifest:
         return path
 
-    # Match by stripping the typical Vite hash segment (.<hex> or -<hex>)
+    # Prefer match by manifest entry key (e.g. "src/entries/thread.ts") or "name"
+    base = wanted_name.rsplit(".", 1)[0]  # "thread"
+    for key, entry in manifest.items():
+        if not isinstance(entry, dict):
+            continue
+        if (
+            key.endswith(f"/{base}.ts")
+            or key.endswith(f"/{base}.js")
+            or entry.get("name") == base
+        ):
+            file = entry.get("file")
+            if isinstance(file, str):
+                return str(p.parent / file)
+
+    # Match by stripping the hash segment from the produced filename
     for entry in manifest.values():
         if not isinstance(entry, dict):
             continue
         file = entry.get("file")
         if not isinstance(file, str):
             continue
-        unhashed = re.sub(r"[-.][0-9a-fA-F]{5,}(?=\.[^.]+$)", "", file)
+        unhashed = re.sub(r"[-.][A-Za-z0-9_-]{4,}(?=\.[^.]+$)", "", file)
         if unhashed == wanted_name or file == wanted_name:
             return str(p.parent / file)
 
-    # Common single-entry SPA fallback
+    # Last resort: first isEntry (for single-entry builds)
     for entry in manifest.values():
         if isinstance(entry, dict) and entry.get("isEntry"):
             file = entry.get("file")

@@ -134,3 +134,75 @@ def test_add_search_opt_in():
         assert is_search_enabled(Item) is True
     finally:
         djcrud.search.add_search(Item)
+
+
+@pytest.mark.django_db
+def test_get_queryset_raises_clear_error_for_model_none(rf, admin_user):
+    """Plain Router + ListView without model or explicit model= should fail fast."""
+    from django.core.exceptions import ImproperlyConfigured
+    from django.views import generic
+
+    from djcrud.model import ModelMixin
+    from djcrud.views.list import ListMixin
+    from djcrud.views.template import TemplateViewMixin
+
+    class BareList(ListMixin, TemplateViewMixin, ModelMixin, generic.ListView):
+        pass
+
+    class SectionRouter(djcrud.Router):
+        routes = [BareList]
+
+    router = SectionRouter()
+    router.build()
+
+    request = rf.get("/section/barelist/")
+    request.user = admin_user
+
+    bare_route = router.routes[0]
+    view = type(bare_route)(request=request)
+    view.router = bare_route.router
+    view.setup(request)
+
+    with pytest.raises(ImproperlyConfigured) as exc:
+        view.get_queryset()
+
+    assert "model=None" in str(exc.value) or "ModelRouter" in str(exc.value)
+
+
+@pytest.mark.django_db
+def test_explicit_model_on_view_under_plain_router_uses_correct_scoper(rf, admin_user):
+    """Workspace sharing pattern: list a different model under a plain section Router."""
+
+    Item.objects.create(name="mine")
+    Item.objects.create(name="other")
+
+    djcrud.permissions.add_queryset(
+        Item,
+        scoper=lambda user, *, model, **ctx: model.objects.filter(name="mine"),
+    )
+    try:
+
+        class ItemListUnderSection(djcrud.views.ListView):
+            # Explicit model allows using under plain Router for custom URL structures
+            # (e.g. workspace sections, invitations tabs, etc.)
+            model = Item
+
+        class WorkspaceSectionRouter(djcrud.Router):
+            codename = "workspacesection"
+            routes = [ItemListUnderSection]
+
+        router = WorkspaceSectionRouter()
+        router.build()
+
+        request = rf.get("/workspacesection/itemlistundersection/")
+        request.user = admin_user
+
+        list_route = router.routes["itemlistundersection"]
+        view = type(list_route)(request=request)
+        view.setup(request)
+        # get_queryset should go through router delegation but use view.model for scoping
+        qs = view.get_queryset()
+        names = list(qs.values_list("name", flat=True))
+        assert names == ["mine"]
+    finally:
+        djcrud.permissions.remove_queryset(Item)

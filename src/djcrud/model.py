@@ -8,6 +8,12 @@ class ModelMixin:
 
     Views nested under a :class:`~djcrud.ModelRouter` inherit its ``model``
     and :meth:`~djcrud.ModelRouter.get_queryset` scoping.
+
+    You can also declare ``model = MyModel`` directly on a ListView (or
+    subclass) to support patterns such as workspace sections, sharing
+    tabs, or invitations lists mounted under a plain ``djcrud.Router``
+    (instead of a ModelRouter). The effective model is then used for
+    both templates and queryset/permission registry lookups.
     """
 
     @property
@@ -39,6 +45,16 @@ class ModelMixin:
     def _router_queryset(self):
         if self.router:
             ctx = self.permission_context()
+            # For queryset scoping (add_queryset registrations), use the
+            # view's effective model (supports explicit model= on view,
+            # list_model on DetailListView, etc). Permission checks may
+            # still use the router's model.
+            try:
+                effective_model = self.model
+                if effective_model is not None:
+                    ctx = dict(ctx, model=effective_model)
+            except Exception:
+                pass
             router = self.router
             get_queryset = getattr(router, "get_queryset", None)
             if get_queryset is None:

@@ -1,6 +1,6 @@
 html,
 body {
-    min-height: 100%;
+    height: 100%;
 }
 
 /* always display hamburger icon, cancels a bulma default */
@@ -31,13 +31,13 @@ body {
 
 /* SPA layout shell (base_spa.html + client frameworks such as Svelte) */
 .djcrud-spa-body {
-    min-height: 100vh;
+    height: 100%;
     margin: 0;
 }
 
 .djcrud-layout-spa {
     display: flex;
-    min-height: 100vh;
+    height: 100%;
 }
 
 .djcrud-layout-spa > .djcrud-sidebar {

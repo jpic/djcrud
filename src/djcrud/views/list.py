@@ -204,7 +204,12 @@ class DetailListMixin:
     """List rows of a related model on an object detail page.
 
     Set :attr:`list_model` when the listed rows are not the enclosing
-    :class:`~djcrud.ModelRouter` model (e.g. log lines on a process detail).
+    :class:`~djcrud.ModelRouter` model (e.g. log lines on a process detail,
+    or invitations under a workspace section).
+
+    When list_model differs from the router model, queryset scoping
+    (add_queryset) uses the list_model, while view permission checks
+    typically stay tied to the parent router.
     """
 
     list_model = None

@@ -5,7 +5,6 @@ import djcrud
 import pytest
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from django.test import RequestFactory
 from django.urls import reverse
 from django.views import generic
 
@@ -86,6 +85,7 @@ def test_spa_css_layout_rules():
     assert ".djcrud-layout-spa" in css
     assert ".djcrud-layout-spa > .djcrud-sidebar" in css
     assert "overflow-y: auto" in css.split(".djcrud-layout-spa > .djcrud-sidebar")[1]
+    assert "height: 100%" in css.split(".djcrud-layout-spa {")[1]
     assert ".djcrud-layout-immersive" not in css
 
 

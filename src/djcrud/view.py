@@ -107,6 +107,15 @@ class ViewMixin(PermissionMixin, Clonable, Route):
         return self.urlname
 
     def _permission_model(self):
+        # Prefer an explicit model declared on the view class (e.g.
+        # ListView with model=..., or DetailListView with list_model).
+        # This enables lists of a different model under plain Routers
+        # (workspace sections, sharing tabs, etc).
+        for cls in type(self).__mro__:
+            if "model" in cls.__dict__:
+                m = cls.__dict__["model"]
+                if isinstance(m, type) and hasattr(m, "_meta"):
+                    return m
         router = getattr(self, "router", None)
         if router is None:
             return None
